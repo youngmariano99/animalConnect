@@ -1,5 +1,6 @@
 using AnimalConnect.Backend.Data;
 using Microsoft.EntityFrameworkCore;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,13 +10,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 
 // A. Configurar la conexión a SQL Server
-// Leemos la cadena de conexión del archivo appsettings.json
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-// B. Inyectamos el DbContext en el contenedor de servicios
-// IMPORTANTE: Esto debe ir ANTES de builder.Build()
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
+
+// B. ACTIVAR LOS CONTROLADORES
+// Esta línea le dice a .NET: "Busca clases en la carpeta Controllers"
+builder.Services.AddControllers(); // <--- ¡IMPORTANTE! SIN ESTO NO VE TU CONTROLLER
 
 // --- FIN CONFIGURACIÓN SERVICIOS ---
 
@@ -23,17 +25,23 @@ var app = builder.Build();
 
 // --- 2. CONFIGURACIÓN DEL PIPELINE HTTP (Después del Build) ---
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-    // Agregamos Swagger UI para ver la documentación visualmente (opcional pero recomendado)
-    // app.UseSwaggerUI(); 
+    app.MapScalarApiReference(); 
 }
 
 app.UseHttpsRedirection();
 
-// --- EJEMPLO CLIMA (Esto lo borraremos después, pero déjalo por ahora para probar) ---
+// --- NUEVO: PERMITIR ARCHIVOS ESTÁTICOS (FOTOS) ---
+app.UseStaticFiles();
+
+// C. MAPEAR LOS CONTROLADORES
+// Esta línea habilita las rutas que definiste (como api/Animales)
+app.MapControllers(); // <--- ¡IMPORTANTE!
+
+
+// --- EJEMPLO CLIMA (Esto lo puedes borrar si quieres, ya no es necesario) ---
 var summaries = new[]
 {
     "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"

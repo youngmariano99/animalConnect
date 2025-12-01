@@ -54,7 +54,7 @@ En este archivo se define la ruta al servidor SQL y las credenciales.
 "ConnectionStrings": {
   "DefaultConnection": "Server=.;Database=AnimalConnectDB;Trusted_Connection=True;TrustServerCertificate=True;"
 }
-
+```
 ## 3. Configuración del Proyecto ("El Cableado")
 
 Para que la aplicación sepa cómo conectarse a la Base de Datos y utilizar Entity Framework, es necesario modificar dos archivos clave.
@@ -66,6 +66,7 @@ En este archivo se define la ruta al servidor SQL y las credenciales.
 "ConnectionStrings": {
   "DefaultConnection": "Server=.;Database=AnimalConnectDB;Trusted_Connection=True;TrustServerCertificate=True;"
 }
+```
 Desglose de la cadena:
 
 Server=.: Indica el servidor local (Localhost). Si se usa SQL Express, puede ser .\\SQLExpress.
@@ -114,7 +115,7 @@ dotnet ef database update
 🛑 Registro de Errores y Soluciones (Troubleshooting)
 Esta sección documenta los obstáculos técnicos encontrados durante la configuración inicial y cómo fueron resueltos.
 
-Error 1: dotnet-ef no encontrado o configuración corrupta
+### Error 1: dotnet-ef no encontrado o configuración corrupta
 Síntoma: Mensaje "El archivo de configuración DotnetToolSettings.xml no se encontró" al intentar instalar la herramienta.
 
 Causa: La caché de NuGet estaba corrupta o hubo una instalación global previa fallida.
@@ -125,23 +126,36 @@ Limpiar la caché de NuGet: dotnet nuget locals all --clear
 
 Instalar la herramienta de forma local usando un manifiesto: dotnet new tool-manifest seguido de dotnet tool install dotnet-ef.
 
-Error 2: The type or namespace name 'DbContext' could not be found
+### Error 2: The type or namespace name 'DbContext' could not be found
 Síntoma: El archivo ApplicationDbContext.cs mostraba múltiples errores de compilación (líneas rojas).
 
 Causa: Faltaban instalar los paquetes NuGet de Entity Framework en el proyecto, a pesar de tener la herramienta de consola instalada.
 
 Solución: Ejecutar los comandos dotnet add package Microsoft.EntityFrameworkCore... para las librerías Core y SqlServer.
 
-Error 3: Incompatibilidad de Versiones (NU1202)
+### Error 3: Incompatibilidad de Versiones (NU1202)
 Síntoma: "Package Microsoft.EntityFrameworkCore 10.0.0 is not compatible with net9.0".
 
 Causa: Al no especificar versión, NuGet intentó instalar la versión 10 (Preview) en un proyecto .NET 9.
 
 Solución: Forzar la instalación de la versión compatible agregando el flag de versión: dotnet add package ... --version 9.0.0.
 
-Error 4: Fallo en Tiempo de Ejecución (Program.cs)
+### Error 4: Fallo en Tiempo de Ejecución (Program.cs)
 Síntoma: La aplicación compilaba correctamente, pero fallaba al iniciar o al intentar acceder a la BD.
 
 Causa: Se intentó inyectar el servicio AddDbContext después de haber ejecutado builder.Build().
 
 Solución: Mover la lógica de configuración hacia arriba, dentro de la sección de "Configuración de Servicios".
+
+## 5. Manejo de Archivos y Multimedia
+
+El sistema no almacena las imágenes como BLOBs (binarios) dentro de SQL Server para evitar degradación de rendimiento. Se utiliza una estrategia de **Referencias URL**.
+
+### Arquitectura de Archivos
+* **Almacenamiento Físico:** Carpeta `/wwwroot/uploads` en la raíz del servidor.
+* **Base de Datos:** La tabla `Animales` tiene un campo `ImagenUrl` (VARCHAR) que guarda la dirección web del archivo.
+
+### Controlador de Archivos (`ArchivosController`)
+Este controlador auxiliar maneja la entrada/salida de ficheros (`IFormFile`).
+* **Seguridad:** Genera nombres aleatorios usando `Guid.NewGuid()` para prevenir que un usuario sobrescriba la foto de otro si suben archivos con el mismo nombre (ej: "foto.jpg").
+* **Respuesta:** Retorna un objeto JSON con la URL absoluta para ser consumida inmediatamente por el Frontend.
