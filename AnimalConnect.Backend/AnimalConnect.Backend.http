@@ -1,0 +1,6 @@
+@AnimalConnect.Backend_HostAddress = http://localhost:5269
+
+GET {{AnimalConnect.Backend_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

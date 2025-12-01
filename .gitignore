@@ -1,0 +1,29 @@
+## Ignorar carpetas de compilación (Binarios temporales)
+[Bb]in/
+[Oo]bj/
+
+## Ignorar archivos específicos de usuarios de Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Ignorar archivos de VS Code
+.vscode/
+
+## Ignorar configuraciones con secretos (IMPORTANTE)
+## appsettings.Development.json suele tener la conexión a BD local o passwords.
+## Se ignora para no subir credenciales a GitHub.
+appsettings.Development.json
+*.env
+
+## Ignorar archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+## Ignorar logs
+*.log
+
+## Ignorar carpetas de Test Results (si agregamos tests luego)
+TestResults/
