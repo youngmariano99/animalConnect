@@ -6,63 +6,182 @@
     <title>Registro - Animal Connect</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body class="bg-gray-900 h-screen flex items-center justify-center bg-[url('https://images.unsplash.com/photo-1450778869180-41d0601e046e?q=80&w=2086&auto=format&fit=crop')] bg-cover bg-center bg-no-repeat bg-blend-overlay">
 
-    <div class="bg-white/95 backdrop-blur-sm p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition-all">
+    <div class="bg-white/95 backdrop-blur-sm p-8 rounded-2xl shadow-2xl w-full max-w-lg transform transition-all h-auto max-h-[90vh] overflow-y-auto">
         
         <div class="text-center mb-6">
             <h2 class="text-3xl font-bold text-gray-800">Crear Cuenta</h2>
-            <p class="text-gray-500 text-sm mt-2">Únete para adoptar responsablemente</p>
+            <p class="text-gray-500 text-sm mt-2">Únete a la red de cuidado animal</p>
         </div>
 
-        <form onsubmit="realizarRegistro(event)" class="space-y-5">
+        <div class="flex bg-gray-100 p-1 rounded-lg mb-6">
+            <button onclick="cambiarRol('Ciudadano')" id="btn-ciudadano" class="flex-1 py-2 text-sm font-bold rounded-md bg-white text-orange-600 shadow-sm transition-all">
+                <i class="fa-solid fa-user mr-2"></i>Soy Vecino
+            </button>
+            <button onclick="cambiarRol('Veterinario')" id="btn-veterinario" class="flex-1 py-2 text-sm font-bold rounded-md text-gray-500 hover:text-gray-700 transition-all">
+                <i class="fa-solid fa-user-doctor mr-2"></i>Soy Veterinario
+            </button>
+        </div>
+
+        <form onsubmit="realizarRegistro(event)" class="space-y-4">
+            
             <div>
-                <label class="block text-gray-700 text-sm font-bold mb-2">Elige un Usuario</label>
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                        <i class="fa-solid fa-user"></i>
-                    </span>
-                    <input type="text" id="reg-usuario" class="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="ej: juanperez" required>
+                <label class="block text-gray-700 text-sm font-bold mb-2">Usuario</label>
+                <input type="text" id="reg-usuario" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="usuario123" required>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Contraseña</label>
+                    <input type="password" id="reg-password" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" required>
+                </div>
+                <div>
+                    <label class="block text-gray-700 text-sm font-bold mb-2">Confirmar</label>
+                    <input type="password" id="reg-confirm" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" required>
                 </div>
             </div>
 
-            <div>
-                <label class="block text-gray-700 text-sm font-bold mb-2">Contraseña</label>
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                        <i class="fa-solid fa-lock"></i>
-                    </span>
-                    <input type="password" id="reg-password" class="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="••••••••" required>
+            <div id="campos-veterinario" class="hidden border-t border-orange-200 pt-4 mt-4 bg-orange-50 p-4 rounded-lg space-y-3">
+                <h3 class="text-orange-800 font-bold text-sm mb-3 text-center">Datos del Consultorio</h3>
+                
+                <div class="flex items-center space-x-4 mb-4">
+                    <div class="w-16 h-16 rounded-full bg-gray-200 border-2 border-dashed border-gray-400 flex items-center justify-center overflow-hidden relative">
+                        <img id="preview-logo" class="absolute w-full h-full object-cover hidden">
+                        <i class="fa-solid fa-camera text-gray-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-gray-700 text-xs font-bold mb-1">Logotipo (Opcional)</label>
+                        <input type="file" id="reg-vet-logo" class="w-full text-xs text-gray-500" onchange="previewImage(this)">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 text-xs font-bold mb-1">Nombre del Local</label>
+                    <input type="text" id="reg-vet-nombre" class="w-full px-3 py-2 border border-orange-200 rounded-lg text-sm" placeholder="Ej: Veterinaria San Roque">
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-gray-700 text-xs font-bold mb-1">Matrícula</label>
+                        <input type="text" id="reg-vet-matricula" class="w-full px-3 py-2 border border-orange-200 rounded-lg text-sm" placeholder="MP-1234">
+                    </div>
+                    <div>
+                        <label class="block text-gray-700 text-xs font-bold mb-1">Teléfono (WhatsApp)</label>
+                        <input type="tel" id="reg-vet-tel" class="w-full px-3 py-2 border border-orange-200 rounded-lg text-sm" placeholder="Ej: 2914123456">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 text-xs font-bold mb-1">Biografía / Servicios</label>
+                    <textarea id="reg-vet-bio" rows="2" class="w-full px-3 py-2 border border-orange-200 rounded-lg text-sm" placeholder="Ej: Urgencias 24hs, Cirugías, Pet Shop..."></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 text-xs font-bold mb-1">Dirección (Texto)</label>
+                    <input type="text" id="reg-vet-direccion" class="w-full px-3 py-2 border border-orange-200 rounded-lg text-sm" placeholder="Calle 123">
+                </div>
+
+                <div class="bg-white p-3 rounded border border-orange-100">
+                    <label class="block text-gray-700 text-xs font-bold mb-2">Horarios de Atención</label>
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <div>
+                            <span class="text-[10px] text-gray-500 uppercase font-bold">Mañana</span>
+                            <div class="flex items-center gap-1">
+                                <input type="time" id="h-m-inicio" class="w-full text-xs border rounded p-1" value="09:00">
+                                <span class="text-gray-400">-</span>
+                                <input type="time" id="h-m-fin" class="w-full text-xs border rounded p-1" value="13:00">
+                            </div>
+                        </div>
+                        <div>
+                            <span class="text-[10px] text-gray-500 uppercase font-bold">Tarde</span>
+                            <div class="flex items-center gap-1">
+                                <input type="time" id="h-t-inicio" class="w-full text-xs border rounded p-1" value="16:00">
+                                <span class="text-gray-400">-</span>
+                                <input type="time" id="h-t-fin" class="w-full text-xs border rounded p-1" value="20:00">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] text-gray-500 font-bold">Días:</span>
+                        <input type="text" id="h-dias" class="flex-1 text-xs border rounded p-1" placeholder="Ej: Lun a Sab" value="Lun a Vie">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-gray-700 text-xs font-bold mb-1">Ubicación en Mapa (Click para marcar)</label>
+                    <div id="map-registro" class="h-48 w-full rounded-lg border border-orange-300 shadow-inner z-0"></div>
+                    <p id="coords-msg" class="text-xs text-gray-500 mt-1 text-center">No has seleccionado ubicación aún</p>
                 </div>
             </div>
 
-            <div>
-                <label class="block text-gray-700 text-sm font-bold mb-2">Confirmar Contraseña</label>
-                <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-                        <i class="fa-solid fa-check-double"></i>
-                    </span>
-                    <input type="password" id="reg-confirm" class="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="••••••••" required>
-                </div>
-            </div>
-
-            <button type="submit" class="w-full bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-700 transition duration-300 flex justify-center items-center">
+            <button type="submit" class="w-full bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-700 transition duration-300 flex justify-center items-center mt-6">
                 <span id="btn-text">Registrarme</span>
                 <i id="btn-spinner" class="fa-solid fa-circle-notch fa-spin ml-2 hidden"></i>
             </button>
         </form>
         
         <div class="mt-6 text-center border-t border-gray-200 pt-4">
-            <p class="text-sm text-gray-600">¿Ya tienes cuenta?</p>
-            <a href="login.html" class="text-orange-600 font-bold hover:underline">Iniciar Sesión aquí</a>
+            <a href="login.html" class="text-orange-600 font-bold hover:underline text-sm">¿Ya tienes cuenta? Inicia Sesión</a>
         </div>
     </div>
 
     <script>
         const API_URL = 'http://127.0.0.1:5269/api';
+        let rolSeleccionado = 'Ciudadano';
+        let mapReg = null, markerReg = null, coordsSelected = null;
 
-        async function realizarRegistro(e) {
+        function previewImage(input) {
+            const preview = document.getElementById('preview-logo');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function cambiarRol(rol) {
+            rolSeleccionado = rol;
+            const btnCiudadano = document.getElementById('btn-ciudadano');
+            const btnVeterinario = document.getElementById('btn-veterinario');
+            const camposVet = document.getElementById('campos-veterinario');
+
+            if (rol === 'Ciudadano') {
+                btnCiudadano.className = "flex-1 py-2 text-sm font-bold rounded-md bg-white text-orange-600 shadow-sm transition-all";
+                btnVeterinario.className = "flex-1 py-2 text-sm font-bold rounded-md text-gray-500 hover:text-gray-700 transition-all";
+                camposVet.classList.add('hidden');
+                document.getElementById('reg-vet-nombre').removeAttribute('required');
+                document.getElementById('reg-vet-matricula').removeAttribute('required');
+            } else {
+                btnVeterinario.className = "flex-1 py-2 text-sm font-bold rounded-md bg-white text-orange-600 shadow-sm transition-all";
+                btnCiudadano.className = "flex-1 py-2 text-sm font-bold rounded-md text-gray-500 hover:text-gray-700 transition-all";
+                camposVet.classList.remove('hidden');
+                document.getElementById('reg-vet-nombre').setAttribute('required', 'true');
+                document.getElementById('reg-vet-matricula').setAttribute('required', 'true');
+                setTimeout(initMapRegistro, 100);
+            }
+        }
+
+        function initMapRegistro() {
+            if (mapReg) return;
+            const defaultCoords = [-37.994, -61.353]; 
+            mapReg = L.map('map-registro').setView(defaultCoords, 14);
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapReg);
+            mapReg.on('click', function(e) {
+                coordsSelected = e.latlng;
+                if (markerReg) markerReg.setLatLng(e.latlng); else markerReg = L.marker(e.latlng).addTo(mapReg);
+                document.getElementById('coords-msg').innerText = `Ubicación: ${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
+                document.getElementById('coords-msg').className = 'text-xs mt-1 text-center text-green-600 font-bold';
+            });
+        }
+
+       async function realizarRegistro(e) {
             e.preventDefault();
             
             const user = document.getElementById('reg-usuario').value;
@@ -71,31 +190,72 @@
             const btnText = document.getElementById('btn-text');
             const spinner = document.getElementById('btn-spinner');
 
-            if(pass !== confirm) {
-                alert("Las contraseñas no coinciden.");
-                return;
+            if(pass !== confirm) { alert("Las contraseñas no coinciden."); return; }
+            if (rolSeleccionado === 'Veterinario' && !coordsSelected) {
+                alert("Por favor, marca la ubicación de tu veterinaria en el mapa."); return;
             }
 
-            btnText.innerText = "Creando cuenta...";
+            btnText.innerText = "Subiendo datos...";
             spinner.classList.remove('hidden');
 
             try {
+                let logoUrl = "";
+                // 1. Subir Logo si existe
+                const fileInput = document.getElementById('reg-vet-logo');
+                if (rolSeleccionado === 'Veterinario' && fileInput.files[0]) {
+                    const fd = new FormData();
+                    fd.append('file', fileInput.files[0]);
+                    const resImg = await fetch(`${API_URL}/Archivos/subir`, { method: 'POST', body: fd });
+                    if(resImg.ok) {
+                        const dataImg = await resImg.json();
+                        logoUrl = dataImg.url;
+                    }
+                }
+
+                // 2. Preparar JSON
+                let requestBody = {
+                    usuario: user,
+                    password: pass,
+                    rol: rolSeleccionado
+                };
+
+                if (rolSeleccionado === 'Veterinario') {
+                    // DECLARAR VARIABLES PRIMERO (Soluciona el error "Cannot access before initialization")
+                    const dias = document.getElementById('h-dias').value;
+                    const m1 = document.getElementById('h-m-inicio').value;
+                    const m2 = document.getElementById('h-m-fin').value;
+                    const t1 = document.getElementById('h-t-inicio').value;
+                    const t2 = document.getElementById('h-t-fin').value;
+                    const horariosStr = `${dias}: ${m1}-${m2} / ${t1}-${t2}`;
+
+                    requestBody.nombreVeterinaria = document.getElementById('reg-vet-nombre').value;
+                    requestBody.matricula = document.getElementById('reg-vet-matricula').value;
+                    requestBody.direccion = document.getElementById('reg-vet-direccion').value;
+                    requestBody.biografia = document.getElementById('reg-vet-bio').value; // Nuevo
+                    requestBody.telefono = document.getElementById('reg-vet-tel').value;   // Arreglado
+                    requestBody.horarios = horariosStr;                                    // Arreglado
+                    requestBody.logoUrl = logoUrl;                                         // Nuevo
+                    requestBody.latitud = coordsSelected.lat;
+                    requestBody.longitud = coordsSelected.lng;
+                }
+
+                // 3. Registrar
                 const res = await fetch(`${API_URL}/Auth/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ usuario: user, password: pass })
+                    body: JSON.stringify(requestBody)
                 });
 
                 if (res.ok) {
-                    alert("¡Cuenta creada! Ahora inicia sesión.");
+                    alert("Cuenta creada con éxito.");
                     window.location.href = 'login.html';
                 } else {
-                    const errorText = await res.text();
-                    alert("Error: " + errorText);
+                    const errorJson = await res.json();
+                    alert("Error: " + (errorJson.message || JSON.stringify(errorJson)));
                 }
             } catch (error) {
                 console.error(error);
-                alert("Error de conexión con el servidor.");
+                alert("Error de conexión.");
             } finally {
                 btnText.innerText = "Registrarme";
                 spinner.classList.add('hidden');

@@ -247,3 +247,57 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
     });
+```
+
+## 12. Arquitectura del Módulo de Campañas (Salud)
+
+Sistema para la gestión de eventos itinerantes (Castración/Vacunación).
+
+### Modelo de Datos
+* **Entidad:** `Campania` (Título, Descripción, FechaHora, Lat/Lon).
+* **Persistencia:** Tabla independiente en SQL Server.
+* **Truco de Optimización (MVP):** Para evitar migraciones complejas en la etapa final, se utilizó el campo `Descripcion` para almacenar metadatos adicionales (Hora Fin y Teléfono) con un formato de texto estructurado (ej: `"Texto... | Fin: 12:00 | Tel: 1234"`), que el Frontend parsea al renderizar.
+
+## 13. Estrategia de Frontend (Vanilla SPA)
+
+A pesar de no utilizar un Framework SPA (Single Page Application) como React, se emuló su comportamiento para una experiencia fluida.
+
+* **Gestión de Vistas:** Se utiliza un patrón de **"Tabs"** donde todo el HTML existe en el DOM inicial pero oculto (`display: none`).
+* **Funciones de Enrutamiento:**
+    - `cambiarSeccion(id)` en Público.
+    - `cambiarVista(id)` en Admin.
+    - Estas funciones orquestan la visibilidad de los contenedores y, crucialmente, **inicializan los mapas de Leaflet** solo cuando la pestaña se hace visible para evitar errores de renderizado de canvas (`invalidateSize`).
+
+## 14. Arquitectura del Módulo de Identidad y Roles (Sprint A)
+
+Para soportar múltiples tipos de usuarios sin romper la base de datos existente, se implementó una estrategia de **Composición de Perfiles**.
+
+### Modelo de Datos (Extensión)
+En lugar de usar Herencia (Table-Per-Hierarchy), se optó por relaciones 1 a 1 opcionales:
+* **Entidad `Usuario`:** Mantiene las credenciales (User/Pass/Rol).
+* **Entidad `PerfilVeterinario`:** Contiene datos de negocio (Matrícula, Logo, Horarios) y de estado (`EstadoVerificacion`, `EsDeTurno`).
+* **Ventaja:** Permite que un usuario evolucione o tenga múltiples roles en el futuro sin migraciones destructivas.
+
+### Flujo de Registro Geo-Referenciado
+A diferencia del reporte de mascotas (que usa el GPS del navegador), el registro de veterinarios requiere precisión comercial.
+1.  **Frontend:** Se instancia un mapa Leaflet dentro del formulario de registro.
+2.  **Captura:** Al hacer click, se extrae `e.latlng` y se guarda en variables temporales.
+3.  **Persistencia:** Se envían junto al DTO de registro. Si el rol es "Veterinario", el Backend valida que las coordenadas no sean nulas (`0,0`).
+
+### Lógica de "Farmacia de Turno" (Single Active)
+Para gestionar quién está de guardia, se creó una lógica de exclusividad en el controlador `VeterinariasController`.
+* **Endpoint:** `PUT /api/Veterinarias/turno/{id}`.
+* **Algoritmo:**
+    1.  Recibe el ID del veterinario a activar.
+    2.  Itera sobre *todos* los veterinarios y establece `EsDeTurno = false`.
+    3.  Establece `EsDeTurno = true` solo al seleccionado.
+    4.  Si se selecciona al que ya está activo, se apaga (quedando 0 activos).
+* **Resultado:** Garantiza que nunca haya dos veterinarias de turno simultáneamente, simplificando la vista para el ciudadano.
+
+### Seguridad de Acceso
+Se modificó el `AuthController` para realizar una validación en dos pasos:
+1.  **Credenciales:** Verifica Usuario y Contraseña.
+2.  **Estado (Solo Vets):** Si el rol es Veterinario, consulta `EstadoVerificacion`.
+    * *Pendiente:* Retorna error 403 o mensaje de advertencia "En espera de aprobación".
+    * *Rechazado:* Bloquea el acceso.
+    * *Aprobado:* Permite el ingreso y emisión de token (o sesión local).

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acceso Administrativo - Animal Connect</title>
+    <title>Iniciar Sesión - Animal Connect</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 </head>
@@ -13,10 +13,10 @@
         
         <div class="text-center mb-8">
             <div class="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fa-solid fa-user-shield text-3xl text-orange-600"></i>
+                <i class="fa-solid fa-paw text-3xl text-orange-600"></i>
             </div>
-            <h2 class="text-2xl font-bold text-gray-800">Acceso Zoonosis</h2>
-            <p class="text-gray-500 text-sm">Ingrese sus credenciales municipales</p>
+            <h2 class="text-2xl font-bold text-gray-800">Bienvenido de nuevo</h2>
+            <p class="text-gray-500 text-sm">Ingresa a tu cuenta para continuar</p>
         </div>
 
         <form onsubmit="realizarLogin(event)" class="space-y-6">
@@ -26,7 +26,7 @@
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
                         <i class="fa-solid fa-user"></i>
                     </span>
-                    <input type="text" id="usuario" class="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="admin" required>
+                    <input type="text" id="usuario" class="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="Tu usuario" required>
                 </div>
             </div>
 
@@ -40,19 +40,24 @@
                 </div>
             </div>
 
-            <button type="submit" class="w-full bg-gray-900 text-white font-bold py-3 rounded-lg hover:bg-orange-600 transition duration-300 flex justify-center items-center">
-                <span id="btn-text">Ingresar al Sistema</span>
+            <button type="submit" class="w-full bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-700 transition duration-300 flex justify-center items-center">
+                <span id="btn-text">Ingresar</span>
                 <i id="btn-spinner" class="fa-solid fa-circle-notch fa-spin ml-2 hidden"></i>
             </button>
 
             <div id="error-msg" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-3 text-sm rounded" role="alert">
-                <p>Usuario o contraseña incorrectos.</p>
+                <p>Mensaje de error.</p>
+            </div>
+            
+            <div id="warning-msg" class="hidden bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-3 text-sm rounded" role="alert">
+                <p class="font-bold"><i class="fa-solid fa-clock mr-1"></i> Cuenta en revisión</p>
+                <p class="mt-1">Tus datos profesionales aún están siendo validados por la administración.</p>
             </div>
         </form>
 
         <div class="mt-4 text-center">
             <p class="text-sm text-gray-600">¿Eres nuevo?</p>
-            <a href="register.html" class="text-blue-600 font-bold hover:underline">Crear cuenta ciudadana</a>
+            <a href="register.html" class="text-orange-600 font-bold hover:underline">Crear cuenta</a>
         </div>
         
         <div class="mt-6 text-center">
@@ -71,11 +76,13 @@
             const btnText = document.getElementById('btn-text');
             const spinner = document.getElementById('btn-spinner');
             const errorMsg = document.getElementById('error-msg');
+            const warningMsg = document.getElementById('warning-msg');
 
-            // UI Loading ON
+            // Reset UI
             btnText.innerText = "Verificando...";
             spinner.classList.remove('hidden');
             errorMsg.classList.add('hidden');
+            warningMsg.classList.add('hidden');
 
             try {
                 const res = await fetch(`${API_URL}/Auth/login`, {
@@ -86,20 +93,38 @@
 
                 if (res.ok) {
                     const data = await res.json();
+                    
+                    // --- 1. FILTRO DE VETERINARIOS ---
+                    if (data.rol === 'Veterinario') {
+                        if (data.estadoVeterinario === 'Pendiente') {
+                            warningMsg.classList.remove('hidden');
+                            btnText.innerText = "Ingresar";
+                            spinner.classList.add('hidden');
+                            return; // STOP: No dejamos entrar
+                        }
+                        if (data.estadoVeterinario === 'Rechazado') {
+                            errorMsg.classList.remove('hidden');
+                            errorMsg.querySelector('p').innerText = "Tu solicitud profesional fue rechazada. Contacta a Zoonosis.";
+                            btnText.innerText = "Ingresar";
+                            spinner.classList.add('hidden');
+                            return; // STOP
+                        }
+                    }
+
+                    // --- 2. LOGIN EXITOSO ---
                     localStorage.setItem('zoonosis_user', JSON.stringify(data));
                     
-                    // Redirección
+                    // Redirección inteligente
                     if (data.rol === 'Administrador') {
                         window.location.href = 'admin.html';
                     } else {
-                        if (data.tienePerfil) {
-                            window.location.href = 'index.html'; 
-                        } else {
-                            window.location.href = 'quiz.html'; 
-                        }
+                        // Ciudadanos y Vets Aprobados van al Home
+                        // Eliminamos la redirección forzada al Quiz
+                        window.location.href = 'index.html'; 
                     }
+
                 } else {
-                    // Error de credenciales (401)
+                    // Error 401
                     errorMsg.classList.remove('hidden');
                     errorMsg.querySelector('p').innerText = "Usuario o contraseña incorrectos.";
                 }
@@ -108,10 +133,9 @@
                 errorMsg.classList.remove('hidden');
                 errorMsg.querySelector('p').innerText = "Error de conexión con el servidor.";
             } finally {
-                // UI Loading OFF (Siempre se ejecuta)
-                if(btnText.innerText === "Verificando...") { 
-                    // Solo restauramos si no hubo redirección exitosa
-                    btnText.innerText = "Ingresar al Sistema";
+                // Solo si no redirigimos (por error o warning), restauramos el botón
+                if (!errorMsg.classList.contains('hidden') || !warningMsg.classList.contains('hidden')) {
+                    btnText.innerText = "Ingresar";
                     spinner.classList.add('hidden');
                 }
             }

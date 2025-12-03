@@ -477,6 +477,105 @@ namespace AnimalConnect.Backend.Migrations
                     b.ToTable("PerfilesAdoptantes");
                 });
 
+            modelBuilder.Entity("AnimalConnect.Backend.Models.PerfilCiudadano", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Barrio")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("FechaRegistro")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FotoPerfilUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NombreCompleto")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Telefono")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId")
+                        .IsUnique();
+
+                    b.ToTable("PerfilesCiudadanos");
+                });
+
+            modelBuilder.Entity("AnimalConnect.Backend.Models.PerfilVeterinario", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Biografia")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Direccion")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("EsDeTurno")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("EstadoVerificacion")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HorariosAtencion")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("Latitud")
+                        .HasColumnType("float");
+
+                    b.Property<string>("LogoUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("Longitud")
+                        .HasColumnType("float");
+
+                    b.Property<string>("MatriculaProfesional")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("NombreVeterinaria")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("TelefonoProfesional")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId")
+                        .IsUnique();
+
+                    b.ToTable("PerfilesVeterinarios");
+                });
+
             modelBuilder.Entity("AnimalConnect.Backend.Models.PreferenciaAdoptante", b =>
                 {
                     b.Property<int>("Id")
@@ -590,6 +689,28 @@ namespace AnimalConnect.Backend.Migrations
                     b.Navigation("Usuario");
                 });
 
+            modelBuilder.Entity("AnimalConnect.Backend.Models.PerfilCiudadano", b =>
+                {
+                    b.HasOne("AnimalConnect.Backend.Models.Usuario", "Usuario")
+                        .WithOne("PerfilCiudadano")
+                        .HasForeignKey("AnimalConnect.Backend.Models.PerfilCiudadano", "UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("AnimalConnect.Backend.Models.PerfilVeterinario", b =>
+                {
+                    b.HasOne("AnimalConnect.Backend.Models.Usuario", "Usuario")
+                        .WithOne("PerfilVeterinario")
+                        .HasForeignKey("AnimalConnect.Backend.Models.PerfilVeterinario", "UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Usuario");
+                });
+
             modelBuilder.Entity("AnimalConnect.Backend.Models.PreferenciaAdoptante", b =>
                 {
                     b.HasOne("AnimalConnect.Backend.Models.Atributo", "Atributo")
@@ -617,6 +738,13 @@ namespace AnimalConnect.Backend.Migrations
             modelBuilder.Entity("AnimalConnect.Backend.Models.PerfilAdoptante", b =>
                 {
                     b.Navigation("Preferencias");
+                });
+
+            modelBuilder.Entity("AnimalConnect.Backend.Models.Usuario", b =>
+                {
+                    b.Navigation("PerfilCiudadano");
+
+                    b.Navigation("PerfilVeterinario");
                 });
 #pragma warning restore 612, 618
         }

@@ -34,7 +34,7 @@ Se implementó un sistema para almacenar fotografías de las mascotas.
 Se habilitó el middleware `app.UseStaticFiles()` en `Program.cs` para permitir que el navegador o aplicaciones externas puedan visualizar las imágenes almacenadas en la carpeta `wwwroot`.
 
 ---
-**✅ CIERRE DE SPRINT 2:** Backend funcional con base de datos, relaciones y manejo de multimedia.
+**✅ CIERRE DE SPRINT 1:** Backend funcional con base de datos, relaciones y manejo de multimedia.
 
 ### 6. Integración Frontend-Backend (CORS)
 Para permitir que la página web (Frontend) consuma datos de la API (Backend), se configuró una política de **CORS (Cross-Origin Resource Sharing)**.
@@ -100,3 +100,56 @@ Se desarrolló un módulo de seguridad para diferenciar usuarios.
 ### 14. Estabilización Técnica (Hardening)
 - **Corrección de Ciclos JSON:** Se configuró `ReferenceHandler.IgnoreCycles` en `Program.cs` para evitar errores de serialización en relaciones bidireccionales (Entidad <-> Atributo).
 - **Reset de Base de Datos:** Se ejecutó una migración limpia (`InicialMatch`) con *Data Seeding* complejo para pruebas de demostración.
+
+### 15. Refinamiento de UX y Segmentación de Interfaz
+Se reestructuró el Frontend para diferenciar claramente los casos de uso.
+- **Segmentación Pública (`index.html`):**
+    - Implementación de **Navegación por Pestañas (Tabs):** "Reportes Perdidos", "Adopción & Match" y "Salud Móvil".
+    - **Lógica de Visualización:** Se ocultan/muestran secciones del DOM (`classList.toggle`) para mejorar la performance sin recargar la página.
+- **Formularios Dinámicos:**
+    - **Modal de Reporte Inteligente:** Detecta la intención del usuario. Si es "Adopción", despliega campos avanzados (Energía, Tamaño); si es "Perdido", muestra solo lo básico.
+    - **Panel Admin:** Se unificó la carga de animales en una vista "Ingreso" que adapta los campos según el estado seleccionado.
+- **Integración Social:** Generación dinámica de enlaces a la API de **WhatsApp** (`wa.me`) pre-llenados con el mensaje de interés.
+
+
+## 🚀 FASE 2: SHOWCASE (En Progreso)
+*Transformación hacia una plataforma comunitaria, segura y profesional para la muestra municipal.*
+
+### 📅 Sprint A: Identidad y Roles Profesionales (Completado)
+**Estado:** ✅ Finalizado | **Fecha:** [03/12/2025]
+**Objetivo:** Expandir el ecosistema para incluir Veterinarios con geolocalización y validación administrativa.
+
+* [x] **Refactor de Usuarios (Modelado):**
+    * Implementación de arquitectura de perfiles satélite (`PerfilVeterinario`, `PerfilCiudadano`) vinculados a la tabla `Usuario`.
+    * Inclusión de campos profesionales: Matrícula, Horarios, Biografía y Logo.
+* [x] **Registro Avanzado (UX/UI):**
+    * Formulario dinámico en `register.html` que se adapta según el rol elegido.
+    * **Selector de Ubicación:** Integración de mapa Leaflet en el registro para que los veterinarios marquen su consultorio con precisión (Lat/Lon).
+* [x] **Sistema de Verificación (Seguridad):**
+    * Los veterinarios nacen con estado `Pendiente`.
+    * Bloqueo de login para cuentas no aprobadas.
+    * Módulo en panel administrativo para Aprobar/Rechazar solicitudes.
+* [x] **Mapa de Salud y Turnos:**
+    * Visualización de veterinarias en el mapa público con icono distintivo (Cruz Azul).
+    * **Sistema de Guardia:** Lógica de "Radio Button" en el backend para asignar una única veterinaria de turno.
+    * **Widget de Guardia:** Aviso visual en el Navbar público que conecta directo al WhatsApp del profesional de turno.
+
+### 📅 Sprint B: Ciclo de Vida y Separación de Flujos
+**Objetivo:** Aislar "Pérdidas" de "Adopciones" y automatizar la higiene de datos.
+* [ ] **Separación Estricta:** Dividir formularios y vistas. El reporte de perdido no debe pedir datos de adopción y viceversa.
+* [ ] **Lógica "Marketplace":** Implementar fecha de vencimiento (15 días) y sistema de renovación de publicaciones.
+* [ ] **Estados Finales:** Reemplazar el borrado por cambios de estado (`Encontrado`, `Adoptado`, `Vencido`).
+* [ ] **Panel "Mis Publicaciones":** Área privada donde el usuario gestiona sus reportes (Renovar, Marcar Encontrado).
+
+### 📅 Sprint C: Comunidad y Gamificación
+**Objetivo:** Fomentar la retención de usuarios y crear una red de apoyo.
+* [ ] **Foro/Muro Comunitario:** Sección para "Dudas", "Finales Felices" y "Avisos".
+* [ ] **Interacción Profesional:** Distintivos visuales para comentarios de veterinarios verificados.
+* [ ] **Historias de Éxito:** Flujo automático para convertir un animal "Adoptado/Encontrado" en un post del muro.
+* [ ] **Gamificación:** Sistema básico de reputación o medallas por ayudar/adoptar.
+
+### 📅 Sprint D: Pulido Visual y Match Detallado
+**Objetivo:** Maximizar el impacto visual para la demo.
+* [ ] **Ficha de Animal v2:** Detalle profundo con visualización semáforo de compatibilidad (Match estricto vs flexible).
+* [ ] **Botón "Veterinaria de Turno":** Widget destacado en home gestionado por Admin.
+* [ ] **UX/UI Final:** Revisión de estilos, textos de ayuda y tour guiado para nuevos usuarios.

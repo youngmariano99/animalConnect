@@ -13,39 +13,69 @@
         .active-tab { border-bottom: 4px solid #f97316; color: #f97316; font-weight: bold; }
         .inactive-tab { color: #6b7280; }
         .hidden-section { display: none; }
-        /* Animación para desplegar formulario */
         .slide-down { animation: slideDown 0.3s ease-out forwards; transform-origin: top; }
         @keyframes slideDown { from { opacity: 0; transform: scaleY(0); max-height: 0; } to { opacity: 1; transform: scaleY(1); max-height: 1000px; } }
+    </style>
+
+    <style>
+        /* Animación de pulso para la farmacia de turno */
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+        .turno-activo {
+            animation: pulse-green 2s infinite;
+        }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 pb-20">
 
     <nav class="bg-white shadow-md fixed w-full z-50 top-0">
-        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center space-x-2">
-                <i class="fa-solid fa-paw text-orange-500 text-2xl"></i>
-                <span class="text-xl font-bold text-gray-800">Animal Connect</span>
-            </div>
-            <div id="auth-buttons">
-                <a href="login.html" class="bg-orange-500 text-white px-4 py-2 rounded-full font-bold text-sm">Ingresar</a>
-            </div>
+    <div class="container mx-auto px-4 py-2 flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-paw text-orange-500 text-2xl"></i>
+            <span class="text-xl font-bold text-gray-800 hidden md:block">Animal Connect</span>
         </div>
-        
-        <div class="bg-white border-t border-gray-100">
-            <div class="container mx-auto flex justify-center space-x-8">
-                <button onclick="cambiarSeccion('perdidos')" id="tab-perdidos" class="py-3 px-4 active-tab transition">
-                    <i class="fa-solid fa-map-location-dot mr-2"></i> Reportes Perdidos
-                </button>
-                <button onclick="cambiarSeccion('adopcion')" id="tab-adopcion" class="py-3 px-4 inactive-tab transition">
-                    <i class="fa-solid fa-heart mr-2"></i> Adopción & Match
-                </button>
-                <button onclick="cambiarSeccion('campanas')" id="tab-campanas" class="py-3 px-4 inactive-tab transition">
-                    <i class="fa-solid fa-truck-medical mr-2"></i> Salud Móvil
-                </button>
-            </div>
-        </div>
-    </nav>
 
+        <div class="flex items-center space-x-4">
+            
+            <div id="widget-turno" class="hidden flex items-center bg-green-50 px-3 py-1 rounded-full border border-green-200 animate-pulse">
+                <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <div class="text-xs mr-2">
+                    <span class="block font-bold text-green-700">GUARDIA ACTIVA</span>
+                    <span id="turno-nombre" class="block text-gray-600 truncate max-w-[100px] md:max-w-[150px]">Nombre Vet</span>
+                </div>
+                <a id="turno-btn" href="#" target="_blank" class="bg-green-500 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-green-600 transition">
+                    <i class="fa-brands fa-whatsapp"></i>
+                </a>
+            </div>
+
+            <div id="auth-buttons" class="flex items-center">
+                <a href="login.html" class="text-gray-500 hover:text-orange-500 font-bold text-sm">
+                    <i class="fa-solid fa-user-circle text-xl align-middle"></i> 
+                    <span class="hidden md:inline ml-1">Ingresar</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="bg-white border-t border-gray-100">
+        <div class="container mx-auto flex justify-center space-x-2 md:space-x-8 overflow-x-auto">
+            <button onclick="cambiarSeccion('perdidos')" id="tab-perdidos" class="py-3 px-4 active-tab transition whitespace-nowrap text-sm md:text-base">
+                <i class="fa-solid fa-map-location-dot mr-2"></i> Perdidos
+            </button>
+            <button onclick="cambiarSeccion('adopcion')" id="tab-adopcion" class="py-3 px-4 inactive-tab transition whitespace-nowrap text-sm md:text-base">
+                <i class="fa-solid fa-heart mr-2"></i> Adopción
+            </button>
+            <button onclick="cambiarSeccion('campanas')" id="tab-campanas" class="py-3 px-4 inactive-tab transition whitespace-nowrap text-sm md:text-base">
+                <i class="fa-solid fa-truck-medical mr-2"></i> Salud
+            </button>
+        </div>
+    </div>
+</nav>
+
+    
     <div class="container mx-auto px-4 mt-36">
 
         <section id="sec-perdidos">
@@ -94,12 +124,14 @@
         <section id="sec-campanas" class="hidden-section">
             <h1 class="text-2xl font-bold text-gray-800 mb-6">Próximos Operativos de Salud</h1>
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="bg-white rounded-xl shadow p-6 h-fit">
-                    <h3 class="font-bold text-gray-500 text-sm uppercase mb-4">Calendario</h3>
-                    <div id="lista-campanas" class="space-y-4"></div>
+                <div class="bg-white rounded-xl shadow p-6 h-[500px] overflow-y-auto">
+                    <h3 class="font-bold text-gray-500 text-sm uppercase mb-4 border-b pb-2">Calendario de Eventos</h3>
+                    <div id="lista-campanas" class="space-y-4">
+                        <p class="text-gray-400 text-center py-4">Cargando fechas...</p>
+                    </div>
                 </div>
                 <div class="lg:col-span-2">
-                    <div id="map-campanas" class="h-[500px] w-full rounded-xl shadow border"></div>
+                    <div id="map-campanas" class="h-[500px] w-full rounded-xl shadow border z-0"></div>
                 </div>
             </div>
         </section>
@@ -212,18 +244,21 @@
         </div>
     </div>
 
-    <script>
+<script>
         const API_URL = 'http://127.0.0.1:5269/api';
+        
+        // Variables Globales
         let mapPerdidos, mapCampanas, mapModal, markerModal;
         let coordsReporte = null;
+        let layerVeterinarias = L.layerGroup(); // <--- NUEVO: Capa para Vets
         const usuario = JSON.parse(localStorage.getItem('zoonosis_user'));
 
         document.addEventListener('DOMContentLoaded', () => {
             verificarAuth();
             cambiarSeccion('perdidos');
+            cargarVeterinarias(); // <--- NUEVO: Cargar datos de salud
         });
 
-        // --- NAVEGACIÓN ---
         function cambiarSeccion(sec) {
             ['perdidos', 'adopcion', 'campanas'].forEach(s => {
                 document.getElementById(`sec-${s}`).classList.add('hidden-section');
@@ -245,7 +280,7 @@
         }
         function logout() { localStorage.removeItem('zoonosis_user'); window.location.reload(); }
 
-        // --- SECCIÓN 1: PERDIDOS ---
+        // --- 1. PERDIDOS & MAPA PRINCIPAL ---
         async function initMapPerdidos() {
             const res = await fetch(`${API_URL}/Animales`);
             const todos = await res.json();
@@ -254,6 +289,10 @@
             if(mapPerdidos) mapPerdidos.remove();
             mapPerdidos = L.map('map-perdidos').setView([-37.994, -61.353], 14);
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapPerdidos);
+
+            // <--- NUEVO: Agregar la capa de veterinarias al mapa ---
+            layerVeterinarias.addTo(mapPerdidos);
+            // -----------------------------------------------------
 
             const grid = document.getElementById('grid-perdidos');
             grid.innerHTML = '';
@@ -272,7 +311,7 @@
                         <img src="${a.imagenUrl || 'https://via.placeholder.com/400'}" class="h-40 w-full object-cover">
                         <div class="p-4">
                             <h3 class="font-bold text-gray-800">${a.nombre}</h3>
-                            <p class="text-xs text-gray-500 mb-2">${a.descripcion}</p>
+                            <p class="text-xs text-gray-500 mb-2 line-clamp-2">${a.descripcion}</p>
                             ${generarBotonWsp(a)}
                         </div>
                     </div>
@@ -280,7 +319,59 @@
             });
         }
 
-        // --- SECCIÓN 2: ADOPCIÓN ---
+        // --- NUEVO: LÓGICA DE VETERINARIAS ---
+        async function cargarVeterinarias() {
+            try {
+                const res = await fetch(`${API_URL}/Veterinarias`);
+                if (res.ok) {
+                    const lista = await res.json();
+                    
+                    // Icono personalizado (Cruz Azul)
+                    const iconVet = L.divIcon({
+                        html: '<div class="w-8 h-8 bg-blue-600 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white"><i class="fa-solid fa-user-doctor"></i></div>',
+                        className: 'bg-transparent',
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 32],
+                        popupAnchor: [0, -32]
+                    });
+
+                    lista.forEach(v => {
+                        // 1. Crear marcador y agregar a la CAPA (no al mapa directamente)
+                        const marker = L.marker([v.latitud, v.longitud], {icon: iconVet})
+                            .bindPopup(`
+                                <div class="text-center min-w-[200px]">
+                                    <h3 class="font-bold text-lg text-blue-700">${v.nombreVeterinaria}</h3>
+                                    <p class="text-gray-600 text-sm mb-2"><i class="fa-solid fa-location-dot mr-1"></i>${v.direccion}</p>
+                                    <div class="flex justify-center gap-2 mb-2">
+                                        <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full font-bold">Mat. ${v.matriculaProfesional}</span>
+                                        ${v.esDeTurno ? '<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full font-bold animate-pulse">DE TURNO</span>' : ''}
+                                    </div>
+                                    <a href="https://wa.me/549${v.telefonoProfesional}" target="_blank" class="block w-full bg-green-500 text-white py-1 rounded text-sm font-bold hover:bg-green-600">
+                                        <i class="fa-brands fa-whatsapp"></i> Consultar
+                                    </a>
+                                </div>
+                            `);
+                        
+                        layerVeterinarias.addLayer(marker);
+
+                        // 2. Widget de Turno
+                        if (v.esDeTurno) mostrarWidgetTurno(v);
+                    });
+                }
+            } catch (e) { console.error("Error cargando veterinarias", e); }
+        }
+
+        function mostrarWidgetTurno(vet) {
+            const widget = document.getElementById('widget-turno');
+            if(widget) {
+                document.getElementById('turno-nombre').innerText = vet.nombreVeterinaria;
+                document.getElementById('turno-btn').href = `https://wa.me/549${vet.telefonoProfesional}?text=Hola, contacto por urgencia.`;
+                widget.classList.remove('hidden');
+                widget.classList.add('flex');
+            }
+        }
+
+        // --- 2. ADOPCIÓN ---
         async function cargarAdopcion() {
             const grid = document.getElementById('grid-adopcion');
             grid.innerHTML = '<div class="col-span-3 text-center text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i> Cargando...</div>';
@@ -340,7 +431,7 @@
             });
         }
 
-        // --- SECCIÓN 3: CAMPAÑAS ---
+        // --- 3. CAMPAÑAS ---
         async function initMapCampanas() {
             if(!mapCampanas) {
                 mapCampanas = L.map('map-campanas').setView([-37.994, -61.353], 13);
@@ -351,13 +442,44 @@
                 const list = await res.json();
                 const cont = document.getElementById('lista-campanas');
                 cont.innerHTML = '';
+                
+                if(list.length === 0) cont.innerHTML = '<p class="text-center text-gray-400 py-4">No hay operativos programados.</p>';
+
                 list.forEach(c => {
-                    const fecha = new Date(c.fechaHora).toLocaleDateString();
-                    L.marker([c.ubicacionLat, c.ubicacionLon]).addTo(mapCampanas).bindPopup(c.titulo);
-                    cont.innerHTML += `<div class="p-3 border rounded hover:bg-gray-50 cursor-pointer transition" onclick="mapCampanas.flyTo([${c.ubicacionLat}, ${c.ubicacionLon}], 15)">
-                        <div class="font-bold text-orange-600">${fecha}</div>
-                        <div class="font-bold text-gray-800">${c.titulo}</div>
-                    </div>`;
+                    const partes = c.descripcion.split('|');
+                    const descReal = partes[0].trim();
+                    const fin = partes.find(p => p.includes('Fin:'))?.replace('Fin:', '').trim();
+                    const tel = partes.find(p => p.includes('Turnos:'))?.replace('Turnos:', '').trim();
+
+                    const fecha = new Date(c.fechaHora);
+                    const dia = fecha.getDate();
+                    const mes = fecha.toLocaleString('es-ES', { month: 'short' }).toUpperCase();
+                    const horaInicio = fecha.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    const horarioTexto = fin ? `${horaInicio} a ${fin}` : `${horaInicio} hs`;
+
+                    L.marker([c.ubicacionLat, c.ubicacionLon]).addTo(mapCampanas)
+                      .bindPopup(`<b>${c.titulo}</b><br>${horarioTexto}`);
+
+                    let btnWsp = '';
+                    if(tel) {
+                        const num = tel.replace(/\D/g,'');
+                        btnWsp = `<a href="https://wa.me/549${num}" target="_blank" class="block mt-2 text-center border border-green-500 text-green-600 text-xs font-bold py-1 rounded hover:bg-green-50"><i class="fa-brands fa-whatsapp"></i> Pedir Turno</a>`;
+                    }
+
+                    cont.innerHTML += `
+                        <div class="flex items-start bg-gray-50 p-4 rounded-xl border border-gray-200 hover:border-orange-300 transition cursor-pointer group" onclick="mapCampanas.flyTo([${c.ubicacionLat}, ${c.ubicacionLon}], 16)">
+                            <div class="bg-white text-center px-3 py-2 rounded-lg shadow-sm border border-gray-200 mr-4 group-hover:border-orange-200">
+                                <span class="block text-2xl font-bold text-orange-600 leading-none">${dia}</span>
+                                <span class="block text-xs font-bold text-gray-500">${mes}</span>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-gray-800 leading-tight">${c.titulo}</h4>
+                                <p class="text-xs text-gray-500 mt-1"><i class="fa-regular fa-clock"></i> ${horarioTexto}</p>
+                                <p class="text-xs text-gray-600 mt-1">${descReal}</p>
+                                ${btnWsp}
+                            </div>
+                        </div>
+                    `;
                 });
             }
         }
@@ -366,8 +488,8 @@
         function abrirModalReporte(esAdopcion = false) {
             document.getElementById('modal-reporte').classList.remove('hidden');
             const select = document.getElementById('rep-estado');
-            select.value = esAdopcion ? "1" : "2"; // 1=Adopción, 2=Perdido
-            toggleCamposAdopcion(); // Actualizar UI
+            select.value = esAdopcion ? "1" : "2";
+            toggleCamposAdopcion();
 
             setTimeout(() => {
                 if(!mapModal) {
@@ -387,7 +509,7 @@
         function toggleCamposAdopcion() {
             const val = document.getElementById('rep-estado').value;
             const extra = document.getElementById('extra-adopcion');
-            if (val === "1") { // Adopción
+            if (val === "1") { 
                 extra.classList.remove('hidden');
                 extra.classList.add('slide-down');
             } else {
@@ -402,7 +524,6 @@
             btn.innerText = "Publicando..."; btn.disabled = true;
 
             try {
-                // 1. Subir Foto
                 const fileInput = document.getElementById('rep-foto');
                 let imgUrl = "";
                 if(fileInput.files[0]) {
@@ -423,20 +544,18 @@
                     ubicacionLat: coordsReporte ? coordsReporte.lat : -37.994,
                     ubicacionLon: coordsReporte ? coordsReporte.lng : -61.353,
                     fechaPublicacion: new Date().toISOString(),
-                    atributos: [] // Importante
+                    atributos: []
                 };
 
-                // Si es Adopción (1), recolectamos los atributos avanzados
                 if (estado === 1) {
                     const addAttr = (id, val) => nuevoAnimal.atributos.push({ atributoId: id, valor: val });
-                    
-                    addAttr(1, parseInt(document.getElementById('rep-energia').value)); // Energía
-                    addAttr(2, document.getElementById('rep-patio').checked ? 1 : 0); // Patio
-                    addAttr(3, document.getElementById('rep-ninos').checked ? 1 : 0); // Niños
-                    addAttr(4, document.getElementById('rep-otros').checked ? 1 : 0); // Mascotas
-                    addAttr(5, 2); // Tiempo (Default Medio)
-                    addAttr(6, parseInt(document.querySelector('input[name="rep-tamano"]:checked').value)); // Tamaño
-                    addAttr(7, parseInt(document.getElementById('rep-exp').value)); // Experiencia
+                    addAttr(1, parseInt(document.getElementById('rep-energia').value)); 
+                    addAttr(2, document.getElementById('rep-patio').checked ? 1 : 0);
+                    addAttr(3, document.getElementById('rep-ninos').checked ? 1 : 0);
+                    addAttr(4, document.getElementById('rep-otros').checked ? 1 : 0);
+                    addAttr(5, 2); 
+                    addAttr(6, parseInt(document.querySelector('input[name="rep-tamano"]:checked').value)); 
+                    addAttr(7, parseInt(document.getElementById('rep-exp').value));
                 }
 
                 const res = await fetch(`${API_URL}/Animales`, {
@@ -449,7 +568,6 @@
                     alert("¡Aviso publicado con éxito!");
                     cerrarModal();
                     e.target.reset();
-                    // Recargar sección correspondiente
                     if(estado === 1) cargarAdopcion(); else initMapPerdidos();
                 } else {
                     alert("Error al publicar.");
