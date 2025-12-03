@@ -74,3 +74,29 @@ Se desarrolló un panel de control (`admin.html`) orientado a la toma de decisio
     - Se implementó la lógica de borrado en el Frontend con confirmación de seguridad.
 - **Correcciones Técnicas:**
     - Se solucionó el error de "Map container already initialized" implementando una lógica de limpieza de instancias (`.remove()` / `.destroy()`) antes de recargar los componentes visuales.
+
+### 11. Módulo de Campañas de Salud (Castrador Móvil)
+Se implementó un sistema de gestión de eventos itinerantes.
+- **Backend:** Nueva entidad `Campania` y controlador API para gestión de fechas.
+- **Frontend:** Visualización dual (Lista + Mapa) donde al seleccionar una fecha, el mapa se centra en la ubicación del operativo.
+- **Regla de Negocio:** Filtrado automático de fechas pasadas para mostrar solo vigentes.
+
+### 12. Sistema de Autenticación y Roles
+Se desarrolló un módulo de seguridad para diferenciar usuarios.
+- **Roles:** `Administrador` (Acceso al Dashboard) y `Ciudadano` (Acceso al Match/Adopción).
+- **Flujo de Usuario:**
+    - Registro de cuenta nueva.
+    - Redirección inteligente:
+        - Si es nuevo -> `quiz.html` (Cuestionario obligatorio).
+        - Si ya tiene perfil -> `index.html` (Home).
+- **Persistencia:** Manejo de sesión mediante `localStorage` en el cliente.
+
+### 13. Algoritmo de Adopción Inteligente (Sistema de Match)
+**Funcionalidad Estrella:** Se implementó un motor de recomendación basado en compatibilidad etológica.
+- **Refactorización de Arquitectura:** Se migró de columnas estáticas a un modelo **EAV (Entity-Attribute-Value)** mediante las tablas `Atributos`, `AnimalAtributos` y `PreferenciasAdoptante`. Esto permite agregar nuevas características (ej: "Tolera Ruidos") sin modificar el código fuente.
+- **Algoritmo:** Lógica de **Puntuación Ponderada (Weighted Scoring)** en el Backend que compara el perfil del usuario con cada animal y genera un porcentaje de afinidad (0-100%).
+- **UX:** Visualización de "Badges de Compatibilidad" (Verde/Amarillo/Rojo) en las tarjetas de adopción.
+
+### 14. Estabilización Técnica (Hardening)
+- **Corrección de Ciclos JSON:** Se configuró `ReferenceHandler.IgnoreCycles` en `Program.cs` para evitar errores de serialización en relaciones bidireccionales (Entidad <-> Atributo).
+- **Reset de Base de Datos:** Se ejecutó una migración limpia (`InicialMatch`) con *Data Seeding* complejo para pruebas de demostración.

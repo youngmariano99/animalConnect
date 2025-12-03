@@ -6,72 +6,139 @@
     <title>Perfil de Adopción - Animal Connect</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <style>
+        input[type=range] { transition: all 0.2s; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-gray-50 min-h-screen font-sans">
 
-    <nav class="bg-white shadow-sm p-4">
-        <div class="container mx-auto flex items-center">
-            <i class="fa-solid fa-paw text-orange-500 text-2xl mr-2"></i>
-            <span class="font-bold text-gray-800">Animal Connect</span>
+    <nav class="bg-white shadow-sm p-4 sticky top-0 z-50">
+        <div class="container mx-auto flex items-center justify-between">
+            <div class="flex items-center">
+                <i class="fa-solid fa-paw text-orange-500 text-2xl mr-2"></i>
+                <span class="font-bold text-gray-800 text-lg">Animal Connect</span>
+            </div>
+            <div class="text-xs font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                Perfil de Adopción
+            </div>
         </div>
     </nav>
 
     <main class="container mx-auto px-4 py-8 max-w-3xl">
         
-        <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg mb-8 shadow-sm">
-            <h1 class="text-2xl font-bold text-gray-800 mb-2">Ayúdanos a encontrar tu compañero ideal</h1>
-            <p class="text-gray-600 mb-2">
-                Este no es un examen, es la forma de asegurar que tanto tú como tu futura mascota sean felices juntos.
+        <div class="bg-gradient-to-r from-blue-50 to-white border-l-4 border-blue-500 p-6 rounded-r-xl mb-8 shadow-sm">
+            <h1 class="text-2xl font-extrabold text-gray-800 mb-2">Encontremos a tu compañero ideal</h1>
+            <p class="text-gray-600 mb-4 text-sm leading-relaxed">
+                Este algoritmo te recomendará mascotas compatibles con tu estilo de vida real.
+                <br><em>Sé sincero: un perro de alta energía en un departamento sin tiempo libre no será feliz.</em>
             </p>
-            <ul class="text-sm text-blue-800 space-y-1">
-                <li><i class="fa-solid fa-check mr-2"></i><strong>Sé honesto:</strong> Un perro con más energía de la que puedes manejar puede generar frustración.</li>
-                <li><i class="fa-solid fa-check mr-2"></i><strong>Completa todo:</strong> Cuantos más datos tengamos, mejor será el "Match".</li>
-            </ul>
         </div>
 
-        <form onsubmit="guardarPerfil(event)" class="space-y-8">
+        <form onsubmit="guardarPerfil(event)" class="space-y-8 pb-10">
             
-            <div class="bg-white p-6 rounded-xl shadow border border-gray-100">
-                <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-house-chimney mr-2 text-orange-500"></i>Hogar y Rutina</h2>
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-2 h-full bg-orange-500"></div>
+                <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                    <span class="bg-orange-100 text-orange-600 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">1</span>
+                    Tu Hogar y Rutina
+                </h2>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block font-medium text-gray-700 mb-1">¿Dónde vives?</label>
-                        <select id="tipoVivienda" class="w-full border rounded-lg p-3 bg-gray-50 focus:ring-2 focus:ring-orange-500 outline-none">
-                            <option value="Casa">Casa</option>
-                            <option value="Departamento">Departamento</option>
-                            <option value="PH">PH / Duplex</option>
-                        </select>
-                    </div>
-
-                    <div>
-                        <label class="block font-medium text-gray-700 mb-1">Horas fuera de casa (diarias)</label>
-                        <div class="flex items-center space-x-3">
-                            <input type="range" id="horasFuera" min="0" max="14" step="1" value="4" 
-                                class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
-                                oninput="actualizarLabel(this, 'lbl-horas', 'hs')">
-                            <span id="lbl-horas" class="font-bold text-orange-600 w-12 text-center">4 hs</span>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="space-y-2">
+                        <label class="block font-bold text-gray-700 text-sm">¿Dónde viviría la mascota?</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-house-chimney absolute left-3 top-3.5 text-gray-400"></i>
+                            <select id="tipoVivienda" class="w-full border border-gray-300 rounded-xl p-3 pl-10 bg-white focus:ring-2 focus:ring-orange-500 outline-none appearance-none cursor-pointer hover:border-orange-300 transition">
+                                <option value="Departamento">🏢 Departamento (Sin patio propio)</option>
+                                <option value="PH">🏘️ PH / Duplex (Patio pequeño)</option>
+                                <option value="Casa">🏠 Casa Abierta (Sin cerco seguro)</option>
+                                <option value="CasaPatio">🏡 Casa con Patio Cerrado (Seguro)</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3 top-4 text-gray-400 text-xs pointer-events-none"></i>
                         </div>
-                        <p class="text-xs text-gray-400 mt-1">Tiempo que la mascota estaría sola.</p>
+                        <p class="text-xs text-gray-400">Esto nos ayuda a saber si requiere patio o si es muy grande.</p>
                     </div>
 
-                    <div class="md:col-span-2">
-                        <label class="block font-medium text-gray-700 mb-1">Tu WhatsApp (Para contactarte)</label>
-                        <input type="tel" id="telefono" class="w-full border rounded-lg p-3 focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Ej: 2922 123456" required>
+                    <div class="space-y-2">
+                        <label class="block font-bold text-gray-700 text-sm">¿Cuánto tiempo pasará sola?</label>
+                        <div class="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                            <div class="flex justify-between items-end mb-2">
+                                <span class="text-xs font-bold text-gray-400 uppercase">Todo el día</span>
+                                <span id="lbl-horas" class="text-2xl font-bold text-orange-600">4 hs</span>
+                                <span class="text-xs font-bold text-gray-400 uppercase">Poco tiempo</span>
+                            </div>
+                            <input type="range" id="horasFuera" min="0" max="12" step="1" value="4" 
+                                class="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                                oninput="actualizarLabelHoras(this)">
+                            <p id="txt-disponibilidad" class="text-center text-xs font-bold text-blue-600 mt-2">Disponibilidad Media</p>
+                        </div>
+                    </div>
+
+                    <div class="md:col-span-2 space-y-2">
+                        <label class="block font-bold text-gray-700 text-sm">WhatsApp de Contacto</label>
+                        <div class="relative">
+                            <i class="fa-brands fa-whatsapp absolute left-3 top-3.5 text-green-500 text-lg"></i>
+                            <input type="tel" id="telefono" class="w-full border border-gray-300 rounded-xl p-3 pl-10 focus:ring-2 focus:ring-green-500 outline-none" placeholder="Ej: 2922 123456" required>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white p-6 rounded-xl shadow border border-gray-100">
-                <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2"><i class="fa-solid fa-heart mr-2 text-red-500"></i>¿Qué buscas en una mascota?</h2>
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-2 h-full bg-blue-500"></div>
+                <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                    <span class="bg-blue-100 text-blue-600 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">2</span>
+                    Compatibilidad
+                </h2>
+                
                 <div id="contenedor-atributos" class="space-y-6">
-                    <p class="text-gray-400 text-center"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Cargando preguntas...</p>
+                    <div class="flex flex-col items-center justify-center py-10 text-gray-400">
+                        <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3"></i>
+                        <p>Cargando preguntas inteligentes...</p>
+                    </div>
                 </div>
             </div>
 
-            <div class="flex justify-end pt-4">
-                <button type="submit" class="bg-gray-900 text-white px-8 py-3 rounded-xl font-bold hover:bg-orange-600 transition shadow-lg transform hover:-translate-y-1">
-                    Guardar y Buscar Match <i class="fa-solid fa-arrow-right ml-2"></i>
+            <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-2 h-full bg-purple-500"></div>
+                <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                    <span class="bg-purple-100 text-purple-600 w-8 h-8 rounded-full flex items-center justify-center mr-3 text-sm">3</span>
+                    Tu Experiencia con Mascotas
+                </h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <label class="cursor-pointer group">
+                        <input type="radio" name="experiencia" value="1" class="peer hidden" checked>
+                        <div class="p-4 rounded-xl border-2 border-gray-100 hover:border-purple-300 peer-checked:border-purple-600 peer-checked:bg-purple-50 transition text-center h-full flex flex-col justify-center">
+                            <div class="text-3xl mb-2 grayscale group-hover:grayscale-0 peer-checked:grayscale-0">🌱</div>
+                            <div class="font-bold text-gray-800">Principiante</div>
+                            <div class="text-xs text-gray-500 mt-1 leading-tight">Es mi primera mascota. Busco algo fácil y dócil.</div>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer group">
+                        <input type="radio" name="experiencia" value="2" class="peer hidden">
+                        <div class="p-4 rounded-xl border-2 border-gray-100 hover:border-purple-300 peer-checked:border-purple-600 peer-checked:bg-purple-50 transition text-center h-full flex flex-col justify-center">
+                            <div class="text-3xl mb-2 grayscale group-hover:grayscale-0 peer-checked:grayscale-0">⭐</div>
+                            <div class="font-bold text-gray-800">Intermedio</div>
+                            <div class="text-xs text-gray-500 mt-1 leading-tight">Ya he tenido mascotas y entiendo sus cuidados básicos.</div>
+                        </div>
+                    </label>
+                    <label class="cursor-pointer group">
+                        <input type="radio" name="experiencia" value="3" class="peer hidden">
+                        <div class="p-4 rounded-xl border-2 border-gray-100 hover:border-purple-300 peer-checked:border-purple-600 peer-checked:bg-purple-50 transition text-center h-full flex flex-col justify-center">
+                            <div class="text-3xl mb-2 grayscale group-hover:grayscale-0 peer-checked:grayscale-0">🏆</div>
+                            <div class="font-bold text-gray-800">Experto</div>
+                            <div class="text-xs text-gray-500 mt-1 leading-tight">Puedo manejar animales con traumas, miedos o necesidades médicas.</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-6">
+                <button type="submit" class="bg-gray-900 text-white text-lg px-10 py-4 rounded-xl font-bold hover:bg-orange-600 transition shadow-xl transform hover:-translate-y-1 flex items-center">
+                    Calcular Compatibilidad <i class="fa-solid fa-wand-magic-sparkles ml-3 text-yellow-300"></i>
                 </button>
             </div>
 
@@ -82,6 +149,12 @@
         const API_URL = 'http://127.0.0.1:5269/api';
         let atributosCargados = [];
 
+        // IDs que vamos a OCULTAR de la lista dinámica porque ya tienen su propia sección especial
+        // 2: Requiere Patio (Se deduce de Vivienda)
+        // 6: Tamaño (Se deduce de Vivienda)
+        // 7: Experiencia (Tiene su propia sección de tarjetas)
+        const idsOcultos = [2, 6, 7]; 
+
         // Verificar Login
         const usuarioSesion = JSON.parse(localStorage.getItem('zoonosis_user'));
         if (!usuarioSesion) window.location.href = 'login.html';
@@ -90,24 +163,23 @@
             cargarAtributos();
         });
 
-        // UI Helper: Actualizar numerito al mover slider
-        function actualizarLabel(input, labelId, suffix = '') {
-            document.getElementById(labelId).innerText = `${input.value} ${suffix}`;
-        }
-
-        // 1. CARGAR PREGUNTAS DEL BACKEND
+        // 1. CARGAR PREGUNTAS
         async function cargarAtributos() {
             try {
                 const res = await fetch(`${API_URL}/Atributos`);
-                atributosCargados = await res.json();
+                const todosLosAtributos = await res.json();
+                
+                // Filtramos los que NO queremos mostrar en la lista genérica
+                atributosCargados = todosLosAtributos.filter(a => !idsOcultos.includes(a.id));
+                
                 renderizarPreguntas(atributosCargados);
             } catch (error) {
                 console.error(error);
-                document.getElementById('contenedor-atributos').innerHTML = `<p class="text-red-500">Error cargando preguntas.</p>`;
+                document.getElementById('contenedor-atributos').innerHTML = `<p class="text-red-500 text-center">Error de conexión.</p>`;
             }
         }
 
-        // 2. RENDERIZAR (DIBUJAR) PREGUNTAS DINÁMICAMENTE
+        // 2. RENDERIZAR PREGUNTAS (Diseño Inteligente)
         function renderizarPreguntas(lista) {
             const container = document.getElementById('contenedor-atributos');
             container.innerHTML = '';
@@ -115,88 +187,179 @@
             lista.forEach(attr => {
                 let htmlPregunta = '';
 
-                // A. Si es Booleano (Si/No) -> Usamos botones tipo Toggle
+                // A. BOOLEANOS (Sí/No)
                 if (attr.tipo === 'Booleano') {
+                    // Texto personalizado según la pregunta
+                    let preguntaTxt = "¿Es un requisito?";
+                    if(attr.nombre.includes("Niños")) preguntaTxt = "¿Tienes niños en casa?";
+                    if(attr.nombre.includes("Gatos") || attr.nombre.includes("Mascotas")) preguntaTxt = "¿Tienes otras mascotas?";
+
                     htmlPregunta = `
-                        <div class="flex flex-col sm:flex-row justify-between items-center bg-gray-50 p-4 rounded-lg">
-                            <div class="mb-2 sm:mb-0">
-                                <span class="font-bold text-gray-700 block text-lg">${attr.nombre}</span>
-                                <span class="text-xs text-gray-500">¿Es esto indispensable para ti?</span>
+                        <div class="flex flex-col sm:flex-row justify-between items-center bg-gray-50 p-5 rounded-xl border border-gray-200 hover:border-blue-300 transition fade-in">
+                            <div class="mb-3 sm:mb-0">
+                                <span class="font-bold text-gray-800 block text-lg mb-1">${attr.nombre}</span>
+                                <span class="text-xs text-gray-500 bg-white px-2 py-1 rounded border">${preguntaTxt}</span>
                             </div>
-                            <div class="flex space-x-2">
+                            <div class="flex bg-white rounded-lg p-1 border border-gray-200 shadow-sm">
                                 <label class="cursor-pointer">
                                     <input type="radio" name="attr_${attr.id}" value="1" class="peer hidden" required>
-                                    <div class="px-4 py-2 rounded-lg border border-gray-300 text-gray-500 peer-checked:bg-green-500 peer-checked:text-white peer-checked:border-green-500 transition">
-                                        Sí, Busco esto
+                                    <div class="px-6 py-2 rounded-md text-gray-500 font-medium peer-checked:bg-green-100 peer-checked:text-green-700 peer-checked:shadow-sm transition flex items-center">
+                                        <i class="fa-solid fa-check mr-2"></i> Sí
                                     </div>
                                 </label>
+                                <div class="w-px bg-gray-200 mx-1"></div>
                                 <label class="cursor-pointer">
                                     <input type="radio" name="attr_${attr.id}" value="0" class="peer hidden" checked>
-                                    <div class="px-4 py-2 rounded-lg border border-gray-300 text-gray-500 peer-checked:bg-red-500 peer-checked:text-white peer-checked:border-red-500 transition">
-                                        No / Me es indiferente
+                                    <div class="px-6 py-2 rounded-md text-gray-500 font-medium peer-checked:bg-gray-200 peer-checked:text-gray-800 transition flex items-center">
+                                        <i class="fa-solid fa-xmark mr-2"></i> No
                                     </div>
                                 </label>
                             </div>
                         </div>
                     `;
                 } 
-                // B. Si es Escala (1-5) -> Usamos Slider con Textos explicativos
+                // B. ESCALAS (Sliders con Textos Contextuales)
                 else {
+                    // Inicializamos el texto correcto para el valor por defecto (3)
+                    const textoInicial = obtenerTextoEscala(attr.id, 3);
+
                     htmlPregunta = `
-                        <div class="bg-gray-50 p-4 rounded-lg">
-                            <label class="font-bold text-gray-700 block mb-2 text-lg">${attr.nombre}</label>
-                            <div class="flex items-center space-x-4">
-                                <span class="text-xs font-bold text-gray-400 uppercase">Bajo</span>
+                        <div class="bg-gray-50 p-5 rounded-xl border border-gray-200 hover:border-blue-300 transition fade-in">
+                            <label class="font-bold text-gray-800 block mb-4 text-lg flex justify-between items-center">
+                                <span>${attr.nombre}</span>
+                                <i class="fa-solid fa-sliders text-blue-400 opacity-50"></i>
+                            </label>
+                            
+                            <div class="px-2">
                                 <input type="range" name="attr_${attr.id}" min="1" max="5" value="3" step="1"
-                                    class="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-blue-500"
-                                    oninput="actualizarTextoEscala(this, 'txt_${attr.id}')">
-                                <span class="text-xs font-bold text-gray-400 uppercase">Alto</span>
+                                    class="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-blue-600 mb-4"
+                                    data-attr-id="${attr.id}"
+                                    oninput="actualizarTextoEscalaUI(this)">
+                                
+                                <div class="flex justify-between text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-2 px-1">
+                                    <span>Bajo</span>
+                                    <span>Medio</span>
+                                    <span>Alto</span>
+                                </div>
+                                
+                                <div id="txt_attr_${attr.id}" class="bg-white border border-blue-100 text-blue-700 font-bold text-center py-3 rounded-lg text-sm shadow-sm transition-all">
+                                    ${textoInicial}
+                                </div>
                             </div>
-                            <p id="txt_${attr.id}" class="text-center text-blue-600 font-bold mt-2 text-sm">Nivel Medio (Equilibrado)</p>
                         </div>
                     `;
                 }
-
                 container.innerHTML += htmlPregunta;
             });
         }
 
-        // Helper para textos de escala
-        window.actualizarTextoEscala = function(input, labelId) {
+        // --- LÓGICA DE TEXTOS INTELIGENTES ---
+        function obtenerTextoEscala(id, val) {
+            val = parseInt(val);
+            // ID 1: Nivel de Energía
+            if(id === 1) {
+                const textos = [
+                    "🛋️ Muy Bajo (Sedentario / Sofá)", 
+                    "🚶 Bajo (Paseos cortos y tranquilos)", 
+                    "🎾 Medio (Juegos y paseos normales)", 
+                    "🏃 Alto (Running / Senderismo)", 
+                    "⚡ Muy Alto (Necesita trabajo / Atleta)"
+                ];
+                return textos[val-1];
+            }
+            // ID 5: Tiempo de Atención (Dedicación exclusiva)
+            if(id === 5) {
+                const textos = [
+                    "⏱️ Muy Poco (< 30 min/día)", 
+                    "🕐 Poco (30-60 min/día)", 
+                    "🕑 Medio (1 a 2 hs/día)", 
+                    "🕒 Alto (2 a 3 hs/día)", 
+                    "♾️ Dedicación Total (+3 hs)"
+                ];
+                return textos[val-1];
+            }
+            
+            // Default por si agregamos otro en el futuro
+            return `Nivel ${val} de 5`;
+        }
+
+        window.actualizarTextoEscalaUI = function(input) {
+            const id = parseInt(input.dataset.attrId);
             const val = parseInt(input.value);
-            const textos = ["Muy Bajo", "Bajo", "Medio (Equilibrado)", "Alto", "Muy Alto / Intenso"];
-            document.getElementById(labelId).innerText = `Nivel ${textos[val-1]}`;
+            const label = document.getElementById(`txt_attr_${id}`);
+            
+            label.innerText = obtenerTextoEscala(id, val);
+            
+            // Efecto visual de intensidad
+            if(val <= 2) label.className = "bg-green-50 border border-green-200 text-green-700 font-bold text-center py-3 rounded-lg text-sm shadow-sm";
+            else if(val === 3) label.className = "bg-blue-50 border border-blue-200 text-blue-700 font-bold text-center py-3 rounded-lg text-sm shadow-sm";
+            else label.className = "bg-orange-50 border border-orange-200 text-orange-700 font-bold text-center py-3 rounded-lg text-sm shadow-sm";
+        }
+
+        // UI: Actualizar label de Horas
+        function actualizarLabelHoras(input) {
+            const val = parseInt(input.value);
+            document.getElementById('lbl-horas').innerText = `${val} hs`;
+            
+            const texto = document.getElementById('txt-disponibilidad');
+            if(val <= 4) { 
+                texto.innerText = "Alta Disponibilidad (Ideal para cachorros)"; 
+                texto.className = "text-center text-xs font-bold text-green-600 mt-2";
+            } else if(val <= 8) {
+                texto.innerText = "Disponibilidad Media (Estándar)"; 
+                texto.className = "text-center text-xs font-bold text-blue-600 mt-2";
+            } else {
+                texto.innerText = "Poca Disponibilidad (Mejor adultos independientes)"; 
+                texto.className = "text-center text-xs font-bold text-orange-600 mt-2";
+            }
         }
 
         // 3. GUARDAR EL PERFIL
         async function guardarPerfil(e) {
             e.preventDefault();
             
-            // Recolectar datos fijos
+            const btn = document.querySelector('button[type="submit"]');
+            const tel = document.getElementById('telefono').value;
+            if(!tel) { alert("Por favor ingresa un teléfono para contactarte."); return; }
+
+            const btnTextoOriginal = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Procesando...';
+            btn.disabled = true;
+
             const perfilData = {
                 usuarioId: usuarioSesion.id,
+                telefono: tel,
                 tipoVivienda: document.getElementById('tipoVivienda').value,
-                horasFuera: parseInt(document.getElementById('horasFuera').value),
-                telefono: document.getElementById('telefono').value,
-                // Recolectar datos dinámicos
-                preferencias: []
+                tienePatio: document.getElementById('tipoVivienda').value === 'CasaPatio',
+                horasFuera: calcularDisponibilidad(parseInt(document.getElementById('horasFuera').value)),
+                // Recopilar Experiencia (Radio Button)
+                nivelExperiencia: parseInt(document.querySelector('input[name="experiencia"]:checked').value),
+                
+                // Estos valores se llenarán en el loop de abajo
+                nivelActividad: 2, 
+                tieneHijos: false,
+                tieneOtrasMascotas: false,
+                preferencias: [] // ✅ Inicializado correctamente
             };
 
-            // Recorrer los atributos cargados y buscar su valor en el form
+            // Recorrer los atributos cargados (solo los visibles)
             atributosCargados.forEach(attr => {
                 let valor = 0;
                 if(attr.tipo === 'Booleano') {
-                    // Buscar cual radio está checkeado
                     const checked = document.querySelector(`input[name="attr_${attr.id}"]:checked`);
                     valor = checked ? parseInt(checked.value) : 0;
                 } else {
-                    valor = parseInt(document.querySelector(`input[name="attr_${attr.id}"]`).value);
+                    const inputElement = document.querySelector(`input[name="attr_${attr.id}"]`);
+                    if(inputElement) valor = parseInt(inputElement.value);
                 }
 
-                perfilData.preferencias.push({
-                    atributoId: attr.id,
-                    valor: valor
-                });
+                // Guardar preferencia dinámica
+                perfilData.preferencias.push({ atributoId: attr.id, valor: valor });
+
+                // Mapeo especial para los campos fijos (Legacy support)
+                if(attr.id === 1) perfilData.nivelActividad = valor;
+                if(attr.id === 3) perfilData.tieneHijos = (valor === 1);
+                if(attr.id === 4) perfilData.tieneOtrasMascotas = (valor === 1);
             });
 
             // Enviar al Backend
@@ -206,28 +369,32 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(perfilData)
                 });
-                if(res.ok) {
-                    // --- ACTUALIZACIÓN NUEVA ---
-                    // 1. Leemos el usuario actual de la memoria
-                    let usuarioActual = JSON.parse(localStorage.getItem('zoonosis_user'));
-                    
-                    // 2. Le ponemos la marca de que YA tiene perfil
-                    usuarioActual.tienePerfil = true;
-                    
-                    // 3. Lo guardamos actualizado
-                    localStorage.setItem('zoonosis_user', JSON.stringify(usuarioActual));
-                    // ---------------------------
 
-                    alert("¡Perfil creado! Ahora buscaremos tus mejores matches.");
+                if(res.ok) {
+                    let usuarioActual = JSON.parse(localStorage.getItem('zoonosis_user'));
+                    usuarioActual.tienePerfil = true;
+                    localStorage.setItem('zoonosis_user', JSON.stringify(usuarioActual));
+
+                    alert("¡Perfil creado! Vamos a buscar tu match ideal.");
                     window.location.href = 'index.html'; 
                 } else {
                     const txt = await res.text();
-                    alert("Error: " + txt);
+                    alert("Error al guardar: " + txt);
+                    btn.innerHTML = btnTextoOriginal;
+                    btn.disabled = false;
                 }
             } catch (error) {
                 console.error(error);
-                alert("Error de conexión");
+                alert("Error de conexión con el servidor");
+                btn.innerHTML = btnTextoOriginal;
+                btn.disabled = false;
             }
+        }
+
+        function calcularDisponibilidad(horasFuera) {
+            if (horasFuera > 9) return 1; 
+            if (horasFuera > 5) return 2; 
+            return 3; 
         }
     </script>
 </body>

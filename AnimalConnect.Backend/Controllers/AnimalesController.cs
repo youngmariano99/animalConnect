@@ -55,19 +55,19 @@ namespace AnimalConnect.Backend.Controllers
 
             return Ok(animal);
         }
-
-        // --- ENDPOINT 3: CREAR UN NUEVO ANIMAL (POST) ---
+        // --- ENDPOINT 3: CREAR NUEVO ANIMAL (CON ATRIBUTOS) ---
         [HttpPost]
         public async Task<ActionResult<Animal>> PostAnimal(Animal animal)
         {
-            // 1. Agregamos el objeto a la memoria del EF
+            // 1. Guardar el Animal básico
             _context.Animales.Add(animal);
             
-            // 2. Guardamos los cambios en la BD real
+            // 2. EF Core es inteligente: Si el objeto 'animal' viene con la lista 
+            // de 'Atributos' (AnimalAtributo) cargada desde el JSON, 
+            // él mismo hará los INSERT en la tabla AnimalAtributos automáticamente.
+            
             await _context.SaveChangesAsync();
 
-            // Retorna HTTP 201 (Created) y la ruta para consultar el nuevo animal
-            // Devolvemos simplemente OK (200) con el objeto creado.
             return Ok(animal);
         }
 

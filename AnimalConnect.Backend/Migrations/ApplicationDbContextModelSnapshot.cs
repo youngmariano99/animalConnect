@@ -79,7 +79,7 @@ namespace AnimalConnect.Backend.Migrations
                         new
                         {
                             Id = 1,
-                            Descripcion = "Activo y juguetón.",
+                            Descripcion = "Perro guardián, mucha energía.",
                             EdadAproximada = "2 años",
                             FechaPublicacion = new DateTime(2025, 12, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IdEspecie = 1,
@@ -92,7 +92,7 @@ namespace AnimalConnect.Backend.Migrations
                         new
                         {
                             Id = 2,
-                            Descripcion = "Muy tranquila.",
+                            Descripcion = "Gatita de departamento.",
                             EdadAproximada = "4 años",
                             FechaPublicacion = new DateTime(2025, 12, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IdEspecie = 2,
@@ -105,15 +105,15 @@ namespace AnimalConnect.Backend.Migrations
                         new
                         {
                             Id = 3,
-                            Descripcion = "Perdido en plaza.",
-                            EdadAproximada = "Viejito",
+                            Descripcion = "Gigante y bonachón, necesita patio.",
+                            EdadAproximada = "3 años",
                             FechaPublicacion = new DateTime(2025, 12, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
                             IdEspecie = 1,
-                            IdEstado = 2,
-                            ImagenUrl = "http://127.0.0.1:5269/uploads/PerroPerdido2.png",
-                            Nombre = "Tobi",
-                            UbicacionLat = -37.991999999999997,
-                            UbicacionLon = -61.350999999999999
+                            IdEstado = 1,
+                            ImagenUrl = "http://127.0.0.1:5269/uploads/PerroAdoptar2.png",
+                            Nombre = "Hulk",
+                            UbicacionLat = -37.991,
+                            UbicacionLon = -61.350000000000001
                         });
                 });
 
@@ -148,7 +148,7 @@ namespace AnimalConnect.Backend.Migrations
                             Id = 1,
                             AnimalId = 1,
                             AtributoId = 1,
-                            Valor = 5
+                            Valor = 3
                         },
                         new
                         {
@@ -159,17 +159,136 @@ namespace AnimalConnect.Backend.Migrations
                         },
                         new
                         {
+                            Id = 3,
+                            AnimalId = 1,
+                            AtributoId = 3,
+                            Valor = 0
+                        },
+                        new
+                        {
                             Id = 4,
+                            AnimalId = 1,
+                            AtributoId = 4,
+                            Valor = 1
+                        },
+                        new
+                        {
+                            Id = 5,
+                            AnimalId = 1,
+                            AtributoId = 5,
+                            Valor = 2
+                        },
+                        new
+                        {
+                            Id = 6,
+                            AnimalId = 1,
+                            AtributoId = 6,
+                            Valor = 2
+                        },
+                        new
+                        {
+                            Id = 7,
+                            AnimalId = 1,
+                            AtributoId = 7,
+                            Valor = 2
+                        },
+                        new
+                        {
+                            Id = 8,
                             AnimalId = 2,
                             AtributoId = 1,
                             Valor = 1
                         },
                         new
                         {
-                            Id = 5,
+                            Id = 9,
                             AnimalId = 2,
                             AtributoId = 2,
                             Valor = 0
+                        },
+                        new
+                        {
+                            Id = 10,
+                            AnimalId = 2,
+                            AtributoId = 3,
+                            Valor = 1
+                        },
+                        new
+                        {
+                            Id = 11,
+                            AnimalId = 2,
+                            AtributoId = 4,
+                            Valor = 0
+                        },
+                        new
+                        {
+                            Id = 12,
+                            AnimalId = 2,
+                            AtributoId = 5,
+                            Valor = 1
+                        },
+                        new
+                        {
+                            Id = 13,
+                            AnimalId = 2,
+                            AtributoId = 6,
+                            Valor = 1
+                        },
+                        new
+                        {
+                            Id = 14,
+                            AnimalId = 2,
+                            AtributoId = 7,
+                            Valor = 1
+                        },
+                        new
+                        {
+                            Id = 15,
+                            AnimalId = 3,
+                            AtributoId = 1,
+                            Valor = 2
+                        },
+                        new
+                        {
+                            Id = 16,
+                            AnimalId = 3,
+                            AtributoId = 2,
+                            Valor = 1
+                        },
+                        new
+                        {
+                            Id = 17,
+                            AnimalId = 3,
+                            AtributoId = 3,
+                            Valor = 1
+                        },
+                        new
+                        {
+                            Id = 18,
+                            AnimalId = 3,
+                            AtributoId = 4,
+                            Valor = 1
+                        },
+                        new
+                        {
+                            Id = 19,
+                            AnimalId = 3,
+                            AtributoId = 5,
+                            Valor = 2
+                        },
+                        new
+                        {
+                            Id = 20,
+                            AnimalId = 3,
+                            AtributoId = 6,
+                            Valor = 3
+                        },
+                        new
+                        {
+                            Id = 21,
+                            AnimalId = 3,
+                            AtributoId = 7,
+                            Valor = 1
                         });
                 });
 
@@ -211,19 +330,31 @@ namespace AnimalConnect.Backend.Migrations
                         new
                         {
                             Id = 3,
-                            Nombre = "Tolera Niños",
+                            Nombre = "Apto con Niños",
                             Tipo = "Booleano"
                         },
                         new
                         {
                             Id = 4,
-                            Nombre = "Tolera Gatos",
+                            Nombre = "Apto con Mascotas",
                             Tipo = "Booleano"
                         },
                         new
                         {
                             Id = 5,
-                            Nombre = "Tiempo de Atención",
+                            Nombre = "Tiempo Requerido",
+                            Tipo = "Escala"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            Nombre = "Tamaño",
+                            Tipo = "Escala"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            Nombre = "Nivel Experiencia",
                             Tipo = "Escala"
                         });
                 });
@@ -344,20 +475,6 @@ namespace AnimalConnect.Backend.Migrations
                     b.HasIndex("UsuarioId");
 
                     b.ToTable("PerfilesAdoptantes");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            TelefonoContacto = "111-222",
-                            UsuarioId = 2
-                        },
-                        new
-                        {
-                            Id = 2,
-                            TelefonoContacto = "333-444",
-                            UsuarioId = 3
-                        });
                 });
 
             modelBuilder.Entity("AnimalConnect.Backend.Models.PreferenciaAdoptante", b =>
@@ -387,40 +504,6 @@ namespace AnimalConnect.Backend.Migrations
                     b.HasIndex("PerfilAdoptanteId");
 
                     b.ToTable("PreferenciasAdoptantes");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            AtributoId = 1,
-                            Importancia = 5,
-                            PerfilAdoptanteId = 1,
-                            ValorPreferido = 5
-                        },
-                        new
-                        {
-                            Id = 2,
-                            AtributoId = 2,
-                            Importancia = 3,
-                            PerfilAdoptanteId = 1,
-                            ValorPreferido = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            AtributoId = 1,
-                            Importancia = 5,
-                            PerfilAdoptanteId = 2,
-                            ValorPreferido = 1
-                        },
-                        new
-                        {
-                            Id = 4,
-                            AtributoId = 2,
-                            Importancia = 5,
-                            PerfilAdoptanteId = 2,
-                            ValorPreferido = 0
-                        });
                 });
 
             modelBuilder.Entity("AnimalConnect.Backend.Models.Usuario", b =>
@@ -455,20 +538,6 @@ namespace AnimalConnect.Backend.Migrations
                             NombreUsuario = "admin",
                             PasswordHash = "admin123",
                             Rol = "Administrador"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            NombreUsuario = "juan",
-                            PasswordHash = "1234",
-                            Rol = "Ciudadano"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            NombreUsuario = "maria",
-                            PasswordHash = "1234",
-                            Rol = "Ciudadano"
                         });
                 });
 

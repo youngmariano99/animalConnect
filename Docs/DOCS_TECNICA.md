@@ -213,3 +213,37 @@ El panel de administración utiliza una estrategia de **Single Page Application 
 - **Método:** `DELETE /api/Animales/{id}`.
 - **Comportamiento:** Eliminación física del registro en SQL Server.
 - **Respuesta:** `204 No Content` (Estándar REST para borrados exitosos).
+
+## 10. Arquitectura del Sistema de Match (Escalabilidad)
+
+Para cumplir con el requisito de "Adopción Inteligente" y garantizar la escalabilidad futura, se evitó el uso de columnas fijas en la tabla `Animales`. Se optó por un modelo relacional dinámico.
+
+### Modelo de Datos (Dinámico)
+* **`Atributo`:** Define la característica (ej: "Nivel de Energía", "Requiere Patio").
+* **`AnimalAtributo`:** El valor real que tiene cada animal.
+* **`PreferenciaAdoptante`:** Lo que el usuario busca + un factor de **Importancia** (Ponderación 1-5).
+
+### Algoritmo de Puntuación (Weighted Scoring)
+El controlador `MatchController` ejecuta la siguiente lógica por cada animal activo:
+
+1.  **Carga:** Recupera el perfil del usuario y sus preferencias con `Include()`.
+2.  **Iteración:** Recorre cada preferencia del usuario y busca si el animal tiene ese atributo medido.
+3.  **Cálculo de Delta:** Calcula la diferencia absoluta (`Math.Abs`) entre el valor buscado y el real.
+    * *Diferencia 0 (Exacto):* Suma el puntaje completo de importancia.
+    * *Diferencia 1 (Aproximado):* Suma el 50% del puntaje (Penalización suave).
+    * *Diferencia > 1:* No suma puntos (Penalización fuerte).
+4.  **Normalización:** El puntaje final se convierte a porcentaje sobre el máximo posible teórico.
+
+## 11. Manejo de Serialización JSON
+
+Debido a la alta interconexión de las entidades (Usuario <-> Perfil <-> Preferencias <-> Atributo), se detectaron excepciones de tipo `JsonException: A possible object cycle was detected`.
+
+**Solución Implementada:**
+Se configuró el serializador `System.Text.Json` en el `Program.cs` para ignorar ciclos de referencias automáticamente:
+
+```csharp
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+    });
