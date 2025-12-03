@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Connect - Adopta tu compañero</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <nav class="bg-white shadow-md fixed w-full z-10 top-0">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-paw text-orange-500 text-2xl"></i>
+                <span class="text-xl font-bold text-gray-800">Animal Connect</span>
+            </div>
+            <div class="hidden md:flex space-x-6">
+                <a href="#" class="text-orange-500 font-semibold">Adoptar</a>
+                <a href="#" onclick="abrirModal()" class="text-gray-600 hover:text-orange-500">Reportar Perdido</a>
+                <a href="#" class="text-gray-600 hover:text-orange-500">Campañas</a>
+                
+            <div id="auth-buttons">
+                <a href="login.html" class="bg-orange-500 text-white px-4 py-2 rounded-full hover:bg-orange-600 transition font-bold text-sm">
+                    Ingresar
+                </a>
+            </div>
+    </nav>
+
+    <header class="mt-16 bg-orange-100 py-12 text-center">
+        <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Encuentra a tu <span class="text-orange-600">compañero ideal</span>
+        </h1>
+        <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+            Conectamos corazones. Adopta, ayuda a encontrar mascotas perdidas o colabora con el municipio.
+        </p>
+    </header>
+
+    <main class="container mx-auto px-4 py-10">
+        
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 mb-8">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">🔍 Encuentra tu compañero ideal</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <input type="text" id="busqueda" placeholder="Buscar por nombre..." 
+                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:outline-none">
+                
+                <select id="filtro-especie" 
+                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:outline-none bg-white">
+                    <option value="todos">Todas las especies</option>
+                    <option value="1">Perros</option>
+                    <option value="2">Gatos</option>
+                </select>
+
+                <select id="filtro-estado" 
+                    class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-orange-500 focus:outline-none bg-white">
+                    <option value="todos">Todos los estados</option>
+                    <option value="1">En Adopción</option>
+                    <option value="2">Perdidos</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-10">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">🗺️ Ubicación de reportes</h2>
+            <div id="map" class="h-96 w-full rounded-xl shadow-lg border border-gray-200 z-0"></div>
+        </div>
+
+        <h2 class="text-2xl font-bold mb-6 border-l-4 border-orange-500 pl-3">Resultados</h2>
+        <div id="animales-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            </div>
+
+            <div id="campanas" class="mt-20 mb-10">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 flex items-center">
+                <i class="fa-solid fa-truck-medical text-orange-500 mr-3"></i>
+                Castrador Móvil y Vacunación
+            </h2>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+                
+                <div class="p-6 overflow-y-auto max-h-[500px]">
+                    <h3 class="text-lg font-semibold text-gray-600 mb-4">Próximas Fechas</h3>
+                    <div id="lista-campanas" class="space-y-4">
+                        <p class="text-gray-400">Cargando fechas...</p>
+                    </div>
+                </div>
+
+                <div class="relative h-96 lg:h-auto">
+                    <div id="mapa-campanas" class="absolute inset-0 w-full h-full"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="modal-reporte" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden animate-fade-in-up">
+            
+            <div class="bg-orange-500 px-6 py-4 flex justify-between items-center">
+                <h3 class="text-white font-bold text-lg"><i class="fa-solid fa-camera mr-2"></i>Reportar Mascota</h3>
+                <button onclick="cerrarModal()" class="text-white hover:text-gray-200 text-2xl">&times;</button>
+            </div>
+
+            <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nombre (o apodo)</label>
+                        <input type="text" id="nombre-animal" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Ej: Firulais / Perro Marrón">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Especie</label>
+                            <select id="especie-animal" class="w-full border rounded-lg p-2">
+                                <option value="1">Perro</option>
+                                <option value="2">Gato</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Estado</label>
+                            <select id="estado-animal" class="w-full border rounded-lg p-2">
+                                <option value="1">En Adopción</option>
+                                <option value="2" selected>Perdido</option>
+                                <option value="3">Encontrado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Descripción</label>
+                        <textarea id="desc-animal" rows="3" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-orange-500 outline-none" placeholder="Color, tamaño, collar..."></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Foto</label>
+                        <input type="file" id="foto-animal" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-orange-50 file:text-orange-700 hover:file:bg-orange-100">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">¿Dónde está? (Toca el mapa)</label>
+                    <div id="mapa-selector" class="h-64 w-full rounded-lg border border-gray-300 cursor-crosshair"></div>
+                    <p class="text-xs text-gray-500 mt-1 text-center" id="coords-text">Sin ubicación seleccionada</p>
+                </div>
+            </div>
+
+            <div class="bg-gray-50 px-6 py-4 flex justify-end space-x-3">
+                <button onclick="cerrarModal()" class="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg">Cancelar</button>
+                <button onclick="guardarReporte()" class="px-6 py-2 bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-700 shadow-md flex items-center">
+                    <span id="btn-texto">Publicar Reporte</span>
+                    <i id="btn-spinner" class="fa-solid fa-spinner fa-spin ml-2 hidden"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+<script>
+        const API_URL = 'http://127.0.0.1:5269/api'; // Base URL
+        const grid = document.getElementById('animales-grid');
+        let map, markersGroup; // Mapa Principal
+        let mapSelector, markerSelector; // Mapa del Modal
+        let coordsSeleccionadas = null; // Guardar lat/lon elegidas
+        let mapCampanas, markersCampanas;
+
+        // --- INICIALIZACIÓN ---
+        document.addEventListener('DOMContentLoaded', () => {
+            initMapPrincipal();
+            cargarAnimales();
+
+            initMapCampanas();
+            cargarCampanas();
+        });
+
+        // 1. Mapa Principal (Ver)
+        function initMapPrincipal() {
+            map = L.map('map').setView([-37.994, -61.353], 14);
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+            markersGroup = L.layerGroup().addTo(map);
+        }
+
+        // 2. Mapa Selector (Modal - Elegir ubicación)
+        function initMapSelector() {
+            if(mapSelector) return; // Si ya existe, no lo creamos de nuevo
+            
+            // Esperamos un poco para que el modal sea visible, sino Leaflet falla al calcular tamaño
+            setTimeout(() => {
+                mapSelector = L.map('mapa-selector').setView([-37.994, -61.353], 14);
+                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapSelector);
+                
+                // Evento: Al hacer click en el mapa selector
+                mapSelector.on('click', function(e) {
+                    const { lat, lng } = e.latlng;
+                    coordsSeleccionadas = { lat, lng };
+                    
+                    // Mover o crear el pin
+                    if (markerSelector) {
+                        markerSelector.setLatLng(e.latlng);
+                    } else {
+                        markerSelector = L.marker(e.latlng, { draggable: true }).addTo(mapSelector);
+                    }
+                    
+                    document.getElementById('coords-text').innerText = `Ubicación: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+                });
+            }, 200);
+        }
+
+        // --- LÓGICA MODAL ---
+        function abrirModal() {
+            document.getElementById('modal-reporte').classList.remove('hidden');
+            initMapSelector(); // Inicializar el mapa pequeño
+        }
+
+        function cerrarModal() {
+            document.getElementById('modal-reporte').classList.add('hidden');
+        }
+
+        // --- LÓGICA DE DATOS ---
+        async function guardarReporte() {
+            const btnTexto = document.getElementById('btn-texto');
+            const spinner = document.getElementById('btn-spinner');
+            const fileInput = document.getElementById('foto-animal');
+            
+            // Validaciones básicas
+            if(!fileInput.files[0]) { alert('Por favor sube una foto'); return; }
+            if(!coordsSeleccionadas) { alert('Toca el mapa para marcar la ubicación'); return; }
+
+            // UI Cargando
+            btnTexto.innerText = "Subiendo...";
+            spinner.classList.remove('hidden');
+
+            try {
+                // PASO 1: Subir Imagen
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+
+                const resImagen = await fetch(`${API_URL}/Archivos/subir`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if(!resImagen.ok) throw new Error("Error subiendo imagen");
+                const dataImagen = await resImagen.json();
+
+                // PASO 2: Crear Animal
+                const nuevoAnimal = {
+                    nombre: document.getElementById('nombre-animal').value,
+                    descripcion: document.getElementById('desc-animal').value,
+                    edadAproximada: "Desconocida", // Podríamos agregar un input para esto
+                    imagenUrl: dataImagen.url,
+                    ubicacionLat: coordsSeleccionadas.lat,
+                    ubicacionLon: coordsSeleccionadas.lng,
+                    idEspecie: parseInt(document.getElementById('especie-animal').value),
+                    idEstado: parseInt(document.getElementById('estado-animal').value)
+                };
+
+                const resAnimal = await fetch(`${API_URL}/Animales`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(nuevoAnimal)
+                });
+
+                if(!resAnimal.ok) throw new Error("Error guardando datos");
+
+                // ÉXITO
+                alert("¡Reporte publicado con éxito!");
+                cerrarModal();
+                cargarAnimales(); // Recargar mapa principal
+                
+                // Limpiar formulario
+                document.getElementById('nombre-animal').value = '';
+                document.getElementById('desc-animal').value = '';
+                fileInput.value = '';
+
+            } catch (error) {
+                console.error(error);
+                // Ahora la alerta te dirá el error técnico real (ej: "Error 500", "Failed to fetch")
+                alert("Error técnico: " + error.message);
+            }finally {
+                btnTexto.innerText = "Publicar Reporte";
+                spinner.classList.add('hidden');
+            }
+        }
+
+        // --- CARGA DE DATOS (Mismo de antes) ---
+        let animalesOriginales = [];
+        
+        // Listeners de filtros (Mismos de antes)
+        document.getElementById('busqueda').addEventListener('input', filtrarAnimales);
+        document.getElementById('filtro-especie').addEventListener('change', filtrarAnimales);
+        document.getElementById('filtro-estado').addEventListener('change', filtrarAnimales);
+
+        async function cargarAnimales() {
+            const usuario = JSON.parse(localStorage.getItem('zoonosis_user'));
+            const container = document.getElementById('animales-grid');
+            
+            try {
+                let url = '';
+                let modoMatch = false;
+
+                if (usuario && usuario.tienePerfil) {
+                    // MODO MATCH: Usuario logueado con quiz hecho
+                    url = `${API_URL}/Match/${usuario.id}`;
+                    modoMatch = true;
+                    // Actualizar título para dar feedback
+                    document.querySelector('h2.border-l-4').innerText = `Hola ${usuario.nombre}, estos son tus mejores compañeros:`;
+                } else {
+                    // MODO NORMAL: Invitado
+                    url = `${API_URL}/Animales`;
+                }
+
+                const res = await fetch(url);
+                if(!res.ok) throw new Error("Error API");
+                
+                const datos = await res.json();
+                
+                // Si estamos en modo match, los datos vienen dentro de un objeto diferente
+                // Normal: [ {id:1, nombre...}, ... ]
+                // Match:  [ {animal: {id:1...}, porcentajeMatch: 95}, ... ]
+                
+                // Normalizamos la lista para usar la misma función de dibujo
+                if (modoMatch) {
+                    animalesOriginales = datos.map(item => {
+                        // Le pegamos el porcentaje al objeto animal para usarlo después
+                        item.animal.matchScore = item.porcentajeMatch;
+                        return item.animal; 
+                    });
+                } else {
+                    animalesOriginales = datos;
+                }
+
+                actualizarInterfaz(animalesOriginales);
+
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = '<p class="text-red-500">Error cargando animales.</p>';
+            }
+        }
+
+        function actualizarInterfaz(lista) {
+            grid.innerHTML = ''; 
+            markersGroup.clearLayers();
+
+            if(lista.length === 0) {
+                grid.innerHTML = '<p class="text-gray-500 col-span-3 text-center">No hay resultados.</p>';
+                return;
+            }
+
+            lista.forEach(animal => {
+                const imagen = animal.imagenUrl || 'https://via.placeholder.com/400x300?text=Sin+Foto';
+                
+                // LÓGICA DEL BADGE DE MATCH
+                let matchBadge = '';
+                if (animal.matchScore !== undefined) {
+                    let color = 'bg-gray-500';
+                    if(animal.matchScore >= 80) color = 'bg-green-500';
+                    else if(animal.matchScore >= 50) color = 'bg-yellow-500';
+                    else color = 'bg-red-500';
+
+                    matchBadge = `
+                        <div class="absolute top-4 left-4 ${color} text-white px-3 py-1 rounded-full text-xs font-bold shadow-md z-10 flex items-center">
+                            <i class="fa-solid fa-heart mr-1"></i> ${animal.matchScore}% Compatible
+                        </div>
+                    `;
+                }
+
+                // HTML DE LA TARJETA
+                const tarjetaHTML = `
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition duration-300 border border-gray-100 group relative">
+                        
+                        ${matchBadge} <div class="relative h-64 w-full overflow-hidden">
+                            <img src="${imagen}" alt="${animal.nombre}" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                            <div class="absolute top-4 right-4 bg-white/90 px-3 py-1 rounded-full text-xs font-bold text-orange-600 shadow-sm">
+                                ${animal.estado ? animal.estado.nombre : 'Reporte'}
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-2xl font-bold text-gray-800 mb-2">${animal.nombre}</h3>
+                            <p class="text-gray-600 text-sm mb-4 line-clamp-2">${animal.descripcion}</p>
+                            
+                            <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-100 gap-2">
+                                ${generarBotonWsp(animal)} <button onclick="centrarMapa(${animal.ubicacionLat}, ${animal.ubicacionLon})" class="text-blue-500 hover:underline text-sm">
+                                    Ver Mapa 📍
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += tarjetaHTML;
+
+                // Marcador Mapa
+                if (animal.ubicacionLat) {
+                    const iconUrl = animal.idEspecie === 1 
+                        ? 'https://cdn-icons-png.flaticon.com/512/616/616408.png' 
+                        : 'https://cdn-icons-png.flaticon.com/512/616/616430.png';
+                    
+                    const icono = L.icon({ iconUrl, iconSize: [30, 30], iconAnchor: [15, 30] });
+                    L.marker([animal.ubicacionLat, animal.ubicacionLon], { icon: icono })
+                     .addTo(markersGroup)
+                     .bindPopup(`<b>${animal.nombre}</b><br>${animal.descripcion}`);
+                }
+            });
+        }
+
+        function filtrarAnimales() {
+            // ... (Mismo código de filtro de antes) ...
+            const texto = document.getElementById('busqueda').value.toLowerCase();
+            const especie = document.getElementById('filtro-especie').value;
+            const estado = document.getElementById('filtro-estado').value;
+
+            const filtrados = animalesOriginales.filter(a => {
+                const matchNombre = a.nombre.toLowerCase().includes(texto);
+                const matchEspecie = (especie === 'todos') || (a.idEspecie.toString() === especie);
+                const matchEstado = (estado === 'todos') || (a.idEstado.toString() === estado);
+                return matchNombre && matchEspecie && matchEstado;
+            });
+            actualizarInterfaz(filtrados);
+        }
+
+        function centrarMapa(lat, lng) {
+            map.flyTo([lat, lng], 16);
+            document.getElementById('map').scrollIntoView({ behavior: 'smooth' });
+        }
+
+
+        // --- CARGA DE CAMPAÑAS ---
+
+        function initMapCampanas() {
+            // Mapa centrado en el pueblo
+            mapCampanas = L.map('mapa-campanas').setView([-37.994, -61.353], 13);
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapCampanas);
+            markersCampanas = L.layerGroup().addTo(mapCampanas);
+        }
+
+        async function cargarCampanas() {
+            try {
+                const res = await fetch(`${API_URL}/Campanias`);
+                if(!res.ok) return; // Si falla, simplemente no mostramos nada
+                const campanas = await res.json();
+                
+                renderizarCampanas(campanas);
+            } catch (e) { console.error(e); }
+        }
+
+        function renderizarCampanas(lista) {
+            const contenedor = document.getElementById('lista-campanas');
+            contenedor.innerHTML = '';
+            markersCampanas.clearLayers();
+
+            if(lista.length === 0) {
+                contenedor.innerHTML = '<p class="text-gray-500">No hay campañas programadas.</p>';
+                return;
+            }
+
+            lista.forEach(c => {
+                // 1. Formatear Fecha (Ej: "25 OCT")
+                const fechaObj = new Date(c.fechaHora);
+                const dia = fechaObj.getDate();
+                const mes = fechaObj.toLocaleString('es-ES', { month: 'short' }).toUpperCase();
+                const hora = fechaObj.toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'});
+
+                // 2. Crear Tarjeta HTML
+                const html = `
+                    <div onclick="verCampanaEnMapa(${c.ubicacionLat}, ${c.ubicacionLon})" 
+                         class="flex items-center bg-gray-50 p-4 rounded-xl border border-gray-100 hover:bg-orange-50 hover:border-orange-200 cursor-pointer transition group">
+                        
+                        <div class="bg-white text-center px-4 py-2 rounded-lg shadow-sm border border-gray-200 group-hover:border-orange-300">
+                            <span class="block text-2xl font-bold text-orange-600">${dia}</span>
+                            <span class="block text-xs font-bold text-gray-500">${mes}</span>
+                        </div>
+
+                        <div class="ml-4 flex-1">
+                            <h4 class="font-bold text-gray-800">${c.titulo}</h4>
+                            <p class="text-sm text-gray-600"><i class="fa-regular fa-clock mr-1"></i> ${hora} hs</p>
+                            <p class="text-sm text-gray-500 mt-1">${c.descripcion}</p>
+                        </div>
+
+                        <div class="text-gray-300 group-hover:text-orange-500">
+                            <i class="fa-solid fa-location-dot text-xl"></i>
+                        </div>
+                    </div>
+                `;
+                contenedor.innerHTML += html;
+
+                // 3. Poner Pin en el Mapa
+                const iconoCamion = L.icon({
+                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/754/754983.png', // Icono de Ambulancia/Camión
+                    iconSize: [35, 35],
+                    iconAnchor: [17, 35]
+                });
+
+                L.marker([c.ubicacionLat, c.ubicacionLon], {icon: iconoCamion})
+                 .addTo(markersCampanas)
+                 .bindPopup(`<b>${c.titulo}</b><br>${fechaObj.toLocaleDateString()}`);
+            });
+        }
+
+        function verCampanaEnMapa(lat, lon) {
+            mapCampanas.flyTo([lat, lon], 16);
+        }
+
+        // Verificar si hay usuario logueado para cambiar el botón del menú
+        function actualizarBotonLogin() {
+            const user = JSON.parse(localStorage.getItem('zoonosis_user'));
+            const container = document.getElementById('auth-buttons');
+            
+            if (user) {
+                // Si está logueado, mostramos su nombre y opción de salir
+                container.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <span class="text-sm font-bold text-orange-600">Hola, ${user.nombre}</span>
+                        <button onclick="cerrarSesion()" class="text-gray-500 hover:text-red-500 text-sm">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function cerrarSesion() {
+            localStorage.removeItem('zoonosis_user');
+            window.location.reload();
+        }
+
+        // Ejecutar al cargar
+        actualizarBotonLogin();
+
+
+        // --- HELPER PARA WHATSAPP ---
+        function generarBotonWsp(animal) {
+            if (!animal.telefonoContacto) return ''; // Si no hay teléfono, no mostramos nada
+
+            // Limpiamos el número (sacamos guiones o espacios)
+            const numeroLimpio = animal.telefonoContacto.replace(/\D/g, ''); 
+            const linkWsp = `https://wa.me/549${numeroLimpio}?text=Hola, vi tu reporte de ${animal.nombre} en AnimalConnect.`;
+            
+            return `
+                <a href="${linkWsp}" target="_blank" class="bg-green-500 text-white px-3 py-1 rounded-lg text-sm font-medium hover:bg-green-600 transition flex items-center justify-center gap-2">
+                    <i class="fa-brands fa-whatsapp"></i> Contactar
+                </a>
+            `;
+        }
+    </script>
+</body>
+</html>

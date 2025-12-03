@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Administrativo - Animal Connect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<body class="bg-gray-900 h-screen flex items-center justify-center bg-[url('https://images.unsplash.com/photo-1548199973-03cce0bbc87b?q=80&w=2069&auto=format&fit=crop')] bg-cover bg-center bg-no-repeat bg-blend-overlay">
+
+    <div class="bg-white/95 backdrop-blur-sm p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition-all hover:scale-105 duration-300">
+        
+        <div class="text-center mb-8">
+            <div class="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-user-shield text-3xl text-orange-600"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-800">Acceso Zoonosis</h2>
+            <p class="text-gray-500 text-sm">Ingrese sus credenciales municipales</p>
+        </div>
+
+        <form onsubmit="realizarLogin(event)" class="space-y-6">
+            <div>
+                <label class="block text-gray-700 text-sm font-bold mb-2">Usuario</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                        <i class="fa-solid fa-user"></i>
+                    </span>
+                    <input type="text" id="usuario" class="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="admin" required>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-gray-700 text-sm font-bold mb-2">Contraseña</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                        <i class="fa-solid fa-lock"></i>
+                    </span>
+                    <input type="password" id="password" class="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-gray-900 text-white font-bold py-3 rounded-lg hover:bg-orange-600 transition duration-300 flex justify-center items-center">
+                <span id="btn-text">Ingresar al Sistema</span>
+                <i id="btn-spinner" class="fa-solid fa-circle-notch fa-spin ml-2 hidden"></i>
+            </button>
+
+            <div id="error-msg" class="hidden bg-red-100 border-l-4 border-red-500 text-red-700 p-3 text-sm rounded" role="alert">
+                <p>Usuario o contraseña incorrectos.</p>
+            </div>
+        </form>
+
+        <div class="mt-4 text-center">
+            <p class="text-sm text-gray-600">¿Eres nuevo?</p>
+            <a href="register.html" class="text-blue-600 font-bold hover:underline">Crear cuenta ciudadana</a>
+        </div>
+        
+        <div class="mt-6 text-center">
+            <a href="index.html" class="text-sm text-gray-500 hover:text-orange-600 transition">← Volver al sitio público</a>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:5269/api';
+
+       async function realizarLogin(e) {
+            e.preventDefault(); 
+            
+            const user = document.getElementById('usuario').value;
+            const pass = document.getElementById('password').value;
+            const btnText = document.getElementById('btn-text');
+            const spinner = document.getElementById('btn-spinner');
+            const errorMsg = document.getElementById('error-msg');
+
+            // UI Loading ON
+            btnText.innerText = "Verificando...";
+            spinner.classList.remove('hidden');
+            errorMsg.classList.add('hidden');
+
+            try {
+                const res = await fetch(`${API_URL}/Auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario: user, password: pass })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    localStorage.setItem('zoonosis_user', JSON.stringify(data));
+                    
+                    // Redirección
+                    if (data.rol === 'Administrador') {
+                        window.location.href = 'admin.html';
+                    } else {
+                        if (data.tienePerfil) {
+                            window.location.href = 'index.html'; 
+                        } else {
+                            window.location.href = 'quiz.html'; 
+                        }
+                    }
+                } else {
+                    // Error de credenciales (401)
+                    errorMsg.classList.remove('hidden');
+                    errorMsg.querySelector('p').innerText = "Usuario o contraseña incorrectos.";
+                }
+            } catch (error) {
+                console.error(error);
+                errorMsg.classList.remove('hidden');
+                errorMsg.querySelector('p').innerText = "Error de conexión con el servidor.";
+            } finally {
+                // UI Loading OFF (Siempre se ejecuta)
+                if(btnText.innerText === "Verificando...") { 
+                    // Solo restauramos si no hubo redirección exitosa
+                    btnText.innerText = "Ingresar al Sistema";
+                    spinner.classList.add('hidden');
+                }
+            }
+        }
+    </script>
+</body>
+</html>

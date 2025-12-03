@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Animal Connect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<body class="bg-gray-900 h-screen flex items-center justify-center bg-[url('https://images.unsplash.com/photo-1450778869180-41d0601e046e?q=80&w=2086&auto=format&fit=crop')] bg-cover bg-center bg-no-repeat bg-blend-overlay">
+
+    <div class="bg-white/95 backdrop-blur-sm p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition-all">
+        
+        <div class="text-center mb-6">
+            <h2 class="text-3xl font-bold text-gray-800">Crear Cuenta</h2>
+            <p class="text-gray-500 text-sm mt-2">Únete para adoptar responsablemente</p>
+        </div>
+
+        <form onsubmit="realizarRegistro(event)" class="space-y-5">
+            <div>
+                <label class="block text-gray-700 text-sm font-bold mb-2">Elige un Usuario</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                        <i class="fa-solid fa-user"></i>
+                    </span>
+                    <input type="text" id="reg-usuario" class="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="ej: juanperez" required>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-gray-700 text-sm font-bold mb-2">Contraseña</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                        <i class="fa-solid fa-lock"></i>
+                    </span>
+                    <input type="password" id="reg-password" class="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-gray-700 text-sm font-bold mb-2">Confirmar Contraseña</label>
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
+                        <i class="fa-solid fa-check-double"></i>
+                    </span>
+                    <input type="password" id="reg-confirm" class="w-full pl-10 pr-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" placeholder="••••••••" required>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-700 transition duration-300 flex justify-center items-center">
+                <span id="btn-text">Registrarme</span>
+                <i id="btn-spinner" class="fa-solid fa-circle-notch fa-spin ml-2 hidden"></i>
+            </button>
+        </form>
+        
+        <div class="mt-6 text-center border-t border-gray-200 pt-4">
+            <p class="text-sm text-gray-600">¿Ya tienes cuenta?</p>
+            <a href="login.html" class="text-orange-600 font-bold hover:underline">Iniciar Sesión aquí</a>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:5269/api';
+
+        async function realizarRegistro(e) {
+            e.preventDefault();
+            
+            const user = document.getElementById('reg-usuario').value;
+            const pass = document.getElementById('reg-password').value;
+            const confirm = document.getElementById('reg-confirm').value;
+            const btnText = document.getElementById('btn-text');
+            const spinner = document.getElementById('btn-spinner');
+
+            if(pass !== confirm) {
+                alert("Las contraseñas no coinciden.");
+                return;
+            }
+
+            btnText.innerText = "Creando cuenta...";
+            spinner.classList.remove('hidden');
+
+            try {
+                const res = await fetch(`${API_URL}/Auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usuario: user, password: pass })
+                });
+
+                if (res.ok) {
+                    alert("¡Cuenta creada! Ahora inicia sesión.");
+                    window.location.href = 'login.html';
+                } else {
+                    const errorText = await res.text();
+                    alert("Error: " + errorText);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Error de conexión con el servidor.");
+            } finally {
+                btnText.innerText = "Registrarme";
+                spinner.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>

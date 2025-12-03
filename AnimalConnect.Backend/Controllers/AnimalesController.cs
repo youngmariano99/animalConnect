@@ -25,14 +25,18 @@ namespace AnimalConnect.Backend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Animal>>> GetAnimales()
         {
-            // Usamos _context.Animales para ir a la tabla.
-            // .Include() es como un JOIN en SQL. Trae los datos de la Especie y el Estado, no solo el ID.
+            // REGLA DE NEGOCIO: Solo mostrar publicaciones de las últimas 2 semanas (15 días)
+            // Esto evita que el mapa se llene de datos viejos/abandonados.
+            var fechaLimite = DateTime.Now.AddDays(-15);
+
             var animales = await _context.Animales
                                          .Include(a => a.Especie)
                                          .Include(a => a.Estado)
+                                         // Aquí está el filtro mágico:
+                                         .Where(a => a.FechaPublicacion >= fechaLimite) 
                                          .ToListAsync();
 
-            return Ok(animales); // Retorna HTTP 200 con la lista JSON
+            return Ok(animales);
         }
 
         // --- ENDPOINT 2: OBTENER UN SOLO ANIMAL POR ID (GET) ---
@@ -63,7 +67,24 @@ namespace AnimalConnect.Backend.Controllers
             await _context.SaveChangesAsync();
 
             // Retorna HTTP 201 (Created) y la ruta para consultar el nuevo animal
-            return CreatedAtAction(nameof(GetAnimal), new { id = animal.Id }, animal);
+            // Devolvemos simplemente OK (200) con el objeto creado.
+            return Ok(animal);
+        }
+
+        // --- ENDPOINT 4: ELIMINAR UN ANIMAL (DELETE) ---
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteAnimal(int id)
+        {
+            var animal = await _context.Animales.FindAsync(id);
+            if (animal == null)
+            {
+                return NotFound();
+            }
+
+            _context.Animales.Remove(animal);
+            await _context.SaveChangesAsync();
+
+            return NoContent(); // Retorna 204 (Éxito sin contenido)
         }
     }
 }

@@ -159,3 +159,57 @@ El sistema no almacena las imágenes como BLOBs (binarios) dentro de SQL Server 
 Este controlador auxiliar maneja la entrada/salida de ficheros (`IFormFile`).
 * **Seguridad:** Genera nombres aleatorios usando `Guid.NewGuid()` para prevenir que un usuario sobrescriba la foto de otro si suben archivos con el mismo nombre (ej: "foto.jpg").
 * **Respuesta:** Retorna un objeto JSON con la URL absoluta para ser consumida inmediatamente por el Frontend.
+
+## 6. Geolocalización y Mapas
+
+Para la representación espacial de los datos se utiliza una arquitectura de renderizado en cliente (Client-Side Rendering).
+
+### Componentes
+* **Librería:** Leaflet.js (Ligera, Open Source, Mobile Friendly).
+* **Proveedor de Mapas (Tiles):** OpenStreetMap (OSM).
+* **Manejo de Coordenadas:**
+    - Backend: Almacena `Latitud` y `Longitud` como `double` en SQL Server.
+    - Frontend: Recibe estos valores en el JSON y los instancia como objetos `L.marker([lat, lon])`.
+
+### Lógica de Sincronización
+Para mantener la coherencia entre la lista y el mapa:
+1.  Existe un `LayerGroup` en Leaflet que agrupa todos los marcadores.
+2.  Cada vez que se aplica un filtro (ej: buscar "Perro"), se ejecuta `markersGroup.clearLayers()` para limpiar el mapa.
+3.  Se regeneran solo los marcadores que coinciden con la búsqueda actual.
+
+### 7. Estrategia de Higiene de Datos (TTL)
+Para evitar la saturación visual del mapa y mantener la relevancia de los reportes, se implementó una regla de filtrado temporal en el Backend.
+- **Problemática:** La acumulación de reportes antiguos (animales ya encontrados o publicaciones abandonadas) degrada la experiencia de usuario.
+- **Solución:** El endpoint `GET /api/Animales` aplica un filtro `Where(x => x.FechaPublicacion >= DateTime.Now.AddDays(-15))`.
+- **Resultado:** Las publicaciones tienen una vigencia efectiva de 2 semanas en la vista pública, manteniéndose en la base de datos para fines estadísticos históricos.
+
+## 8. Flujo de Creación de Datos (Frontend -> Backend)
+
+La creación de un nuevo reporte implica una transacción en dos pasos coordinada por el cliente:
+
+1.  **Carga de Multimedia (Media Upload):**
+    - El cliente envía la imagen mediante `multipart/form-data`.
+    - El servidor almacena el archivo y retorna `{ url: "..." }`.
+    
+2.  **Persistencia de Entidad:**
+    - El cliente construye el objeto DTO (Data Transfer Object) con los datos del formulario, las coordenadas capturadas del mapa y la URL de la imagen.
+    - Se envía un `POST /api/Animales` con `Content-Type: application/json`.
+    - **Optimización:** El Backend responde con `200 OK` y el objeto creado, evitando el uso de `CreatedAtAction` para prevenir errores de enrutamiento en desarrollo local.
+
+## 9. Arquitectura del Dashboard Administrativo
+
+El panel de administración utiliza una estrategia de **Single Page Application (SPA)** simplificada para el consumo de métricas.
+
+### Componentes de Visualización
+1.  **Mapa de Calor (Heatmap):**
+    - Utiliza un array de vectores `[lat, lng, intensidad]`.
+    - La intensidad se normaliza a `0.8` para resaltar visualmente las zonas con múltiples reportes superpuestos (hotspots).
+    
+2.  **Gestión de Ciclo de Vida del DOM:**
+    - Debido a la naturaleza dinámica de las librerías de gráficos (Chart.js y Leaflet), se implementó un control de instancias globales (`let mapaCalor`, `let grafico`).
+    - Antes de cada renderizado (ej: tras eliminar un registro), se verifica si la instancia existe y se invoca su método destructor para liberar memoria y evitar conflictos en el canvas HTML.
+
+### Endpoint de Eliminación
+- **Método:** `DELETE /api/Animales/{id}`.
+- **Comportamiento:** Eliminación física del registro en SQL Server.
+- **Respuesta:** `204 No Content` (Estándar REST para borrados exitosos).

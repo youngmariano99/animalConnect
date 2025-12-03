@@ -25,6 +25,13 @@ namespace AnimalConnect.Backend.Models
 
         public DateTime FechaPublicacion { get; set; } = DateTime.Now;
 
+        // Datos opcionales del contacto
+        [MaxLength(20)]
+        public string? TelefonoContacto { get; set; } 
+
+        // Relación dinámica para el Match
+        public virtual ICollection<AnimalAtributo>? Atributos { get; set; }
+
         // --- RELACIONES (Foreign Keys) ---
 
         // 1. Relación con Especie

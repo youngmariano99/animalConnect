@@ -35,3 +35,42 @@ Se habilitó el middleware `app.UseStaticFiles()` en `Program.cs` para permitir 
 
 ---
 **✅ CIERRE DE SPRINT 2:** Backend funcional con base de datos, relaciones y manejo de multimedia.
+
+### 6. Integración Frontend-Backend (CORS)
+Para permitir que la página web (Frontend) consuma datos de la API (Backend), se configuró una política de **CORS (Cross-Origin Resource Sharing)**.
+- **Configuración:** Se habilitó `AllowAnyOrigin` en el `Program.cs` del Backend. Esto permite que el navegador acepte respuestas de la API aunque vengan de dominios diferentes (ej: localhost:5500 vs localhost:5269).
+
+### 7. Inicio Sprint 3: Frontend Público
+Se creó la estructura base del cliente web (`index.html`) utilizando:
+- **Tailwind CSS (CDN):** Para el diseño rápido y responsivo.
+- **JavaScript (Fetch API):** Para realizar peticiones asíncronas al Backend.
+- **Renderizado Dinámico:** Se implementó una función JS que recibe el JSON de animales e inyecta el HTML de las tarjetas en el DOM.
+
+### 8. Integración de Mapas Interactivos (Leaflet.js)
+Se implementó la visualización geolocalizada de mascotas.
+- **Tecnología:** Librería `Leaflet.js` con tiles (mapas base) de OpenStreetMap.
+- **Funcionalidad:**
+    - Inicialización del mapa centrado en las coordenadas del municipio (-37.994, -61.353).
+    - **Marcadores Dinámicos:** Al cargar o filtrar mascotas, se generan pines en el mapa.
+    - **Interactividad:**
+        - Click en marcador -> Muestra Popup con nombre y descripción.
+        - Click en botón "Ver en Mapa" (Tarjeta) -> El mapa hace un vuelo suave (`flyTo`) hacia la ubicación y centra el marcador.
+
+### 9. Módulo de Reporte Ciudadano (Modal + FormData)
+Se implementó la funcionalidad para que los usuarios carguen nuevos reportes desde el Frontend.
+- **Interfaz (UI):** Se creó un Modal flotante (oculto por defecto) que contiene el formulario de carga.
+- **Selector Geográfico:** Se integró una segunda instancia de mapa (`L.map`) dentro del modal para permitir al usuario seleccionar la ubicación exacta haciendo clic (evento `click` -> captura `lat, lng`).
+- **Manejo de Imágenes:** - Se utiliza `FormData` en JavaScript para enviar el archivo binario al endpoint `POST /api/Archivos/subir`.
+    - Se recibe la URL y se adjunta al objeto JSON del animal.
+- **Corrección de Infraestructura:** Se configuró el perfil de lanzamiento HTTP en el puerto 5269 y se ajustaron las llamadas `fetch` a `127.0.0.1` para evitar bloqueos de seguridad/CORS en navegadores modernos.
+
+### 10. Módulo de Administración y Analítica (Dashboard)
+Se desarrolló un panel de control (`admin.html`) orientado a la toma de decisiones municipales.
+- **Visualización de Datos:**
+    - Integración de **Chart.js** para gráficos de torta (distribución por especies).
+    - Implementación de **Leaflet.heat** para generar Mapas de Calor (Heatmaps) basados en la densidad de reportes geolocalizados.
+- **Gestión de Registros:**
+    - Se habilitó el verbo `DELETE` en el controlador `AnimalesController`.
+    - Se implementó la lógica de borrado en el Frontend con confirmación de seguridad.
+- **Correcciones Técnicas:**
+    - Se solucionó el error de "Map container already initialized" implementando una lógica de limpieza de instancias (`.remove()` / `.destroy()`) antes de recargar los componentes visuales.
