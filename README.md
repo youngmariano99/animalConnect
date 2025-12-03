@@ -1,21 +1,27 @@
 # 🐾 Animal Connect: Sistema Integral de Gestión de Zoonosis
 
-> **Propuesta Tecnológica para la Modernización de la Gestión de Fauna Urbana.**
+> **Plataforma Integral de Gestión de Zoonosis, Adopción Inteligente y Red Profesional.**
 
 ## 📄 Descripción del Proyecto
-**Animal Connect** es una plataforma web diseñada para centralizar, optimizar y digitalizar la gestión de animales en situación de calle y mascotas en una comunidad.
+**Animal Connect** ha evolucionado de un simple registro de mascotas a un **Ecosistema de Salud Pública** completo. Es una plataforma web diseñada para centralizar y profesionalizar la gestión de la fauna urbana en comunidades medianas.
 
-El sistema conecta tres actores claves: **El Municipio (Zoonosis)**, las **Organizaciones de Rescate** y los **Ciudadanos**, transformando reportes informales en datos geolocalizados para la toma de decisiones estratégicas de salud pública, a la vez que fomenta la adopción responsable mediante algoritmos de compatibilidad.
+
+El sistema conecta ahora a **cuatro actores estratégicos**:
+1.  **El Municipio (Zoonosis):** Para inteligencia de datos y control sanitario.
+2.  **Veterinarios y Profesionales:** Integrados como agentes de salud verificados.
+3.  **Organizaciones de Rescate:** Para la gestión eficiente de tránsitos.
+4.  **Ciudadanos:** Empoderados con herramientas de reporte y adopción.
 
 ---
 
-## 🎯 Visión y Objetivos
+## 🎯 Visión y Soluciones
 
-El objetivo principal es proveer una solución tecnológica eficiente y escalable para un municipio de aprox. 30.000 habitantes, abordando las siguientes problemáticas:
+El proyecto aborda problemáticas reales con tecnología escalable:
 
-1.  **Inteligencia de Datos:** Permitir al municipio visualizar "Mapas de Calor" sobre problemáticas animales para optimizar recursos (ej. campañas de castración).
-2.  **Eficiencia en Adopciones:** Reemplazar el caos de las redes sociales con un sistema centralizado que utiliza filtros de compatibilidad (Espacio, Tiempo, Tipo de mascota).
-3.  **Seguridad y Rapidez:** Agilizar el reencuentro de mascotas perdidas mediante geolocalización en mapas interactivos.
+1.  **Red de Salud Profesional (Nuevo):** Digitalización del directorio veterinario y sistema automatizado de **"Farmacia de Turno"** geolocalizada para urgencias.
+2.  **Seguridad Ciudadana:** Validación de identidad para profesionales (Matrícula/Bio) para evitar fraudes y garantizar confianza en la comunidad.
+3.  **Inteligencia de Datos:** "Mapas de Calor" para que el municipio optimice recursos en campañas de castración y vacunación.
+4.  **Adopción Eficiente (Match):** Algoritmos de compatibilidad que conectan mascotas con dueños ideales según estilo de vida, reduciendo la tasa de devolución.
 
 ---
 
@@ -40,47 +46,24 @@ Este proyecto utiliza una arquitectura moderna, escalable y segura, dividida en 
 
 ---
 
-## 📋 Requisitos del Sistema (MVP)
+## 📋 Módulos del Sistema (V2.0)
 
-### Requisitos Funcionales
+### 1. Módulo Público (Ciudadanos)
+* **Mapa de Salud:** Visualización en tiempo real de veterinarias y campañas de salud.
+* **Widget de Guardia:** Aviso destacado en la navegación con la veterinaria de turno y conexión directa a WhatsApp.
+* **Reportes Geolocalizados:** Sistema de alertas para mascotas perdidas/encontradas con ubicación exacta en mapa.
+* **Adopción & Match:** Catálogo con filtros avanzados y cálculo de compatibilidad (%).
 
-#### Módulo Público (Ciudadanos)
-1.  **Catálogo de Adopción:** Búsqueda de animales con filtros avanzados.
-2.  **Sistema de Reportes:** Capacidad de reportar mascotas perdidas/encontradas marcando la ubicación exacta en el mapa y subiendo una fotografía.
-3.  **Visualización de Campañas:** Acceso al calendario del Castrador movil Municipal.
-4.  **Contacto Directo:** Integración con WhatsApp API para contactar al refugio o dueño.
+### 2. Módulo Profesional (Veterinarios)
+* **Perfil Verificado:** Registro con validación de matrícula y datos biométricos (Logo, Bio).
+* **Gestión de Presencia:** Configuración de horarios de atención y ubicación comercial.
+* **Visibilidad:** Destacado automático en el mapa al estar de turno.
 
-#### Módulo Administrativo (Zoonosis/Admin)
-1.  **Autenticación:** Login seguro para personal autorizado.
-2.  **Gestión de Animales (CRUD):** Alta, baja y modificación de fichas médicas y de adopción.
-3.  **Dashboard de Gestión:** Panel con métricas y Mapa de Calor (Heatmap) de incidentes.
-4.  **Gestión de Eventos:** Administración de fechas de castración y vacunación.
-
-### Requisitos No Funcionales
-* **Usabilidad:** Diseño 100% Responsivo (Mobile First).
-* **Performance:** Optimización de carga de imágenes.
-* **Seguridad:** Hashing de contraseñas y validación de datos en servidor.
-* **Escalabilidad:** Arquitectura desacoplada (API REST) preparada para futuras apps móviles.
-
----
-
-## 🗓 Historias de Usuario (Priorizadas)
-
-Utilizando la metodología **MoSCoW** para el MVP:
-
-### 🔴 High Priority (Must Have)
-* **HU-01 (Admin):** Quiero ingresar al sistema (Login) para proteger la integridad de los datos.
-* **HU-02 (Admin):** Quiero dar de alta un animal (foto, descripción, estado) para publicarlo.
-* **HU-03 (Ciudadano):** Quiero ver un listado de animales para adoptar.
-* **HU-04 (Ciudadano):** Quiero reportar un animal perdido marcando su ubicación en el mapa.
-
-### 🟡 Medium Priority (Should Have)
-* **HU-05 (Ciudadano):** Quiero filtrar animales por características (tamaño, espacio necesario) para encontrar una mascota compatible ("Match").
-* **HU-06 (Zoonosis):** Quiero ver un mapa de calor con las zonas de mayores reportes para planificar intervenciones.
-* **HU-07 (Ciudadano):** Quiero un botón de contacto rápido (WhatsApp) en la ficha del animal.
-
-### 🟢 Low Priority (Could Have)
-* **HU-08 (Admin):** Quiero gestionar y publicar un calendario de castraciones.
+### 3. Módulo Administrativo (Zoonosis/Gobierno)
+* **Centro de Validación:** Panel para aprobar o rechazar solicitudes de nuevos profesionales.
+* **Gestión de Turnos:** Control centralizado de la "Veterinaria de Guardia" (Toggle On/Off).
+* **Dashboard de Métricas:** Gráficos de especies, estados y mapas de calor de incidentes.
+* **Gestión de Campañas:** Publicación de eventos de castración móvil.
 
 ---
 
@@ -106,5 +89,21 @@ Planificación basada en metodología ágil (adaptada para desarrollador único)
     * Implementación de gráficos y Heatmap.
     * Deploy y pruebas finales.
 
+### 🔄 FASE 2: SHOWCASE (Actual)
+* **Sprint A: Identidad Profesional (Completado)**
+    * Roles de Usuario (Vet/Vecino).
+    * Registro con Mapa Interactivo (Leaflet Picker).
+    * Panel de Aprobación de Veterinarios.
+    * Sistema de Guardia/Turnos.
+* **Sprint B: Ciclo de Vida y UX (En Progreso)**
+    * Separación lógica Perdidos vs. Adopción.
+    * Panel "Mis Publicaciones".
+    * Estados finales (Encontrado/Adoptado).
+* **Sprint C: Comunidad**
+    * Foro de dudas y consultas.
+    * Muro de "Finales Felices".
+    * Gamificación para usuarios activos.
+
+
 ---
-*Desarrollado para la Tecnicatura Superior en Programación - 2024/2025.*
+*Proyecto desarrollado para la Tecnicatura Superior en Programación - 2024/2025.*
