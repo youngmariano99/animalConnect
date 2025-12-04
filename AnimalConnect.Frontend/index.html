@@ -15,65 +15,68 @@
         .hidden-section { display: none; }
         .slide-down { animation: slideDown 0.3s ease-out forwards; transform-origin: top; }
         @keyframes slideDown { from { opacity: 0; transform: scaleY(0); max-height: 0; } to { opacity: 1; transform: scaleY(1); max-height: 1000px; } }
+        
+        /* Badges comunidad */
+        .badge-vet { background-color: #dbeafe; color: #1e40af; border: 1px solid #93c5fd; }
+        .badge-user { background-color: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
     </style>
 
     <style>
-        /* Animación de pulso para la farmacia de turno */
         @keyframes pulse-green {
             0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
             70% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
             100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
         }
-        .turno-activo {
-            animation: pulse-green 2s infinite;
-        }
+        .turno-activo { animation: pulse-green 2s infinite; }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 pb-20">
 
     <nav class="bg-white shadow-md fixed w-full z-50 top-0">
-    <div class="container mx-auto px-4 py-2 flex justify-between items-center">
-        <div class="flex items-center space-x-2">
-            <i class="fa-solid fa-paw text-orange-500 text-2xl"></i>
-            <span class="text-xl font-bold text-gray-800 hidden md:block">Animal Connect</span>
-        </div>
+        <div class="container mx-auto px-4 py-2 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-paw text-orange-500 text-2xl"></i>
+                <span class="text-xl font-bold text-gray-800 hidden md:block">Animal Connect</span>
+            </div>
 
-        <div class="flex items-center space-x-4">
-            
-            <div id="widget-turno" class="hidden flex items-center bg-green-50 px-3 py-1 rounded-full border border-green-200 animate-pulse">
-                <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-                <div class="text-xs mr-2">
-                    <span class="block font-bold text-green-700">GUARDIA ACTIVA</span>
-                    <span id="turno-nombre" class="block text-gray-600 truncate max-w-[100px] md:max-w-[150px]">Nombre Vet</span>
+            <div class="flex items-center space-x-4">
+                <div id="widget-turno" class="hidden flex items-center bg-green-50 px-3 py-1 rounded-full border border-green-200 animate-pulse">
+                    <div class="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    <div class="text-xs mr-2">
+                        <span class="block font-bold text-green-700">GUARDIA ACTIVA</span>
+                        <span id="turno-nombre" class="block text-gray-600 truncate max-w-[100px] md:max-w-[150px]">Nombre Vet</span>
+                    </div>
+                    <a id="turno-btn" href="#" target="_blank" class="bg-green-500 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-green-600 transition">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </a>
                 </div>
-                <a id="turno-btn" href="#" target="_blank" class="bg-green-500 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-green-600 transition">
-                    <i class="fa-brands fa-whatsapp"></i>
-                </a>
-            </div>
 
-            <div id="auth-buttons" class="flex items-center">
-                <a href="login.html" class="text-gray-500 hover:text-orange-500 font-bold text-sm">
-                    <i class="fa-solid fa-user-circle text-xl align-middle"></i> 
-                    <span class="hidden md:inline ml-1">Ingresar</span>
-                </a>
+                <div id="auth-buttons" class="flex items-center">
+                    <a href="login.html" class="text-gray-500 hover:text-orange-500 font-bold text-sm">
+                        <i class="fa-solid fa-user-circle text-xl align-middle"></i> 
+                        <span class="hidden md:inline ml-1">Ingresar</span>
+                    </a>
+                </div>
             </div>
         </div>
-    </div>
-    
-    <div class="bg-white border-t border-gray-100">
-        <div class="container mx-auto flex justify-center space-x-2 md:space-x-8 overflow-x-auto">
-            <button onclick="cambiarSeccion('perdidos')" id="tab-perdidos" class="py-3 px-4 active-tab transition whitespace-nowrap text-sm md:text-base">
-                <i class="fa-solid fa-map-location-dot mr-2"></i> Perdidos
-            </button>
-            <button onclick="cambiarSeccion('adopcion')" id="tab-adopcion" class="py-3 px-4 inactive-tab transition whitespace-nowrap text-sm md:text-base">
-                <i class="fa-solid fa-heart mr-2"></i> Adopción
-            </button>
-            <button onclick="cambiarSeccion('campanas')" id="tab-campanas" class="py-3 px-4 inactive-tab transition whitespace-nowrap text-sm md:text-base">
-                <i class="fa-solid fa-truck-medical mr-2"></i> Salud
-            </button>
+        
+        <div class="bg-white border-t border-gray-100">
+            <div class="container mx-auto flex justify-center space-x-2 md:space-x-8 overflow-x-auto">
+                <button onclick="cambiarSeccion('perdidos')" id="tab-perdidos" class="py-3 px-4 active-tab transition whitespace-nowrap text-sm md:text-base">
+                    <i class="fa-solid fa-map-location-dot mr-2"></i> Perdidos
+                </button>
+                <button onclick="cambiarSeccion('adopcion')" id="tab-adopcion" class="py-3 px-4 inactive-tab transition whitespace-nowrap text-sm md:text-base">
+                    <i class="fa-solid fa-heart mr-2"></i> Adopción
+                </button>
+                <button onclick="cambiarSeccion('comunidad')" id="tab-comunidad" class="py-3 px-4 inactive-tab transition whitespace-nowrap text-sm md:text-base">
+                    <i class="fa-solid fa-users mr-2"></i> Comunidad
+                </button>
+                <button onclick="cambiarSeccion('campanas')" id="tab-campanas" class="py-3 px-4 inactive-tab transition whitespace-nowrap text-sm md:text-base">
+                    <i class="fa-solid fa-truck-medical mr-2"></i> Salud
+                </button>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
 
     
     <div class="container mx-auto px-4 mt-36">
@@ -84,13 +87,11 @@
                     <h1 class="text-2xl font-bold text-gray-800">Mapa de Reportes Ciudadanos</h1>
                     <p class="text-gray-500 text-sm">Ayúdanos a encontrar mascotas perdidas.</p>
                 </div>
-                <button onclick="abrirModalReporte()" class="bg-red-500 text-white px-6 py-3 rounded-xl shadow-lg hover:bg-red-600 font-bold transition transform hover:-translate-y-1 flex items-center">
+                <button onclick="abrirModalReporte('perdidos')" class="bg-red-500 text-white px-6 py-3 rounded-xl shadow-lg hover:bg-red-600 font-bold transition transform hover:-translate-y-1 flex items-center">
                     <i class="fa-solid fa-camera mr-2"></i> PUBLICAR AVISO
                 </button>
             </div>
-
             <div id="map-perdidos" class="h-[500px] w-full rounded-2xl shadow-lg border border-gray-200 z-0"></div>
-            
             <h2 class="text-xl font-bold mt-8 mb-4">Últimos Reportes</h2>
             <div id="grid-perdidos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"></div>
         </section>
@@ -101,24 +102,63 @@
                     <h1 class="text-2xl font-bold text-gray-800">Adopción Responsable</h1>
                     <p class="text-gray-500 text-sm">Estos animales buscan un hogar que se adapte a ellos.</p>
                 </div>
-                <button onclick="abrirModalReporte(true)" class="bg-orange-500 text-white px-5 py-2 rounded-lg font-bold text-sm hover:bg-orange-600 transition">
+                <button onclick="abrirModalReporte('adopcion')" class="bg-orange-500 text-white px-5 py-2 rounded-lg font-bold text-sm hover:bg-orange-600 transition">
                     <i class="fa-solid fa-plus mr-1"></i> Dar en Adopción
                 </button>
             </div>
-
             <div id="banner-login-adopcion" class="hidden bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg mb-8">
                 <h2 class="text-xl font-bold text-blue-800">Encuentra tu alma gemela</h2>
                 <p class="text-blue-600 mb-4">Para ver el % de compatibilidad real, necesitamos conocer tu estilo de vida.</p>
                 <a href="login.html" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700">Iniciar Sesión / Registrarme</a>
             </div>
-
             <div id="banner-match-ok" class="hidden mb-6">
                 <p class="text-green-600 font-medium bg-green-50 px-4 py-2 rounded-lg inline-block">
                     <i class="fa-solid fa-check-circle mr-2"></i> Algoritmo de compatibilidad activo.
                 </p>
             </div>
-
             <div id="grid-adopcion" class="grid grid-cols-1 md:grid-cols-3 gap-8"></div>
+        </section>
+
+        <section id="sec-comunidad" class="hidden-section max-w-3xl mx-auto">
+            
+            <div class="text-center mb-8">
+                <h1 class="text-2xl font-bold text-gray-800">Muro Comunitario</h1>
+                <p class="text-gray-500 text-sm">Dudas, historias y avisos vecinales.</p>
+            </div>
+
+            <div id="box-publicar" class="bg-white p-5 rounded-xl shadow-md mb-8 border border-gray-100 hidden">
+                <div class="flex gap-4">
+                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-orange-500 text-xl flex-shrink-0">
+                        <i class="fa-solid fa-pen"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-bold text-gray-700 mb-2">¿Qué quieres compartir?</h3>
+                        <input type="text" id="post-titulo" placeholder="Título breve..." class="w-full border-b border-gray-200 focus:border-orange-500 outline-none py-2 mb-2 text-lg font-medium">
+                        <textarea id="post-contenido" rows="3" placeholder="Escribe tu duda, historia o aviso..." class="w-full bg-gray-50 rounded-lg p-3 outline-none focus:ring-2 focus:ring-orange-200 text-sm"></textarea>
+                        
+                        <div class="flex justify-between items-center mt-3">
+                            <select id="post-categoria" class="text-xs border rounded-full px-3 py-1 bg-white hover:bg-gray-50 cursor-pointer outline-none">
+                                <option value="Duda">❓ Consulta / Duda</option>
+                                <option value="Historia">❤️ Historia de Éxito</option>
+                                <option value="Aviso">📢 Aviso General</option>
+                            </select>
+                            <button onclick="publicarPost()" class="bg-orange-600 text-white px-6 py-1.5 rounded-full font-bold text-sm hover:bg-orange-700 transition shadow-sm">
+                                Publicar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="msg-login-comunidad" class="bg-blue-50 text-blue-700 p-4 rounded-lg text-center mb-8 hidden">
+                <i class="fa-solid fa-lock mr-2"></i> Inicia sesión para publicar o comentar.
+            </div>
+
+            <div id="feed-container" class="space-y-6 pb-12">
+                <div class="text-center py-10 text-gray-400">
+                    <i class="fa-solid fa-circle-notch fa-spin text-2xl"></i> Cargando muro...
+                </div>
+            </div>
         </section>
 
         <section id="sec-campanas" class="hidden-section">
@@ -147,16 +187,11 @@
 
             <div class="p-6 overflow-y-auto max-h-[85vh]">
                 <form onsubmit="enviarReporte(event)" class="space-y-5">
-                    
                     <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">¿Qué quieres publicar?</label>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Tipo de Reporte</label>
                         <select id="rep-estado" class="w-full border-2 border-gray-200 rounded-xl p-3 focus:border-orange-500 outline-none text-gray-700 font-medium" onchange="toggleCamposAdopcion()">
-                            <option value="2">🚨 Perdí mi mascota (Alerta)</option>
-                            <option value="3">👀 Encontré una mascota (Alerta)</option>
-                            <option value="1">🏡 Dar en Adopción (Requiere datos)</option>
                         </select>
                     </div>
-
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="text-xs font-bold text-gray-500 uppercase">Nombre</label>
@@ -170,23 +205,19 @@
                             </select>
                         </div>
                     </div>
-
                     <div>
                         <label class="text-xs font-bold text-gray-500 uppercase">Descripción</label>
                         <textarea id="rep-desc" rows="2" placeholder="Color, raza, señas particulares..." class="w-full border rounded-lg p-2"></textarea>
                     </div>
-
                     <div id="extra-adopcion" class="hidden bg-orange-50 p-5 rounded-xl border border-orange-100 space-y-4">
                         <h4 class="font-bold text-orange-800 text-sm border-b border-orange-200 pb-2 mb-2">
                             <i class="fa-solid fa-clipboard-list mr-1"></i> Datos para el Match
                         </h4>
-                        
                         <div>
                             <label class="text-xs font-bold text-gray-600">Nivel de Energía</label>
                             <input type="range" id="rep-energia" min="1" max="5" value="3" class="w-full h-2 bg-gray-300 rounded-lg accent-orange-500">
                             <div class="flex justify-between text-[10px] text-gray-500"><span>Bajo</span><span>Medio</span><span>Alto</span></div>
                         </div>
-
                         <div>
                             <label class="text-xs font-bold text-gray-600">Tamaño</label>
                             <div class="flex gap-4 mt-1">
@@ -195,7 +226,6 @@
                                 <label class="flex items-center text-sm"><input type="radio" name="rep-tamano" value="3" class="mr-1 accent-orange-600"> Grande</label>
                             </div>
                         </div>
-
                         <div class="grid grid-cols-2 gap-2">
                             <label class="flex items-center p-2 bg-white rounded border cursor-pointer">
                                 <input type="checkbox" id="rep-patio" class="w-4 h-4 text-orange-600 mr-2 rounded">
@@ -219,7 +249,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="text-xs font-bold text-gray-500 uppercase">Foto</label>
@@ -230,12 +259,10 @@
                             <input type="tel" id="rep-tel" placeholder="2922..." class="w-full border rounded-lg p-2" required>
                         </div>
                     </div>
-
                     <div class="bg-gray-100 p-3 rounded-xl">
                         <p class="text-xs text-center text-gray-500 mb-2">Marca la ubicación en el mapa (Opcional)</p>
                         <div id="map-modal" class="h-40 w-full rounded-lg cursor-crosshair border border-gray-300"></div>
                     </div>
-
                     <button type="submit" class="w-full bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-gray-800 transition shadow-lg">
                         PUBLICAR AVISO
                     </button>
@@ -244,43 +271,196 @@
         </div>
     </div>
 
-<script>
+    <script>
         const API_URL = 'http://127.0.0.1:5269/api';
         
-        // Variables Globales
         let mapPerdidos, mapCampanas, mapModal, markerModal;
         let coordsReporte = null;
-        let layerVeterinarias = L.layerGroup(); // <--- NUEVO: Capa para Vets
+        let layerVeterinarias = L.layerGroup(); 
         const usuario = JSON.parse(localStorage.getItem('zoonosis_user'));
 
         document.addEventListener('DOMContentLoaded', () => {
             verificarAuth();
-            cambiarSeccion('perdidos');
-            cargarVeterinarias(); // <--- NUEVO: Cargar datos de salud
+            
+            // Chequear si viene redirigido desde "Finalizar Historia" (Perfil)
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('modo') === 'historia') {
+                cambiarSeccion('comunidad');
+                
+                // Pre-llenar campos si es posible (solo si el usuario ya está logueado)
+                setTimeout(() => {
+                    const selCat = document.getElementById('post-categoria');
+                    const inpTit = document.getElementById('post-titulo');
+                    const inpCont = document.getElementById('post-contenido');
+                    if(selCat && inpTit) {
+                        selCat.value = 'Historia';
+                        inpTit.value = "¡Final Feliz! Encontré a mi mascota 🎉";
+                        inpCont.value = "Quiero agradecer a la comunidad porque gracias a Animal Connect pude...";
+                        inpCont.focus();
+                    }
+                }, 500);
+            } else {
+                cambiarSeccion('perdidos');
+            }
+
+            cargarVeterinarias();
         });
 
+        // --- NAVEGACIÓN SPA ---
         function cambiarSeccion(sec) {
-            ['perdidos', 'adopcion', 'campanas'].forEach(s => {
-                document.getElementById(`sec-${s}`).classList.add('hidden-section');
-                document.getElementById(`tab-${s}`).className = "py-3 px-4 inactive-tab transition hover:text-orange-500 cursor-pointer";
+            ['perdidos', 'adopcion', 'comunidad', 'campanas'].forEach(s => {
+                const elSec = document.getElementById(`sec-${s}`);
+                const elTab = document.getElementById(`tab-${s}`);
+                if(elSec) elSec.classList.add('hidden-section');
+                if(elTab) elTab.className = "py-3 px-4 inactive-tab transition hover:text-orange-500 cursor-pointer";
             });
+
             document.getElementById(`sec-${sec}`).classList.remove('hidden-section');
             document.getElementById(`tab-${sec}`).className = "py-3 px-4 active-tab transition cursor-pointer";
 
             if(sec === 'perdidos') initMapPerdidos();
             if(sec === 'adopcion') cargarAdopcion();
             if(sec === 'campanas') initMapCampanas();
+            if(sec === 'comunidad') cargarMuro(); // <--- NUEVO
+        }
+
+        // --- COMUNIDAD (SPRINT C) ---
+        async function cargarMuro() {
+            // Mostrar/Ocultar caja de publicar según login
+            if(usuario) {
+                document.getElementById('box-publicar').classList.remove('hidden');
+                document.getElementById('msg-login-comunidad').classList.add('hidden');
+            } else {
+                document.getElementById('box-publicar').classList.add('hidden');
+                document.getElementById('msg-login-comunidad').classList.remove('hidden');
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/Foro`);
+                const posts = await res.json();
+                renderizarFeed(posts);
+            } catch (e) { console.error(e); }
+        }
+
+        function renderizarFeed(posts) {
+            const container = document.getElementById('feed-container');
+            container.innerHTML = '';
+
+            if (posts.length === 0) {
+                container.innerHTML = '<div class="text-center py-10 bg-white rounded-xl shadow-sm"><i class="fa-regular fa-comments text-4xl text-gray-300 mb-3"></i><p class="text-gray-500">Aún no hay publicaciones. ¡Sé el primero!</p></div>';
+                return;
+            }
+
+            posts.forEach(p => {
+                let iconoCat = 'fa-question-circle text-blue-500';
+                if(p.categoria === 'Historia') iconoCat = 'fa-heart text-red-500';
+                if(p.categoria === 'Aviso') iconoCat = 'fa-bullhorn text-yellow-600';
+
+                const badgeAutor = p.esVeterinario 
+                    ? `<span class="badge-vet text-[10px] px-2 py-0.5 rounded-full font-bold ml-2"><i class="fa-solid fa-user-doctor mr-1"></i>Vet</span>`
+                    : `<span class="badge-user text-[10px] px-2 py-0.5 rounded-full font-bold ml-2">Vecino</span>`;
+
+                let htmlComentarios = p.comentarios.map(c => {
+                    const badgeCom = c.esVeterinario ? `<i class="fa-solid fa-circle-check text-blue-500 ml-1" title="Respuesta Profesional"></i>` : '';
+                    return `
+                        <div class="bg-gray-50 p-2 rounded-lg mb-2 text-sm border-l-2 ${c.esVeterinario ? 'border-blue-400' : 'border-gray-200'}">
+                            <span class="font-bold text-gray-700 text-xs block">${c.autor} ${badgeCom}</span>
+                            <p class="text-gray-600">${c.contenido}</p>
+                        </div>
+                    `;
+                }).join('');
+
+                // Input comentario solo si logueado
+                const inputComentario = usuario 
+                    ? `<div class="flex gap-2 mt-3">
+                        <input type="text" id="coment-${p.id}" placeholder="Responder..." class="flex-1 bg-gray-50 border border-gray-200 rounded-full px-4 py-1.5 text-sm focus:outline-none focus:border-orange-300">
+                        <button onclick="enviarComentario(${p.id})" class="text-orange-600 hover:text-orange-700 px-2"><i class="fa-solid fa-paper-plane"></i></button>
+                       </div>`
+                    : '';
+
+                container.innerHTML += `
+                    <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 mb-4">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-400 mr-3">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div>
+                                    <p class="font-bold text-sm text-gray-800 flex items-center">${p.autor} ${badgeAutor}</p>
+                                    <p class="text-xs text-gray-400">${new Date(p.fechaPublicacion).toLocaleDateString()}</p>
+                                </div>
+                            </div>
+                            <div class="text-xl ${iconoCat}" title="${p.categoria}"><i class="fa-solid ${iconoCat.split(' ')[0]}"></i></div>
+                        </div>
+                        <h4 class="font-bold text-lg text-gray-900 mb-1">${p.titulo}</h4>
+                        <p class="text-gray-600 text-sm mb-4 leading-relaxed">${p.contenido}</p>
+                        
+                        <div class="border-t border-gray-100 pt-3">
+                            ${htmlComentarios ? `<div class="mb-3 pl-2 border-l-2 border-gray-100 space-y-2">${htmlComentarios}</div>` : ''}
+                            ${inputComentario}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function publicarPost() {
+            const titulo = document.getElementById('post-titulo').value;
+            const contenido = document.getElementById('post-contenido').value;
+            const categoria = document.getElementById('post-categoria').value;
+
+            if(!titulo || !contenido) return alert("Completa los campos.");
+
+            try {
+                const res = await fetch(`${API_URL}/Foro`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ titulo, contenido, categoria, usuarioId: usuario.id })
+                });
+                if(res.ok) {
+                    if(categoria === 'Historia') alert("¡Gracias por compartir! +50 Puntos.");
+                    else alert("Publicado.");
+                    document.getElementById('post-titulo').value = '';
+                    document.getElementById('post-contenido').value = '';
+                    cargarMuro();
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function enviarComentario(postId) {
+            const input = document.getElementById(`coment-${postId}`);
+            const texto = input.value;
+            if(!texto) return;
+
+            try {
+                const res = await fetch(`${API_URL}/Foro/${postId}/comentar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contenido: texto, usuarioId: usuario.id })
+                });
+                if(res.ok) cargarMuro();
+            } catch(e) { console.error(e); }
         }
 
         function verificarAuth() {
             const container = document.getElementById('auth-buttons');
             if(usuario) {
-                container.innerHTML = `<span class="text-sm font-bold text-orange-600 mr-3">Hola, ${usuario.nombre}</span><button onclick="logout()" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-right-from-bracket"></i></button>`;
+                container.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-sm font-bold text-orange-600 hidden md:inline">Hola, ${usuario.nombre}</span>
+                        <a href="perfil.html" class="bg-orange-100 text-orange-600 px-3 py-1 rounded-lg text-sm font-bold hover:bg-orange-200 transition">
+                            <i class="fa-solid fa-user-gear mr-1"></i> Mi Perfil
+                        </a>
+                        <button onclick="logout()" class="text-gray-400 hover:text-red-500" title="Salir">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                        </button>
+                    </div>
+                `;
             }
         }
         function logout() { localStorage.removeItem('zoonosis_user'); window.location.reload(); }
 
-        // --- 1. PERDIDOS & MAPA PRINCIPAL ---
+        // --- MAPAS Y FUNCIONES EXISTENTES ---
         async function initMapPerdidos() {
             const res = await fetch(`${API_URL}/Animales`);
             const todos = await res.json();
@@ -289,10 +469,7 @@
             if(mapPerdidos) mapPerdidos.remove();
             mapPerdidos = L.map('map-perdidos').setView([-37.994, -61.353], 14);
             L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapPerdidos);
-
-            // <--- NUEVO: Agregar la capa de veterinarias al mapa ---
             layerVeterinarias.addTo(mapPerdidos);
-            // -----------------------------------------------------
 
             const grid = document.getElementById('grid-perdidos');
             grid.innerHTML = '';
@@ -319,14 +496,12 @@
             });
         }
 
-        // --- NUEVO: LÓGICA DE VETERINARIAS ---
         async function cargarVeterinarias() {
             try {
                 const res = await fetch(`${API_URL}/Veterinarias`);
                 if (res.ok) {
                     const lista = await res.json();
                     
-                    // Icono personalizado (Cruz Azul)
                     const iconVet = L.divIcon({
                         html: '<div class="w-8 h-8 bg-blue-600 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white"><i class="fa-solid fa-user-doctor"></i></div>',
                         className: 'bg-transparent',
@@ -336,7 +511,6 @@
                     });
 
                     lista.forEach(v => {
-                        // 1. Crear marcador y agregar a la CAPA (no al mapa directamente)
                         const marker = L.marker([v.latitud, v.longitud], {icon: iconVet})
                             .bindPopup(`
                                 <div class="text-center min-w-[200px]">
@@ -354,7 +528,6 @@
                         
                         layerVeterinarias.addLayer(marker);
 
-                        // 2. Widget de Turno
                         if (v.esDeTurno) mostrarWidgetTurno(v);
                     });
                 }
@@ -371,7 +544,6 @@
             }
         }
 
-        // --- 2. ADOPCIÓN ---
         async function cargarAdopcion() {
             const grid = document.getElementById('grid-adopcion');
             grid.innerHTML = '<div class="col-span-3 text-center text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i> Cargando...</div>';
@@ -431,7 +603,6 @@
             });
         }
 
-        // --- 3. CAMPAÑAS ---
         async function initMapCampanas() {
             if(!mapCampanas) {
                 mapCampanas = L.map('map-campanas').setView([-37.994, -61.353], 13);
@@ -484,12 +655,38 @@
             }
         }
 
-        // --- MODAL Y ENVÍO ---
-        function abrirModalReporte(esAdopcion = false) {
-            document.getElementById('modal-reporte').classList.remove('hidden');
+        // --- LÓGICA DE MODAL DINÁMICO (SEPARACIÓN) ---
+        function abrirModalReporte(modo) {
+            const modal = document.getElementById('modal-reporte');
             const select = document.getElementById('rep-estado');
-            select.value = esAdopcion ? "1" : "2";
-            toggleCamposAdopcion();
+            const extra = document.getElementById('extra-adopcion');
+            const titulo = modal.querySelector('h3');
+
+            modal.classList.remove('hidden');
+            select.innerHTML = ''; // Limpiamos opciones
+
+            if (modo === 'adopcion') {
+                if(titulo) titulo.innerHTML = '<i class="fa-solid fa-heart mr-2"></i> Publicar en Adopción';
+                
+                const opt = document.createElement('option');
+                opt.value = "1";
+                opt.text = "🏡 Dar en Adopción";
+                select.appendChild(opt);
+
+                extra.classList.remove('hidden');
+                extra.classList.add('slide-down');
+            } 
+            else {
+                if(titulo) titulo.innerHTML = '<i class="fa-solid fa-bullhorn mr-2"></i> Reportar Alerta';
+
+                const op1 = document.createElement('option'); op1.value = "2"; op1.text = "🚨 Se perdió mi mascota";
+                const op2 = document.createElement('option'); op2.value = "3"; op2.text = "👀 Encontré una mascota";
+                select.appendChild(op1);
+                select.appendChild(op2);
+
+                extra.classList.add('hidden');
+                extra.classList.remove('slide-down');
+            }
 
             setTimeout(() => {
                 if(!mapModal) {
@@ -504,6 +701,7 @@
                 }
             }, 200);
         }
+
         function cerrarModal() { document.getElementById('modal-reporte').classList.add('hidden'); }
 
         function toggleCamposAdopcion() {
@@ -533,12 +731,19 @@
                     imgUrl = dataImg.url;
                 }
 
+                if (!usuario) {
+                    alert("Debes iniciar sesión para publicar.");
+                    window.location.href = 'login.html';
+                    return;
+                }
+
                 const estado = parseInt(document.getElementById('rep-estado').value);
                 const nuevoAnimal = {
                     nombre: document.getElementById('rep-nombre').value,
                     descripcion: document.getElementById('rep-desc').value,
                     idEspecie: parseInt(document.getElementById('rep-especie').value),
                     idEstado: estado,
+                    usuarioId: usuario ? usuario.id : null,
                     telefonoContacto: document.getElementById('rep-tel').value,
                     imagenUrl: imgUrl,
                     ubicacionLat: coordsReporte ? coordsReporte.lat : -37.994,

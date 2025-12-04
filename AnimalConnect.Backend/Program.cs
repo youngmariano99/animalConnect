@@ -5,6 +5,7 @@ using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+
 // --- 1. CONFIGURACIÓN DE SERVICIOS ---
 
 builder.Services.AddOpenApi();
@@ -32,6 +33,25 @@ builder.Services.AddControllers()
     });
 
 var app = builder.Build();
+
+// --- INICIO DATA SEEDING ---
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        var context = services.GetRequiredService<ApplicationDbContext>();
+        
+        // Esta línea crea la BD si no existe y ejecuta el Seeder
+        DbInitializer.Initialize(context);
+    }
+    catch (Exception ex)
+    {
+        var logger = services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Ocurrió un error al sembrar la base de datos.");
+    }
+}
+// --- FIN DATA SEEDING ---
 
 // --- 2. CONFIGURACIÓN DEL PIPELINE ---
 

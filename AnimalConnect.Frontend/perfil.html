@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil - Animal Connect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <nav class="bg-white shadow-md mb-8">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <a href="index.html" class="flex items-center text-gray-700 hover:text-orange-500 transition">
+                    <i class="fa-solid fa-arrow-left mr-2"></i> Volver al Inicio
+                </a>
+            </div>
+            <h1 class="text-xl font-bold text-orange-600">Mi Panel de Gestión</h1>
+            <div class="w-24"></div> </div>
+    </nav>
+
+    <div class="container mx-auto px-4">
+        
+        <div class="bg-white p-6 rounded-xl shadow-lg mb-8 flex flex-col md:flex-row items-center justify-between">
+            <div class="flex items-center mb-4 md:mb-0">
+                <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center text-orange-500 text-2xl mr-4">
+                    <i class="fa-solid fa-user"></i>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold" id="user-name">Cargando...</h2>
+                    <p class="text-gray-500 text-sm">Gestiona tus reportes y adopciones</p>
+                </div>
+            </div>
+            <button onclick="logout()" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg hover:bg-red-100 transition font-bold text-sm">
+                <i class="fa-solid fa-power-off mr-2"></i> Cerrar Sesión
+            </button>
+        </div>
+
+        <h3 class="text-xl font-bold text-gray-700 mb-4 border-l-4 border-orange-500 pl-3">Mis Publicaciones</h3>
+        
+        <div id="grid-mis-publicaciones" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full text-center py-10">
+                <i class="fa-solid fa-circle-notch fa-spin text-4xl text-gray-300"></i>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:5269/api';
+        const usuario = JSON.parse(localStorage.getItem('zoonosis_user'));
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if(!usuario) {
+                window.location.href = 'login.html';
+                return;
+            }
+            document.getElementById('user-name').innerText = usuario.nombre;
+            cargarMisPublicaciones();
+        });
+
+        function logout() {
+            localStorage.removeItem('zoonosis_user');
+            window.location.href = 'index.html';
+        }
+
+        async function cargarMisPublicaciones() {
+            try {
+                const res = await fetch(`${API_URL}/Animales/usuario/${usuario.id}`);
+                const lista = await res.json();
+                renderizarLista(lista);
+            } catch (error) {
+                console.error(error);
+                document.getElementById('grid-mis-publicaciones').innerHTML = 
+                    '<p class="col-span-full text-center text-red-500">Error al cargar datos.</p>';
+            }
+        }
+
+        function renderizarLista(lista) {
+            const grid = document.getElementById('grid-mis-publicaciones');
+            grid.innerHTML = '';
+
+            if(lista.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12 bg-white rounded-xl shadow border border-dashed border-gray-300">
+                        <i class="fa-regular fa-folder-open text-4xl text-gray-300 mb-3"></i>
+                        <p class="text-gray-500">No tienes publicaciones activas.</p>
+                        <a href="index.html" class="mt-4 inline-block text-orange-600 font-bold hover:underline">Crear un reporte ahora</a>
+                    </div>`;
+                return;
+            }
+
+            lista.forEach(a => {
+                // Calcular días restantes
+                const fechaRenov = new Date(a.fechaUltimaRenovacion);
+                const hoy = new Date();
+                const diffTime = Math.abs(hoy - fechaRenov);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
+                const diasRestantes = 15 - diffDays;
+                
+                const esVencido = diasRestantes < 0;
+                
+                // Estilos según estado
+                let estadoBadge = '';
+                let acciones = '';
+                let opacidad = 'opacity-100';
+
+                if (a.idEstado === 3 || a.idEstado === 4) { // Encontrado/Adoptado
+                    opacidad = 'opacity-60 grayscale';
+                    estadoBadge = `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">✅ FINALIZADO</span>`;
+                    acciones = `<button onclick="borrar(${a.id})" class="text-red-500 hover:text-red-700 font-bold text-sm">Eliminar Historial</button>`;
+                } 
+                else if (esVencido) { // Vencido
+                    opacidad = 'opacity-75 border-2 border-red-300';
+                    estadoBadge = `<span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">⚠️ VENCIDO</span>`;
+                    acciones = `
+                        <button onclick="renovar(${a.id})" class="w-full bg-orange-500 text-white py-2 rounded-lg font-bold hover:bg-orange-600 mb-2 transition shadow">
+                            <i class="fa-solid fa-arrows-rotate mr-2"></i> Renovar Aviso
+                        </button>
+                        <button onclick="finalizar(${a.id}, ${a.idEstado})" class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg font-bold hover:bg-gray-300 transition text-sm">
+                            Ya se resolvió
+                        </button>
+                    `;
+                } 
+                else { // Activo
+                    estadoBadge = `<span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">ACTIVO (${diasRestantes} días)</span>`;
+                    acciones = `
+                        <button onclick="finalizar(${a.id}, ${a.idEstado})" class="w-full bg-green-500 text-white py-2 rounded-lg font-bold hover:bg-green-600 mb-2 transition shadow">
+                            <i class="fa-solid fa-check mr-2"></i> ¡Lo encontré / Adoptado!
+                        </button>
+                        <button onclick="borrar(${a.id})" class="w-full border border-red-200 text-red-500 py-2 rounded-lg font-bold hover:bg-red-50 transition text-sm">
+                            Eliminar
+                        </button>
+                    `;
+                }
+
+                grid.innerHTML += `
+                    <div class="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col ${opacidad} transition-all hover:scale-[1.01]">
+                        <div class="relative h-48">
+                            <img src="${a.imagenUrl || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover">
+                            <div class="absolute top-3 right-3 shadow-sm">${estadoBadge}</div>
+                        </div>
+                        <div class="p-5 flex-1 flex flex-col">
+                            <h3 class="text-lg font-bold text-gray-800 mb-1">${a.nombre}</h3>
+                            <p class="text-xs text-gray-500 mb-4 bg-gray-100 inline-block px-2 py-1 rounded self-start">
+                                Publicado: ${new Date(a.fechaPublicacion).toLocaleDateString()}
+                            </p>
+                            <p class="text-sm text-gray-600 mb-4 flex-1 line-clamp-2">${a.descripcion}</p>
+                            
+                            <div class="mt-auto border-t border-gray-100 pt-4">
+                                ${acciones}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // --- ACCIONES ---
+
+        async function renovar(id) {
+            if(!confirm("¿Tu mascota sigue perdida/en adopción? Al renovar, aparecerá 15 días más.")) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/Animales/renovar/${id}`, { method: 'PUT' });
+                if(res.ok) {
+                    alert("¡Publicación renovada!");
+                    cargarMisPublicaciones();
+                }
+            } catch(e) { console.error(e); alert("Error al conectar"); }
+        }
+
+        async function finalizar(id, estadoActual) {
+            const nuevoEstado = 3; // Encontrado/Histórico
+            const texto = estadoActual === 1 ? "¿Se concretó la adopción?" : "¿Encontraste a tu mascota?";
+
+            if(!confirm(texto + " Esto quitará el aviso del mapa público.")) return;
+
+            try {
+                const res = await fetch(`${API_URL}/Animales/estado/${id}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(nuevoEstado)
+                });
+                
+                if(res.ok) {
+                    // --- NUEVO: PREGUNTA DE GAMIFICACIÓN ---
+                    if (confirm("¡Qué gran noticia! 🎉\n\n¿Te gustaría compartir esta historia de éxito en la Comunidad?\nGanarás 50 Puntos de reputación y ayudarás a inspirar a otros.")) {
+                        // Redirigimos al muro con modo 'historia' para que se autolllen los campos
+                        window.location.href = 'comunidad.html?modo=historia';
+                    } else {
+                        alert("Estado actualizado correctamente.");
+                        cargarMisPublicaciones();
+                    }
+                    // ----------------------------------------
+                }
+            } catch(e) { console.error(e); }
+        }
+        async function borrar(id) {
+            if(!confirm("¿Eliminar definitivamente? Esta acción no se puede deshacer.")) return;
+            await fetch(`${API_URL}/Animales/${id}`, { method: 'DELETE' });
+            cargarMisPublicaciones();
+        }
+    </script>
+</body>
+</html>

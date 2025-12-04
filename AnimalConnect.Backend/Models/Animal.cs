@@ -23,11 +23,21 @@ namespace AnimalConnect.Backend.Models
         public double? UbicacionLat { get; set; }
         public double? UbicacionLon { get; set; }
 
+
+        // Fechas del Ciclo de Vida
         public DateTime FechaPublicacion { get; set; } = DateTime.Now;
+
+        // NUEVO: Para saber cuándo vence (Fecha + 15 días)
+        public DateTime FechaUltimaRenovacion { get; set; } = DateTime.Now;
 
         // Datos opcionales del contacto
         [MaxLength(20)]
         public string? TelefonoContacto { get; set; } 
+
+        // Relación con Usuario (quién publicó el animal)
+        public int? UsuarioId { get; set; } 
+        [ForeignKey("UsuarioId")]
+        public virtual Usuario? Usuario { get; set; }
 
         // Relación dinámica para el Match
         public virtual ICollection<AnimalAtributo>? Atributos { get; set; }
@@ -45,5 +55,7 @@ namespace AnimalConnect.Backend.Models
         
         [ForeignKey("IdEstado")]
         public virtual Estado? Estado { get; set; }
+
+        
     }
 }

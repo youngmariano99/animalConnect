@@ -29,7 +29,7 @@ namespace AnimalConnect.Backend.Controllers
                     u.Id,
                     u.NombreUsuario,
                     // Proyectamos datos del perfil relacionado
-                    NombreVeterinaria = u.PerfilVeterinario.NombreVeterinaria,
+                    NombreVeterinaria = u.PerfilVeterinario != null ? u.PerfilVeterinario.NombreVeterinaria : "Sin Datos",
                     Matricula = u.PerfilVeterinario.MatriculaProfesional,
                     Direccion = u.PerfilVeterinario.Direccion,
                     FechaRegistro = u.PerfilVeterinario.Id // O cualquier dato de fecha si tuvieras

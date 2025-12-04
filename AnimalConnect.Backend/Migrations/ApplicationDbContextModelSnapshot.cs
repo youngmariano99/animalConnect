@@ -43,6 +43,9 @@ namespace AnimalConnect.Backend.Migrations
                     b.Property<DateTime>("FechaPublicacion")
                         .HasColumnType("datetime2");
 
+                    b.Property<DateTime>("FechaUltimaRenovacion")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("IdEspecie")
                         .HasColumnType("int");
 
@@ -67,54 +70,18 @@ namespace AnimalConnect.Backend.Migrations
                     b.Property<double?>("UbicacionLon")
                         .HasColumnType("float");
 
+                    b.Property<int?>("UsuarioId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("IdEspecie");
 
                     b.HasIndex("IdEstado");
 
-                    b.ToTable("Animales");
+                    b.HasIndex("UsuarioId");
 
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Descripcion = "Perro guardián, mucha energía.",
-                            EdadAproximada = "2 años",
-                            FechaPublicacion = new DateTime(2025, 12, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IdEspecie = 1,
-                            IdEstado = 1,
-                            ImagenUrl = "http://127.0.0.1:5269/uploads/PerroAdoptar1.png",
-                            Nombre = "Rocky",
-                            UbicacionLat = -37.994,
-                            UbicacionLon = -61.353000000000002
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Descripcion = "Gatita de departamento.",
-                            EdadAproximada = "4 años",
-                            FechaPublicacion = new DateTime(2025, 12, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IdEspecie = 2,
-                            IdEstado = 1,
-                            ImagenUrl = "http://127.0.0.1:5269/uploads/GatoAdoptar1.png",
-                            Nombre = "Mishi",
-                            UbicacionLat = -37.996000000000002,
-                            UbicacionLon = -61.354999999999997
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Descripcion = "Gigante y bonachón, necesita patio.",
-                            EdadAproximada = "3 años",
-                            FechaPublicacion = new DateTime(2025, 12, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            IdEspecie = 1,
-                            IdEstado = 1,
-                            ImagenUrl = "http://127.0.0.1:5269/uploads/PerroAdoptar2.png",
-                            Nombre = "Hulk",
-                            UbicacionLat = -37.991,
-                            UbicacionLon = -61.350000000000001
-                        });
+                    b.ToTable("Animales");
                 });
 
             modelBuilder.Entity("AnimalConnect.Backend.Models.AnimalAtributo", b =>
@@ -141,155 +108,6 @@ namespace AnimalConnect.Backend.Migrations
                     b.HasIndex("AtributoId");
 
                     b.ToTable("AnimalAtributos");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            AnimalId = 1,
-                            AtributoId = 1,
-                            Valor = 3
-                        },
-                        new
-                        {
-                            Id = 2,
-                            AnimalId = 1,
-                            AtributoId = 2,
-                            Valor = 1
-                        },
-                        new
-                        {
-                            Id = 3,
-                            AnimalId = 1,
-                            AtributoId = 3,
-                            Valor = 0
-                        },
-                        new
-                        {
-                            Id = 4,
-                            AnimalId = 1,
-                            AtributoId = 4,
-                            Valor = 1
-                        },
-                        new
-                        {
-                            Id = 5,
-                            AnimalId = 1,
-                            AtributoId = 5,
-                            Valor = 2
-                        },
-                        new
-                        {
-                            Id = 6,
-                            AnimalId = 1,
-                            AtributoId = 6,
-                            Valor = 2
-                        },
-                        new
-                        {
-                            Id = 7,
-                            AnimalId = 1,
-                            AtributoId = 7,
-                            Valor = 2
-                        },
-                        new
-                        {
-                            Id = 8,
-                            AnimalId = 2,
-                            AtributoId = 1,
-                            Valor = 1
-                        },
-                        new
-                        {
-                            Id = 9,
-                            AnimalId = 2,
-                            AtributoId = 2,
-                            Valor = 0
-                        },
-                        new
-                        {
-                            Id = 10,
-                            AnimalId = 2,
-                            AtributoId = 3,
-                            Valor = 1
-                        },
-                        new
-                        {
-                            Id = 11,
-                            AnimalId = 2,
-                            AtributoId = 4,
-                            Valor = 0
-                        },
-                        new
-                        {
-                            Id = 12,
-                            AnimalId = 2,
-                            AtributoId = 5,
-                            Valor = 1
-                        },
-                        new
-                        {
-                            Id = 13,
-                            AnimalId = 2,
-                            AtributoId = 6,
-                            Valor = 1
-                        },
-                        new
-                        {
-                            Id = 14,
-                            AnimalId = 2,
-                            AtributoId = 7,
-                            Valor = 1
-                        },
-                        new
-                        {
-                            Id = 15,
-                            AnimalId = 3,
-                            AtributoId = 1,
-                            Valor = 2
-                        },
-                        new
-                        {
-                            Id = 16,
-                            AnimalId = 3,
-                            AtributoId = 2,
-                            Valor = 1
-                        },
-                        new
-                        {
-                            Id = 17,
-                            AnimalId = 3,
-                            AtributoId = 3,
-                            Valor = 1
-                        },
-                        new
-                        {
-                            Id = 18,
-                            AnimalId = 3,
-                            AtributoId = 4,
-                            Valor = 1
-                        },
-                        new
-                        {
-                            Id = 19,
-                            AnimalId = 3,
-                            AtributoId = 5,
-                            Valor = 2
-                        },
-                        new
-                        {
-                            Id = 20,
-                            AnimalId = 3,
-                            AtributoId = 6,
-                            Valor = 3
-                        },
-                        new
-                        {
-                            Id = 21,
-                            AnimalId = 3,
-                            AtributoId = 7,
-                            Valor = 1
-                        });
                 });
 
             modelBuilder.Entity("AnimalConnect.Backend.Models.Atributo", b =>
@@ -313,50 +131,6 @@ namespace AnimalConnect.Backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Atributos");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Nombre = "Nivel de Energía",
-                            Tipo = "Escala"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Nombre = "Requiere Patio",
-                            Tipo = "Booleano"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Nombre = "Apto con Niños",
-                            Tipo = "Booleano"
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Nombre = "Apto con Mascotas",
-                            Tipo = "Booleano"
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Nombre = "Tiempo Requerido",
-                            Tipo = "Escala"
-                        },
-                        new
-                        {
-                            Id = 6,
-                            Nombre = "Tamaño",
-                            Tipo = "Escala"
-                        },
-                        new
-                        {
-                            Id = 7,
-                            Nombre = "Nivel Experiencia",
-                            Tipo = "Escala"
-                        });
                 });
 
             modelBuilder.Entity("AnimalConnect.Backend.Models.Campania", b =>
@@ -391,6 +165,37 @@ namespace AnimalConnect.Backend.Migrations
                     b.ToTable("Campanias");
                 });
 
+            modelBuilder.Entity("AnimalConnect.Backend.Models.Comentario", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Contenido")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PostId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("Comentarios");
+                });
+
             modelBuilder.Entity("AnimalConnect.Backend.Models.Especie", b =>
                 {
                     b.Property<int>("Id")
@@ -407,18 +212,6 @@ namespace AnimalConnect.Backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Especies");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Nombre = "Perro"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Nombre = "Gato"
-                        });
                 });
 
             modelBuilder.Entity("AnimalConnect.Backend.Models.Estado", b =>
@@ -437,23 +230,6 @@ namespace AnimalConnect.Backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Estados");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Nombre = "En Adopción"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Nombre = "Perdido"
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Nombre = "Encontrado"
-                        });
                 });
 
             modelBuilder.Entity("AnimalConnect.Backend.Models.PerfilAdoptante", b =>
@@ -500,6 +276,9 @@ namespace AnimalConnect.Backend.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("Puntos")
+                        .HasColumnType("int");
 
                     b.Property<string>("Telefono")
                         .HasColumnType("nvarchar(max)");
@@ -576,6 +355,43 @@ namespace AnimalConnect.Backend.Migrations
                     b.ToTable("PerfilesVeterinarios");
                 });
 
+            modelBuilder.Entity("AnimalConnect.Backend.Models.Post", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Categoria")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Contenido")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("FechaPublicacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ImagenUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Titulo")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId");
+
+                    b.ToTable("Posts");
+                });
+
             modelBuilder.Entity("AnimalConnect.Backend.Models.PreferenciaAdoptante", b =>
                 {
                     b.Property<int>("Id")
@@ -629,15 +445,6 @@ namespace AnimalConnect.Backend.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Usuarios");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            NombreUsuario = "admin",
-                            PasswordHash = "admin123",
-                            Rol = "Administrador"
-                        });
                 });
 
             modelBuilder.Entity("AnimalConnect.Backend.Models.Animal", b =>
@@ -654,9 +461,15 @@ namespace AnimalConnect.Backend.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("AnimalConnect.Backend.Models.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId");
+
                     b.Navigation("Especie");
 
                     b.Navigation("Estado");
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("AnimalConnect.Backend.Models.AnimalAtributo", b =>
@@ -676,6 +489,25 @@ namespace AnimalConnect.Backend.Migrations
                     b.Navigation("Animal");
 
                     b.Navigation("Atributo");
+                });
+
+            modelBuilder.Entity("AnimalConnect.Backend.Models.Comentario", b =>
+                {
+                    b.HasOne("AnimalConnect.Backend.Models.Post", "Post")
+                        .WithMany("Comentarios")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("AnimalConnect.Backend.Models.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("AnimalConnect.Backend.Models.PerfilAdoptante", b =>
@@ -711,6 +543,17 @@ namespace AnimalConnect.Backend.Migrations
                     b.Navigation("Usuario");
                 });
 
+            modelBuilder.Entity("AnimalConnect.Backend.Models.Post", b =>
+                {
+                    b.HasOne("AnimalConnect.Backend.Models.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Usuario");
+                });
+
             modelBuilder.Entity("AnimalConnect.Backend.Models.PreferenciaAdoptante", b =>
                 {
                     b.HasOne("AnimalConnect.Backend.Models.Atributo", "Atributo")
@@ -738,6 +581,11 @@ namespace AnimalConnect.Backend.Migrations
             modelBuilder.Entity("AnimalConnect.Backend.Models.PerfilAdoptante", b =>
                 {
                     b.Navigation("Preferencias");
+                });
+
+            modelBuilder.Entity("AnimalConnect.Backend.Models.Post", b =>
+                {
+                    b.Navigation("Comentarios");
                 });
 
             modelBuilder.Entity("AnimalConnect.Backend.Models.Usuario", b =>

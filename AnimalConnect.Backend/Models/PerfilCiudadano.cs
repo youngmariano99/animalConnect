@@ -25,5 +25,7 @@ namespace AnimalConnect.Backend.Models
 
         // Fecha de registro para gamificación (ej: "Miembro desde 2024")
         public DateTime FechaRegistro { get; set; } = DateTime.Now;
+
+        public int Puntos { get; set; } = 0; // Se suman al aportar a la comunidad
     }
 }

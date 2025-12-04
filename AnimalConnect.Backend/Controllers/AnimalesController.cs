@@ -5,86 +5,99 @@ using AnimalConnect.Backend.Models;
 
 namespace AnimalConnect.Backend.Controllers
 {
-    // 1. Definimos que esto es un controlador de API
     [ApiController]
-    // 2. Definimos la ruta. [controller] se reemplaza por el nombre de la clase (Animales)
-    // La ruta final será: https://localhost:xxxx/api/animales
     [Route("api/[controller]")]
     public class AnimalesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
 
-        // 3. Inyección de Dependencias:
-        // El constructor "pide" el DbContext que configuramos en Program.cs
         public AnimalesController(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        // --- ENDPOINT 1: OBTENER TODOS LOS ANIMALES (GET) ---
+        // --- 1. OBTENER PÚBLICOS (Solo activos y recientes) ---
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Animal>>> GetAnimales()
         {
-            // REGLA DE NEGOCIO: Solo mostrar publicaciones de las últimas 2 semanas (15 días)
-            // Esto evita que el mapa se llene de datos viejos/abandonados.
+            // Regla: Mostrar solo si se renovó en los últimos 15 días
             var fechaLimite = DateTime.Now.AddDays(-15);
 
+            // Estados válidos para mostrar: 1 (Adopción), 2 (Perdido), 3 (Encontrado - opcional mostrarlo un tiempo)
+            // Ocultamos los que ya se resolvieron hace mucho o vencieron.
+            
             var animales = await _context.Animales
                                          .Include(a => a.Especie)
                                          .Include(a => a.Estado)
-                                         // Aquí está el filtro mágico:
-                                         .Where(a => a.FechaPublicacion >= fechaLimite) 
+                                         .Where(a => a.FechaUltimaRenovacion >= fechaLimite) 
                                          .ToListAsync();
 
             return Ok(animales);
         }
 
-        // --- ENDPOINT 2: OBTENER UN SOLO ANIMAL POR ID (GET) ---
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Animal>> GetAnimal(int id)
+        // --- 2. OBTENER MIS PUBLICACIONES (Panel Privado) ---
+        [HttpGet("usuario/{usuarioId}")]
+        public async Task<ActionResult<IEnumerable<Animal>>> GetMisPublicaciones(int usuarioId)
         {
-            var animal = await _context.Animales
-                                       .Include(a => a.Especie)
-                                       .Include(a => a.Estado)
-                                       .FirstOrDefaultAsync(a => a.Id == id);
-
-            if (animal == null)
-            {
-                return NotFound(); // Retorna HTTP 404 si no existe
-            }
-
-            return Ok(animal);
+            var misAnimales = await _context.Animales
+                                            .Include(a => a.Especie)
+                                            .Include(a => a.Estado)
+                                            .Where(a => a.UsuarioId == usuarioId)
+                                            .OrderByDescending(a => a.FechaUltimaRenovacion)
+                                            .ToListAsync();
+            return Ok(misAnimales);
         }
-        // --- ENDPOINT 3: CREAR NUEVO ANIMAL (CON ATRIBUTOS) ---
+
+        // --- 3. RENOVAR PUBLICACIÓN (Marketplace Logic) ---
+        [HttpPut("renovar/{id}")]
+        public async Task<IActionResult> RenovarPublicacion(int id)
+        {
+            var animal = await _context.Animales.FindAsync(id);
+            if (animal == null) return NotFound();
+
+            animal.FechaUltimaRenovacion = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Publicación renovada por 15 días más." });
+        }
+
+        // --- 4. CAMBIAR ESTADO (Finalizar) ---
+        [HttpPut("estado/{id}")]
+        public async Task<IActionResult> CambiarEstado(int id, [FromBody] int nuevoEstadoId)
+        {
+            var animal = await _context.Animales.FindAsync(id);
+            if (animal == null) return NotFound();
+
+            animal.IdEstado = nuevoEstadoId;
+            // Opcional: Al finalizar, podríamos querer que deje de aparecer o se archive.
+            // Por ahora solo cambiamos el estado.
+            
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Estado actualizado correctamente." });
+        }
+
+        // --- CREAR (Actualizado con UsuarioId) ---
         [HttpPost]
         public async Task<ActionResult<Animal>> PostAnimal(Animal animal)
         {
-            // 1. Guardar el Animal básico
+            animal.FechaPublicacion = DateTime.Now;
+            animal.FechaUltimaRenovacion = DateTime.Now;
+            
             _context.Animales.Add(animal);
-            
-            // 2. EF Core es inteligente: Si el objeto 'animal' viene con la lista 
-            // de 'Atributos' (AnimalAtributo) cargada desde el JSON, 
-            // él mismo hará los INSERT en la tabla AnimalAtributos automáticamente.
-            
             await _context.SaveChangesAsync();
 
             return Ok(animal);
         }
 
-        // --- ENDPOINT 4: ELIMINAR UN ANIMAL (DELETE) ---
+        // ... (Mantener Delete y Get por ID igual que antes) ...
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAnimal(int id)
         {
             var animal = await _context.Animales.FindAsync(id);
-            if (animal == null)
-            {
-                return NotFound();
-            }
-
+            if (animal == null) return NotFound();
             _context.Animales.Remove(animal);
             await _context.SaveChangesAsync();
-
-            return NoContent(); // Retorna 204 (Éxito sin contenido)
+            return NoContent();
         }
     }
 }
