@@ -136,16 +136,16 @@ Se reestructuró el Frontend para diferenciar claramente los casos de uso.
 
 ### 📅 Sprint B: Ciclo de Vida y Separación de Flujos
 **Objetivo:** Aislar "Pérdidas" de "Adopciones" y automatizar la higiene de datos.
-* [ ] **Separación Estricta:** Dividir formularios y vistas. El reporte de perdido no debe pedir datos de adopción y viceversa.
-* [ ] **Lógica "Marketplace":** Implementar fecha de vencimiento (15 días) y sistema de renovación de publicaciones.
+* [x] **Separación Estricta:** Dividir formularios y vistas. El reporte de perdido no debe pedir datos de adopción y viceversa.
+* [x] **Lógica "Marketplace":** Implementar fecha de vencimiento (15 días) y sistema de renovación de publicaciones.
 * [ ] **Estados Finales:** Reemplazar el borrado por cambios de estado (`Encontrado`, `Adoptado`, `Vencido`).
-* [ ] **Panel "Mis Publicaciones":** Área privada donde el usuario gestiona sus reportes (Renovar, Marcar Encontrado).
+* [x] **Panel "Mis Publicaciones":** Área privada donde el usuario gestiona sus reportes (Renovar, Marcar Encontrado).
 
 ### 📅 Sprint C: Comunidad y Gamificación
 **Objetivo:** Fomentar la retención de usuarios y crear una red de apoyo.
-* [ ] **Foro/Muro Comunitario:** Sección para "Dudas", "Finales Felices" y "Avisos".
-* [ ] **Interacción Profesional:** Distintivos visuales para comentarios de veterinarios verificados.
-* [ ] **Historias de Éxito:** Flujo automático para convertir un animal "Adoptado/Encontrado" en un post del muro.
+* [x] **Foro/Muro Comunitario:** Sección para "Dudas", "Finales Felices" y "Avisos".
+* [x] **Interacción Profesional:** Distintivos visuales para comentarios de veterinarios verificados.
+* [x] **Historias de Éxito:** Flujo automático para convertir un animal "Adoptado/Encontrado" en un post del muro.
 * [ ] **Gamificación:** Sistema básico de reputación o medallas por ayudar/adoptar.
 
 ### 📅 Sprint D: Pulido Visual y Match Detallado

@@ -56,7 +56,8 @@
                 window.location.href = 'login.html';
                 return;
             }
-            document.getElementById('user-name').innerText = usuario.nombre;
+            const htmlPuntos = usuario.puntos ? `<span class="ml-2 text-sm bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full"><i class="fa-solid fa-trophy text-yellow-500 mr-1"></i>${usuario.puntos} Ptos</span>` : '';
+            document.getElementById('user-name').innerHTML = `${usuario.nombre} ${htmlPuntos}`;
             cargarMisPublicaciones();
         });
 

@@ -372,7 +372,7 @@
 
                 if(res.ok) {
                     let usuarioActual = JSON.parse(localStorage.getItem('zoonosis_user'));
-                    usuarioActual.tienePerfil = true;
+                    usuarioActual.tienePerfilMatch = true;
                     localStorage.setItem('zoonosis_user', JSON.stringify(usuarioActual));
 
                     alert("¡Perfil creado! Vamos a buscar tu match ideal.");

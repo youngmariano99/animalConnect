@@ -69,6 +69,8 @@ namespace AnimalConnect.Backend.Controllers
                 // Lógica Match: ¿Tiene perfil de preferencias (Quiz) llenado?
                 tienePerfilMatch = await _context.PerfilesAdoptantes.AnyAsync(p => p.UsuarioId == user.Id),
 
+                puntos = user.Rol == "Ciudadano" && user.PerfilCiudadano != null ? user.PerfilCiudadano.Puntos : 0,
+
                 // Lógica Vet: Estado de verificación (Solo si es vet)
                 estadoVeterinario = user.Rol == "Veterinario" && user.PerfilVeterinario != null 
                                     ? user.PerfilVeterinario.EstadoVerificacion 

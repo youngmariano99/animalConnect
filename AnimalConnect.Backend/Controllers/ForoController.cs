@@ -21,9 +21,10 @@ namespace AnimalConnect.Backend.Controllers
         public async Task<ActionResult> GetPosts()
         {
             var posts = await _context.Posts
-                .Include(p => p.Usuario).ThenInclude(u => u.PerfilVeterinario) // Para ver si es Vet
-                .Include(p => p.Usuario).ThenInclude(u => u.PerfilCiudadano)   // Para ver nombre ciudadano
+                .Include(p => p.Usuario).ThenInclude(u => u.PerfilVeterinario)
+                .Include(p => p.Usuario).ThenInclude(u => u.PerfilCiudadano)
                 .Include(p => p.Comentarios).ThenInclude(c => c.Usuario).ThenInclude(u => u.PerfilVeterinario)
+                .Include(p => p.Comentarios).ThenInclude(c => c.Usuario).ThenInclude(u => u.PerfilCiudadano) // <--- FALTABA ESTO PARA COMENTARIOS
                 .OrderByDescending(p => p.FechaPublicacion)
                 .Select(p => new {
                     p.Id,
@@ -32,15 +33,28 @@ namespace AnimalConnect.Backend.Controllers
                     p.Categoria,
                     p.ImagenUrl,
                     p.FechaPublicacion,
-                    Autor = p.Usuario.Rol == "Veterinario" ? p.Usuario.PerfilVeterinario.NombreVeterinaria : p.Usuario.PerfilCiudadano.NombreCompleto,
+                    
+                    // LÓGICA ROBUSTA PARA NOMBRE DE AUTOR (POST)
+                    Autor = p.Usuario.Rol == "Veterinario" 
+                        ? (p.Usuario.PerfilVeterinario != null ? p.Usuario.PerfilVeterinario.NombreVeterinaria : p.Usuario.NombreUsuario)
+                        : (p.Usuario.PerfilCiudadano != null && !string.IsNullOrEmpty(p.Usuario.PerfilCiudadano.NombreCompleto) ? p.Usuario.PerfilCiudadano.NombreCompleto : p.Usuario.NombreUsuario),
+                    
                     EsVeterinario = p.Usuario.Rol == "Veterinario",
                     AutorId = p.UsuarioId,
+                    AutorPuntos = p.Usuario.Rol == "Ciudadano" && p.Usuario.PerfilCiudadano != null ? p.Usuario.PerfilCiudadano.Puntos : 0,
+                    
                     Comentarios = p.Comentarios.Select(c => new {
                         c.Id,
                         c.Contenido,
                         c.Fecha,
-                        Autor = c.Usuario.Rol == "Veterinario" ? c.Usuario.PerfilVeterinario.NombreVeterinaria : c.Usuario.NombreUsuario,
-                        EsVeterinario = c.Usuario.Rol == "Veterinario"
+                        
+                        // LÓGICA ROBUSTA PARA NOMBRE DE AUTOR (COMENTARIO)
+                        Autor = c.Usuario.Rol == "Veterinario" 
+                            ? (c.Usuario.PerfilVeterinario != null ? c.Usuario.PerfilVeterinario.NombreVeterinaria : c.Usuario.NombreUsuario)
+                            : (c.Usuario.PerfilCiudadano != null && !string.IsNullOrEmpty(c.Usuario.PerfilCiudadano.NombreCompleto) ? c.Usuario.PerfilCiudadano.NombreCompleto : c.Usuario.NombreUsuario),
+                        
+                        EsVeterinario = c.Usuario.Rol == "Veterinario",
+                        AutorPuntos = c.Usuario.Rol == "Ciudadano" && c.Usuario.PerfilCiudadano != null ? c.Usuario.PerfilCiudadano.Puntos : 0
                     }).OrderBy(c => c.Fecha).ToList()
                 })
                 .ToListAsync();
@@ -54,25 +68,25 @@ namespace AnimalConnect.Backend.Controllers
         {
             post.FechaPublicacion = DateTime.Now;
             _context.Posts.Add(post);
+            
+            int nuevosPuntos = 0;
 
-            // GAMIFICACIÓN: Si comparte una historia de éxito, suma puntos
-            if (post.Categoria == "Historia")
+            // LÓGICA DE PUNTOS
+            // Solo sumamos si es un Ciudadano (los Vets tienen otra reputación)
+            var perfil = await _context.PerfilesCiudadanos.FirstOrDefaultAsync(p => p.UsuarioId == post.UsuarioId);
+            
+            if (perfil != null)
             {
-                var perfil = await _context.PerfilesCiudadanos.FirstOrDefaultAsync(p => p.UsuarioId == post.UsuarioId);
-                if (perfil != null)
-                {
-                    perfil.Puntos += 50; // ¡50 Puntos por final feliz!
-                }
-            }
-            // Puntos por participar (Duda/Aviso)
-            else 
-            {
-                var perfil = await _context.PerfilesCiudadanos.FirstOrDefaultAsync(p => p.UsuarioId == post.UsuarioId);
-                if (perfil != null) perfil.Puntos += 5; 
+                if (post.Categoria == "Historia") perfil.Puntos += 50; // Gran premio
+                else perfil.Puntos += 5; // Premio estándar
+
+                nuevosPuntos = perfil.Puntos;
             }
 
             await _context.SaveChangesAsync();
-            return Ok(post);
+            
+            // IMPORTANTE: Devolvemos el objeto y los NUEVOS PUNTOS para actualizar el front
+            return Ok(new { post, nuevosPuntos });
         }
 
         // 3. POST: Comentar (Veterinarios suman reputación aquí también)
@@ -82,8 +96,21 @@ namespace AnimalConnect.Backend.Controllers
             comentario.PostId = id;
             comentario.Fecha = DateTime.Now;
             _context.Comentarios.Add(comentario);
+
+            int nuevosPuntos = 0;
+
+            // SUMAR PUNTOS POR COMENTAR
+            var perfil = await _context.PerfilesCiudadanos.FirstOrDefaultAsync(p => p.UsuarioId == comentario.UsuarioId);
+            if (perfil != null)
+            {
+                perfil.Puntos += 2; // Ejemplo: 2 puntos por ayudar/comentar
+                nuevosPuntos = perfil.Puntos;
+            }
+
             await _context.SaveChangesAsync();
-            return Ok(new { message = "Comentario agregado" });
+
+            // Devolvemos los puntos actualizados
+            return Ok(new { message = "Comentario agregado", nuevosPuntos });
         }
     }
 }

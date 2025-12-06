@@ -116,7 +116,25 @@
                     <i class="fa-solid fa-check-circle mr-2"></i> Algoritmo de compatibilidad activo.
                 </p>
             </div>
+
+            <div id="filtros-match" class="hidden mb-6 flex flex-wrap gap-3">
+                <span class="text-sm text-gray-500 font-bold uppercase self-center mr-2">Filtrar por Match:</span>
+                
+                <button onclick="filtrarPorMatch('estricto')" id="btn-match-estricto" class="px-4 py-2 rounded-full text-sm font-bold bg-green-100 text-green-700 hover:bg-green-200 transition border border-green-200 ring-2 ring-green-500">
+                    <i class="fa-solid fa-star mr-1"></i> Alto (+80%)
+                </button>
+                
+                <button onclick="filtrarPorMatch('intermedio')" id="btn-match-intermedio" class="px-4 py-2 rounded-full text-sm font-bold bg-white text-gray-600 hover:bg-gray-100 transition border border-gray-200">
+                    <i class="fa-solid fa-star-half-stroke mr-1"></i> Medio (+50%)
+                </button>
+                
+                <button onclick="filtrarPorMatch('todos')" id="btn-match-todos" class="px-4 py-2 rounded-full text-sm font-bold bg-white text-gray-600 hover:bg-gray-100 transition border border-gray-200">
+                    <i class="fa-solid fa-list mr-1"></i> Todos los viables
+                </button>
+            </div>
             <div id="grid-adopcion" class="grid grid-cols-1 md:grid-cols-3 gap-8"></div>
+
+            
         </section>
 
         <section id="sec-comunidad" class="hidden-section max-w-3xl mx-auto">
@@ -271,6 +289,37 @@
         </div>
     </div>
 
+
+    <div id="modal-match" class="fixed inset-0 bg-black bg-opacity-70 hidden z-[110] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative animate-fade-in-up overflow-hidden">
+            <div class="relative h-32 bg-gray-200">
+                <img id="match-img" class="w-full h-full object-cover opacity-80" src="">
+                <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/70 to-transparent p-4">
+                    <h3 id="match-nombre" class="text-white font-bold text-2xl">Nombre</h3>
+                </div>
+                <button onclick="document.getElementById('modal-match').classList.add('hidden')" class="absolute top-2 right-2 bg-black/50 text-white w-8 h-8 rounded-full hover:bg-black/80">&times;</button>
+            </div>
+
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <p class="text-sm text-gray-500 font-bold uppercase">Compatibilidad General</p>
+                        <p class="text-xs text-gray-400">Basado en tu perfil de hogar y rutina</p>
+                    </div>
+                    <div id="match-badge-modal" class="text-xl font-bold px-4 py-2 rounded-lg shadow-sm">
+                        95%
+                    </div>
+                </div>
+
+                <h4 class="font-bold text-gray-700 mb-3 text-sm border-b pb-1">¿Por qué hacen match?</h4>
+                <ul id="match-razones" class="space-y-3 text-sm text-gray-600 mb-6">
+                    </ul>
+
+                <button onclick="document.getElementById('modal-match').classList.add('hidden')" class="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200">Entendido</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_URL = 'http://127.0.0.1:5269/api';
         
@@ -278,6 +327,7 @@
         let coordsReporte = null;
         let layerVeterinarias = L.layerGroup(); 
         const usuario = JSON.parse(localStorage.getItem('zoonosis_user'));
+        let listaMatchesGlobal = [];
 
         document.addEventListener('DOMContentLoaded', () => {
             verificarAuth();
@@ -445,9 +495,14 @@
         function verificarAuth() {
             const container = document.getElementById('auth-buttons');
             if(usuario) {
+                // Lógica para mostrar puntos si existen
+                const htmlPuntos = usuario.puntos ? `<span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2 py-0.5 rounded-full ml-1"><i class="fa-solid fa-star text-yellow-500 mr-1"></i>${usuario.puntos}</span>` : '';
+
                 container.innerHTML = `
                     <div class="flex items-center gap-3">
-                        <span class="text-sm font-bold text-orange-600 hidden md:inline">Hola, ${usuario.nombre}</span>
+                        <span class="text-sm font-bold text-orange-600 hidden md:inline">
+                            Hola, ${usuario.nombre} ${htmlPuntos}
+                        </span>
                         <a href="perfil.html" class="bg-orange-100 text-orange-600 px-3 py-1 rounded-lg text-sm font-bold hover:bg-orange-200 transition">
                             <i class="fa-solid fa-user-gear mr-1"></i> Mi Perfil
                         </a>
@@ -544,29 +599,92 @@
             }
         }
 
+        // --- SECCIÓN 2: ADOPCIÓN ---
         async function cargarAdopcion() {
             const grid = document.getElementById('grid-adopcion');
-            grid.innerHTML = '<div class="col-span-3 text-center text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i> Cargando...</div>';
+            const filtrosDiv = document.getElementById('filtros-match'); // NUEVO
 
-            if(!usuario || !usuario.tienePerfil) {
-                document.getElementById('banner-login-adopcion').classList.remove('hidden');
-                document.getElementById('banner-match-ok').classList.add('hidden');
+            grid.innerHTML = '<div class="col-span-3 text-center text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i> Cargando...</div>';
+            
+            // Ocultar todo al inicio
+            document.getElementById('banner-login-adopcion').classList.add('hidden');
+            document.getElementById('banner-match-ok').classList.add('hidden');
+            if(filtrosDiv) filtrosDiv.classList.add('hidden');
+
+            // 1. INVITADO
+            if(!usuario) {
+                mostrarBanner('banner-login-adopcion');
+                const res = await fetch(`${API_URL}/Animales`);
+                const todos = await res.json();
+                renderizarTarjetasAdopcion(todos.filter(a => a.idEstado === 1), false);
+            } 
+            // 2. SIN QUIZ
+            else if (usuario && !usuario.tienePerfilMatch) {
+                const b = document.getElementById('banner-login-adopcion');
+                b.classList.remove('hidden');
+                b.querySelector('h2').innerText = `Hola ${usuario.nombre}, completa tu perfil`;
+                b.querySelector('p').innerText = "Para calcular la compatibilidad, necesitamos saber sobre tu hogar.";
+                b.querySelector('a').innerText = "Ir al Cuestionario";
+                b.querySelector('a').href = "quiz.html";
                 
                 const res = await fetch(`${API_URL}/Animales`);
                 const todos = await res.json();
-                const adopcion = todos.filter(a => a.idEstado === 1);
-                renderizarTarjetasAdopcion(adopcion, false);
-            } else {
-                document.getElementById('banner-login-adopcion').classList.add('hidden');
-                document.getElementById('banner-match-ok').classList.remove('hidden');
-
+                renderizarTarjetasAdopcion(todos.filter(a => a.idEstado === 1), false);
+            } 
+            // 3. FULL MATCH
+            else {
+                mostrarBanner('banner-match-ok');
                 const res = await fetch(`${API_URL}/Match/${usuario.id}`);
                 if(res.ok) {
                     const matches = await res.json();
-                    const lista = matches.map(m => { m.animal.matchScore = m.porcentajeMatch; m.animal.razones = m.razonesMatch; return m.animal; });
-                    renderizarTarjetasAdopcion(lista, true);
+                    // Guardamos datos crudos para el filtrado
+                    listadoMatchActual = matches; 
+                    
+                    // Mapeamos a formato animal
+                    const lista = matches.map(m => { 
+                        m.animal.matchDetails = m; // Guardamos detalles
+                        m.animal.matchScore = m.porcentajeMatch; // Shortcut
+                        return m.animal; 
+                    });
+
+                    // Guardamos la lista mapeada globalmente para filtrar sin recargar
+                    listaMatchesGlobal = lista;
+
+                    // Mostrar filtros
+                    if(filtrosDiv) filtrosDiv.classList.remove('hidden');
+                    
+                    // Render inicial (Estricto por defecto o Todos, tú eliges)
+                    filtrarPorMatch('estricto'); 
                 }
             }
+        }
+
+        // --- FUNCIÓN DE FILTRADO (NUEVO) ---
+        function filtrarPorMatch(criterio) {
+            // 1. Actualizar estilos de botones
+            const btns = ['estricto', 'intermedio', 'todos'];
+            btns.forEach(b => {
+                const btn = document.getElementById(`btn-match-${b}`);
+                if(b === criterio) {
+                    btn.className = "px-4 py-2 rounded-full text-sm font-bold bg-green-100 text-green-700 transition border border-green-200 ring-2 ring-green-500";
+                } else {
+                    btn.className = "px-4 py-2 rounded-full text-sm font-bold bg-white text-gray-600 hover:bg-gray-100 transition border border-gray-200";
+                }
+            });
+
+            // 2. Filtrar la lista global
+            let filtrados = [];
+            
+            if (criterio === 'estricto') {
+                filtrados = listaMatchesGlobal.filter(a => a.matchScore >= 80);
+            } else if (criterio === 'intermedio') {
+                filtrados = listaMatchesGlobal.filter(a => a.matchScore >= 50);
+            } else {
+                filtrados = listaMatchesGlobal; // Todos (los viables que mandó el back)
+            }
+
+            // 3. Renderizar
+            renderizarTarjetasAdopcion(filtrados, true);
         }
 
         function renderizarTarjetasAdopcion(lista, conMatch) {
@@ -574,26 +692,52 @@
             grid.innerHTML = '';
             
             if(lista.length === 0) {
-                grid.innerHTML = '<p class="col-span-3 text-center text-gray-500">No hay animales en adopción por el momento.</p>';
+                // Mensaje mejorado según el contexto
+                if(conMatch) {
+                    grid.innerHTML = `
+                        <div class="col-span-3 text-center py-10">
+                            <i class="fa-solid fa-filter text-4xl text-gray-300 mb-3"></i>
+                            <p class="text-gray-500">No hay animales con este nivel de compatibilidad.</p>
+                            <button onclick="filtrarPorMatch('todos')" class="text-blue-500 hover:underline mt-2 text-sm">Ver todos los disponibles</button>
+                        </div>`;
+                } else {
+                    grid.innerHTML = '<p class="col-span-3 text-center text-gray-500">No hay animales en adopción por el momento.</p>';
+                }
                 return;
             }
 
-            lista.forEach(a => {
+            lista.forEach((a, index) => { 
                 let badge = '';
-                if(conMatch) {
+                let btnDetalles = '';
+                
+                if(conMatch && a.matchScore !== undefined) {
                     let color = 'bg-gray-500';
-                    if(a.matchScore >= 80) color = 'bg-green-500'; else if(a.matchScore >= 50) color = 'bg-yellow-500'; else color = 'bg-red-500';
+                    if(a.matchScore >= 80) color = 'bg-green-500'; 
+                    else if(a.matchScore >= 50) color = 'bg-yellow-500'; 
+                    else color = 'bg-red-500';
+                    
                     badge = `<div class="absolute top-2 right-2 ${color} text-white text-xs font-bold px-2 py-1 rounded shadow z-10">${a.matchScore}% Match</div>`;
+                    
+                    // Botón para abrir el modal de detalles
+                    btnDetalles = `
+                        <button onclick="verDetalleMatch(${index})" class="w-full mt-3 border border-orange-100 text-orange-600 text-xs font-bold py-2 rounded hover:bg-orange-50 transition flex items-center justify-center">
+                            <i class="fa-solid fa-magnifying-glass-chart mr-1"></i> Ver Análisis
+                        </button>
+                    `;
                 }
 
                 grid.innerHTML += `
-                    <div class="bg-white rounded-xl shadow-lg relative overflow-hidden group hover:-translate-y-1 transition duration-300">
+                    <div class="bg-white rounded-xl shadow-lg relative overflow-hidden group hover:-translate-y-1 transition duration-300 flex flex-col">
                         ${badge}
-                        <img src="${a.imagenUrl || 'https://via.placeholder.com/400'}" class="h-56 w-full object-cover">
-                        <div class="p-5">
+                        <div class="relative h-56">
+                            <img src="${a.imagenUrl || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="p-5 flex-1 flex flex-col">
                             <h3 class="text-xl font-bold text-gray-800">${a.nombre}</h3>
-                            <p class="text-sm text-gray-600 mt-1 line-clamp-2">${a.descripcion}</p>
-                            ${conMatch && a.razones ? `<p class="text-xs text-green-600 mt-2"><i class="fa-solid fa-check"></i> ${a.razones.join(', ')}</p>` : ''}
+                            <p class="text-sm text-gray-600 mt-1 line-clamp-2 flex-1">${a.descripcion}</p>
+                            
+                            ${btnDetalles}
+
                             <div class="mt-4 pt-4 border-t border-gray-100 flex gap-2">
                                 ${generarBotonWsp(a)}
                             </div>
@@ -601,6 +745,9 @@
                     </div>
                 `;
             });
+            
+            // Guardamos la lista actual en window para acceder desde el modal
+            window.listaAdopcionActual = lista;
         }
 
         async function initMapCampanas() {
@@ -657,15 +804,30 @@
 
         // --- LÓGICA DE MODAL DINÁMICO (SEPARACIÓN) ---
         function abrirModalReporte(modo) {
+            // 1. SEGURIDAD: Verificar Login primero
+            const userLogueado = JSON.parse(localStorage.getItem('zoonosis_user'));
+            
+            if (!userLogueado) {
+                if(confirm("Para publicar un aviso debes estar registrado.\n¿Quieres iniciar sesión ahora?")) {
+                    window.location.href = 'login.html';
+                }
+                return; // Stop si no está logueado
+            }
+
+            // 2. TU LÓGICA VISUAL (Intacta)
             const modal = document.getElementById('modal-reporte');
             const select = document.getElementById('rep-estado');
             const extra = document.getElementById('extra-adopcion');
-            const titulo = modal.querySelector('h3');
+            
+            // Buscamos el título h3 dentro del modal (con seguridad por si cambia el HTML)
+            const tituloContainer = modal.querySelector('.bg-gray-800'); 
+            const titulo = tituloContainer ? tituloContainer.querySelector('h3') : null;
 
             modal.classList.remove('hidden');
-            select.innerHTML = ''; // Limpiamos opciones
+            select.innerHTML = ''; // Limpiar opciones anteriores
 
             if (modo === 'adopcion') {
+                // Modo Adopción
                 if(titulo) titulo.innerHTML = '<i class="fa-solid fa-heart mr-2"></i> Publicar en Adopción';
                 
                 const opt = document.createElement('option');
@@ -677,6 +839,7 @@
                 extra.classList.add('slide-down');
             } 
             else {
+                // Modo Alerta (Perdido/Encontrado)
                 if(titulo) titulo.innerHTML = '<i class="fa-solid fa-bullhorn mr-2"></i> Reportar Alerta';
 
                 const op1 = document.createElement('option'); op1.value = "2"; op1.text = "🚨 Se perdió mi mascota";
@@ -688,6 +851,7 @@
                 extra.classList.remove('slide-down');
             }
 
+            // 3. Inicialización del Mapa (Igual que antes)
             setTimeout(() => {
                 if(!mapModal) {
                     mapModal = L.map('map-modal').setView([-37.994, -61.353], 13);
@@ -789,6 +953,62 @@
             if(!a.telefonoContacto) return '';
             const num = a.telefonoContacto.replace(/\D/g,'');
             return `<a href="https://wa.me/549${num}" target="_blank" class="flex-1 bg-green-500 text-white text-center px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-600 transition flex items-center justify-center"><i class="fa-brands fa-whatsapp mr-2"></i> Contactar</a>`;
+        }
+
+        function verDetalleMatch(index) {
+            const animal = window.listaAdopcionActual[index];
+            const modal = document.getElementById('modal-match');
+            
+            // Llenar datos
+            document.getElementById('match-img').src = animal.imagenUrl || 'https://via.placeholder.com/400';
+            document.getElementById('match-nombre').innerText = animal.nombre;
+            
+            // Badge Color
+            const badge = document.getElementById('match-badge-modal');
+            badge.innerText = `${animal.matchScore}%`;
+            
+            // Reset clases de color
+            badge.classList.remove('bg-green-100', 'text-green-700', 'bg-yellow-100', 'text-yellow-700', 'bg-red-100', 'text-red-700');
+            
+            if(animal.matchScore >= 80) badge.classList.add('bg-green-100', 'text-green-700');
+            else if(animal.matchScore >= 50) badge.classList.add('bg-yellow-100', 'text-yellow-700');
+            else badge.classList.add('bg-red-100', 'text-red-700');
+
+            // Lista de Razones
+            const listaUl = document.getElementById('match-razones');
+            listaUl.innerHTML = '';
+
+            if (animal.razones && animal.razones.length > 0) {
+                animal.razones.forEach(razon => {
+                    listaUl.innerHTML += `
+                        <li class="flex items-start">
+                            <i class="fa-solid fa-check text-green-500 mt-1 mr-2"></i>
+                            <span>${razon}</span>
+                        </li>
+                    `;
+                });
+            } else {
+                // Si no hay razones específicas (puntaje bajo o medio sin coincidencias exactas)
+                listaUl.innerHTML = `
+                    <li class="flex items-start text-orange-600">
+                        <i class="fa-solid fa-triangle-exclamation mt-1 mr-2"></i>
+                        <span>No hay coincidencias fuertes. Este animal tiene necesidades muy distintas a tu rutina o vivienda.</span>
+                    </li>
+                `;
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function mostrarBanner(id, titulo, texto, btnTxt, btnLink) {
+            const b = document.getElementById(id);
+            b.classList.remove('hidden');
+            if(titulo) {
+                b.querySelector('h2').innerText = titulo;
+                b.querySelector('p').innerText = texto;
+                b.querySelector('a').innerText = btnTxt;
+                b.querySelector('a').href = btnLink;
+            }
         }
     </script>
 </body>
