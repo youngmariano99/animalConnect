@@ -16,16 +16,22 @@ namespace AnimalConnect.Backend.Controllers
             _context = context;
         }
 
-        // 1. GET: Obtener Muro (Recientes primero)
+        // 1. GET: Obtener Muro Paginado
+        // Url ejemplo: api/Foro?pagina=1&cantidad=5
         [HttpGet]
-        public async Task<ActionResult> GetPosts()
+        public async Task<ActionResult> GetPosts([FromQuery] int pagina = 1, [FromQuery] int cantidad = 5)
         {
-            var posts = await _context.Posts
+            var query = _context.Posts
                 .Include(p => p.Usuario).ThenInclude(u => u.PerfilVeterinario)
                 .Include(p => p.Usuario).ThenInclude(u => u.PerfilCiudadano)
-                .Include(p => p.Comentarios).ThenInclude(c => c.Usuario).ThenInclude(u => u.PerfilVeterinario)
-                .Include(p => p.Comentarios).ThenInclude(c => c.Usuario).ThenInclude(u => u.PerfilCiudadano) // <--- FALTABA ESTO PARA COMENTARIOS
-                .OrderByDescending(p => p.FechaPublicacion)
+                .OrderByDescending(p => p.FechaPublicacion);
+
+            // Total para saber si hay más páginas
+            var totalRegistros = await query.CountAsync();
+
+            var posts = await query
+                .Skip((pagina - 1) * cantidad)
+                .Take(cantidad)
                 .Select(p => new {
                     p.Id,
                     p.Titulo,
@@ -34,7 +40,6 @@ namespace AnimalConnect.Backend.Controllers
                     p.ImagenUrl,
                     p.FechaPublicacion,
                     
-                    // LÓGICA ROBUSTA PARA NOMBRE DE AUTOR (POST)
                     Autor = p.Usuario.Rol == "Veterinario" 
                         ? (p.Usuario.PerfilVeterinario != null ? p.Usuario.PerfilVeterinario.NombreVeterinaria : p.Usuario.NombreUsuario)
                         : (p.Usuario.PerfilCiudadano != null && !string.IsNullOrEmpty(p.Usuario.PerfilCiudadano.NombreCompleto) ? p.Usuario.PerfilCiudadano.NombreCompleto : p.Usuario.NombreUsuario),
@@ -43,26 +48,56 @@ namespace AnimalConnect.Backend.Controllers
                     AutorId = p.UsuarioId,
                     AutorPuntos = p.Usuario.Rol == "Ciudadano" && p.Usuario.PerfilCiudadano != null ? p.Usuario.PerfilCiudadano.Puntos : 0,
                     
-                    Comentarios = p.Comentarios.Select(c => new {
+                    // OPTIMIZACIÓN: Solo traemos los últimos 3 comentarios inicialmente y el total real
+                    TotalComentarios = p.Comentarios.Count(),
+                    Comentarios = p.Comentarios.OrderByDescending(c => c.Fecha).Take(3).Select(c => new {
                         c.Id,
                         c.Contenido,
                         c.Fecha,
-                        
-                        // LÓGICA ROBUSTA PARA NOMBRE DE AUTOR (COMENTARIO)
                         Autor = c.Usuario.Rol == "Veterinario" 
                             ? (c.Usuario.PerfilVeterinario != null ? c.Usuario.PerfilVeterinario.NombreVeterinaria : c.Usuario.NombreUsuario)
                             : (c.Usuario.PerfilCiudadano != null && !string.IsNullOrEmpty(c.Usuario.PerfilCiudadano.NombreCompleto) ? c.Usuario.PerfilCiudadano.NombreCompleto : c.Usuario.NombreUsuario),
-                        
                         EsVeterinario = c.Usuario.Rol == "Veterinario",
                         AutorPuntos = c.Usuario.Rol == "Ciudadano" && c.Usuario.PerfilCiudadano != null ? c.Usuario.PerfilCiudadano.Puntos : 0
-                    }).OrderBy(c => c.Fecha).ToList()
+                    }).OrderBy(c => c.Fecha).ToList() // Reordenamos cronológicamente para mostrar
                 })
                 .ToListAsync();
 
-            return Ok(posts);
+            return Ok(new { 
+                data = posts, 
+                total = totalRegistros,
+                paginaActual = pagina,
+                hayMas = (pagina * cantidad) < totalRegistros 
+            });
         }
 
-        // 2. POST: Publicar nuevo tema (y sumar puntos si es Historia)
+        // 1.1 GET: Cargar más comentarios de un post específico
+        [HttpGet("{id}/comentarios")]
+        public async Task<ActionResult> GetComentariosPost(int id, [FromQuery] int pagina = 1, [FromQuery] int cantidad = 10)
+        {
+            var comentarios = await _context.Comentarios
+                .Where(c => c.PostId == id)
+                .Include(c => c.Usuario).ThenInclude(u => u.PerfilVeterinario)
+                .Include(c => c.Usuario).ThenInclude(u => u.PerfilCiudadano)
+                .OrderBy(c => c.Fecha) // Orden cronológico normal
+                .Skip((pagina - 1) * cantidad)
+                .Take(cantidad)
+                .Select(c => new {
+                    c.Id,
+                    c.Contenido,
+                    c.Fecha,
+                    Autor = c.Usuario.Rol == "Veterinario" 
+                            ? (c.Usuario.PerfilVeterinario != null ? c.Usuario.PerfilVeterinario.NombreVeterinaria : c.Usuario.NombreUsuario)
+                            : (c.Usuario.PerfilCiudadano != null && !string.IsNullOrEmpty(c.Usuario.PerfilCiudadano.NombreCompleto) ? c.Usuario.PerfilCiudadano.NombreCompleto : c.Usuario.NombreUsuario),
+                    EsVeterinario = c.Usuario.Rol == "Veterinario",
+                    AutorPuntos = c.Usuario.Rol == "Ciudadano" && c.Usuario.PerfilCiudadano != null ? c.Usuario.PerfilCiudadano.Puntos : 0
+                })
+                .ToListAsync();
+
+            return Ok(comentarios);
+        }
+
+        // 2. POST: Crear Post (Igual que antes)
         [HttpPost]
         public async Task<ActionResult> CrearPost(Post post)
         {
@@ -70,26 +105,20 @@ namespace AnimalConnect.Backend.Controllers
             _context.Posts.Add(post);
             
             int nuevosPuntos = 0;
-
-            // LÓGICA DE PUNTOS
-            // Solo sumamos si es un Ciudadano (los Vets tienen otra reputación)
             var perfil = await _context.PerfilesCiudadanos.FirstOrDefaultAsync(p => p.UsuarioId == post.UsuarioId);
             
             if (perfil != null)
             {
-                if (post.Categoria == "Historia") perfil.Puntos += 50; // Gran premio
-                else perfil.Puntos += 5; // Premio estándar
-
+                if (post.Categoria == "Historia") perfil.Puntos += 50; 
+                else perfil.Puntos += 5;
                 nuevosPuntos = perfil.Puntos;
             }
 
             await _context.SaveChangesAsync();
-            
-            // IMPORTANTE: Devolvemos el objeto y los NUEVOS PUNTOS para actualizar el front
             return Ok(new { post, nuevosPuntos });
         }
 
-        // 3. POST: Comentar (Veterinarios suman reputación aquí también)
+        // 3. POST: Comentar (Igual que antes)
         [HttpPost("{id}/comentar")]
         public async Task<ActionResult> Comentar(int id, Comentario comentario)
         {
@@ -98,18 +127,14 @@ namespace AnimalConnect.Backend.Controllers
             _context.Comentarios.Add(comentario);
 
             int nuevosPuntos = 0;
-
-            // SUMAR PUNTOS POR COMENTAR
             var perfil = await _context.PerfilesCiudadanos.FirstOrDefaultAsync(p => p.UsuarioId == comentario.UsuarioId);
             if (perfil != null)
             {
-                perfil.Puntos += 2; // Ejemplo: 2 puntos por ayudar/comentar
+                perfil.Puntos += 2;
                 nuevosPuntos = perfil.Puntos;
             }
 
             await _context.SaveChangesAsync();
-
-            // Devolvemos los puntos actualizados
             return Ok(new { message = "Comentario agregado", nuevosPuntos });
         }
     }
