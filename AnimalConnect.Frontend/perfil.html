@@ -47,7 +47,7 @@
 
     </div>
 
-    <script>
+   <script>
         const API_URL = 'http://127.0.0.1:5269/api';
         const usuario = JSON.parse(localStorage.getItem('zoonosis_user'));
 
@@ -67,20 +67,24 @@
         }
 
         async function cargarMisPublicaciones() {
+            const grid = document.getElementById('grid-mis-publicaciones');
+            // Spinner de carga
+            grid.innerHTML = '<div class="col-span-full text-center py-10"><i class="fa-solid fa-circle-notch fa-spin text-4xl text-orange-300"></i><p class="text-gray-500 mt-2">Cargando tus avisos...</p></div>';
+
             try {
                 const res = await fetch(`${API_URL}/Animales/usuario/${usuario.id}`);
+                if (!res.ok) throw new Error("Error API");
                 const lista = await res.json();
                 renderizarLista(lista);
             } catch (error) {
                 console.error(error);
-                document.getElementById('grid-mis-publicaciones').innerHTML = 
-                    '<p class="col-span-full text-center text-red-500">Error al cargar datos.</p>';
+                grid.innerHTML = '<p class="col-span-full text-center text-red-500">No se pudieron cargar tus publicaciones.</p>';
             }
         }
 
         function renderizarLista(lista) {
             const grid = document.getElementById('grid-mis-publicaciones');
-            grid.innerHTML = '';
+            grid.innerHTML = ''; // Limpiar spinner
 
             if(lista.length === 0) {
                 grid.innerHTML = `
@@ -93,59 +97,67 @@
             }
 
             lista.forEach(a => {
-                // Calcular días restantes
                 const fechaRenov = new Date(a.fechaUltimaRenovacion);
                 const hoy = new Date();
-                const diffTime = Math.abs(hoy - fechaRenov);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-                const diasRestantes = 15 - diffDays;
+                const diasRestantes = 15 - Math.ceil(Math.abs(hoy - fechaRenov) / (1000 * 60 * 60 * 24));
                 
-                const esVencido = diasRestantes < 0;
-                
-                // Estilos según estado
                 let estadoBadge = '';
                 let acciones = '';
                 let opacidad = 'opacity-100';
 
-                if (a.idEstado === 3 || a.idEstado === 4) { // Encontrado/Adoptado
+                // --- ESTADO 4: FINALIZADO (HISTÓRICO) ---
+                if (a.idEstado === 4) { 
                     opacidad = 'opacity-60 grayscale';
-                    estadoBadge = `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">✅ FINALIZADO</span>`;
-                    acciones = `<button onclick="borrar(${a.id})" class="text-red-500 hover:text-red-700 font-bold text-sm">Eliminar Historial</button>`;
+                    estadoBadge = `<span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-bold border border-gray-200">🏁 CASO CERRADO</span>`;
+                    acciones = `<button onclick="borrar(${a.id})" class="text-red-500 hover:text-red-700 font-bold text-sm w-full text-center py-2"><i class="fa-solid fa-trash-can mr-2"></i>Eliminar del historial</button>`;
                 } 
-                else if (esVencido) { // Vencido
-                    opacidad = 'opacity-75 border-2 border-red-300';
-                    estadoBadge = `<span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">⚠️ VENCIDO</span>`;
+                // --- ESTADO 2: PERDIDO ---
+                else if (a.idEstado === 2) {
+                    estadoBadge = `<span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold border border-red-200">🔴 SE BUSCA</span>`;
                     acciones = `
-                        <button onclick="renovar(${a.id})" class="w-full bg-orange-500 text-white py-2 rounded-lg font-bold hover:bg-orange-600 mb-2 transition shadow">
-                            <i class="fa-solid fa-arrows-rotate mr-2"></i> Renovar Aviso
+                        <button onclick="finalizar(${a.id}, 2)" class="w-full bg-green-500 text-white py-2 rounded-lg font-bold hover:bg-green-600 mb-2 transition shadow-sm">
+                            <i class="fa-solid fa-house-user mr-2"></i> ¡Ya apareció!
                         </button>
-                        <button onclick="finalizar(${a.id}, ${a.idEstado})" class="w-full bg-gray-200 text-gray-700 py-2 rounded-lg font-bold hover:bg-gray-300 transition text-sm">
-                            Ya se resolvió
-                        </button>
+                        <div class="flex gap-2">
+                            <button onclick="renovar(${a.id})" class="flex-1 bg-orange-50 text-orange-600 py-2 rounded-lg font-bold text-xs hover:bg-orange-100">Renovar (${diasRestantes}d)</button>
+                            <button onclick="borrar(${a.id})" class="flex-1 border border-red-200 text-red-500 py-2 rounded-lg font-bold text-xs hover:bg-red-50">Borrar</button>
+                        </div>
                     `;
-                } 
-                else { // Activo
-                    estadoBadge = `<span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">ACTIVO (${diasRestantes} días)</span>`;
+                }
+                // --- ESTADO 3: ENCONTRADO (AVISO) ---
+                else if (a.idEstado === 3) {
+                    estadoBadge = `<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-200">🟢 BUSCO DUEÑO</span>`;
                     acciones = `
-                        <button onclick="finalizar(${a.id}, ${a.idEstado})" class="w-full bg-green-500 text-white py-2 rounded-lg font-bold hover:bg-green-600 mb-2 transition shadow">
-                            <i class="fa-solid fa-check mr-2"></i> ¡Lo encontré / Adoptado!
+                        <button onclick="finalizar(${a.id}, 3)" class="w-full bg-blue-600 text-white py-2 rounded-lg font-bold hover:bg-blue-700 mb-2 transition shadow-sm">
+                            <i class="fa-solid fa-handshake mr-2"></i> Entregado a familia
                         </button>
-                        <button onclick="borrar(${a.id})" class="w-full border border-red-200 text-red-500 py-2 rounded-lg font-bold hover:bg-red-50 transition text-sm">
-                            Eliminar
+                        <div class="flex gap-2">
+                            <button onclick="renovar(${a.id})" class="flex-1 bg-orange-50 text-orange-600 py-2 rounded-lg font-bold text-xs hover:bg-orange-100">Renovar (${diasRestantes}d)</button>
+                            <button onclick="borrar(${a.id})" class="flex-1 border border-red-200 text-red-500 py-2 rounded-lg font-bold text-xs hover:bg-red-50">Borrar</button>
+                        </div>
+                    `;
+                }
+                // --- ESTADO 1: ADOPCIÓN ---
+                else {
+                    estadoBadge = `<span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold border border-blue-200">🏡 EN ADOPCIÓN</span>`;
+                    acciones = `
+                        <button onclick="finalizar(${a.id}, 1)" class="w-full bg-blue-500 text-white py-2 rounded-lg font-bold hover:bg-blue-600 mb-2 transition shadow-sm">
+                            <i class="fa-solid fa-check mr-2"></i> ¡Adoptado!
                         </button>
+                        <button onclick="borrar(${a.id})" class="w-full border border-red-200 text-red-500 py-2 rounded-lg font-bold hover:bg-red-50 transition text-sm">Eliminar</button>
                     `;
                 }
 
                 grid.innerHTML += `
-                    <div class="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col ${opacidad} transition-all hover:scale-[1.01]">
-                        <div class="relative h-48">
-                            <img src="${a.imagenUrl || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover">
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col ${opacidad} transition-all hover:shadow-md">
+                        <div class="relative h-48 group">
+                            <img src="${a.imagenUrl || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover transition duration-500 group-hover:scale-105">
                             <div class="absolute top-3 right-3 shadow-sm">${estadoBadge}</div>
                         </div>
                         <div class="p-5 flex-1 flex flex-col">
                             <h3 class="text-lg font-bold text-gray-800 mb-1">${a.nombre}</h3>
-                            <p class="text-xs text-gray-500 mb-4 bg-gray-100 inline-block px-2 py-1 rounded self-start">
-                                Publicado: ${new Date(a.fechaPublicacion).toLocaleDateString()}
+                            <p class="text-xs text-gray-500 mb-3 flex items-center">
+                                <i class="fa-regular fa-calendar mr-1"></i> ${new Date(a.fechaPublicacion).toLocaleDateString()}
                             </p>
                             <p class="text-sm text-gray-600 mb-4 flex-1 line-clamp-2">${a.descripcion}</p>
                             
@@ -158,25 +170,10 @@
             });
         }
 
-        // --- ACCIONES ---
-
-        async function renovar(id) {
-            if(!confirm("¿Tu mascota sigue perdida/en adopción? Al renovar, aparecerá 15 días más.")) return;
-            
-            try {
-                const res = await fetch(`${API_URL}/Animales/renovar/${id}`, { method: 'PUT' });
-                if(res.ok) {
-                    alert("¡Publicación renovada!");
-                    cargarMisPublicaciones();
-                }
-            } catch(e) { console.error(e); alert("Error al conectar"); }
-        }
-
-        async function finalizar(id, estadoActual) {
-            const nuevoEstado = 3; // Encontrado/Histórico
-            const texto = estadoActual === 1 ? "¿Se concretó la adopción?" : "¿Encontraste a tu mascota?";
-
-            if(!confirm(texto + " Esto quitará el aviso del mapa público.")) return;
+        // ... (Aquí van tus funciones finalizar, renovar y borrar que ya tenías) ...
+        async function finalizar(id, estadoOrigen) {
+            const nuevoEstado = 4; // Todos van a cerrado
+            if(!confirm("¿Confirmar cambio de estado?")) return;
 
             try {
                 const res = await fetch(`${API_URL}/Animales/estado/${id}`, {
@@ -186,20 +183,23 @@
                 });
                 
                 if(res.ok) {
-                    // --- NUEVO: PREGUNTA DE GAMIFICACIÓN ---
-                    if (confirm("¡Qué gran noticia! 🎉\n\n¿Te gustaría compartir esta historia de éxito en la Comunidad?\nGanarás 50 Puntos de reputación y ayudarás a inspirar a otros.")) {
-                        // Redirigimos al muro con modo 'historia' para que se autolllen los campos
+                    if (confirm("🎉 ¡Genial! ¿Quieres compartir esta buena noticia en la Comunidad?")) {
                         window.location.href = 'comunidad.html?modo=historia';
                     } else {
-                        alert("Estado actualizado correctamente.");
                         cargarMisPublicaciones();
                     }
-                    // ----------------------------------------
                 }
             } catch(e) { console.error(e); }
         }
+
+        async function renovar(id) {
+            if(!confirm("Renovar por 15 días más?")) return;
+            await fetch(`${API_URL}/Animales/renovar/${id}`, { method: 'PUT' });
+            cargarMisPublicaciones();
+        }
+
         async function borrar(id) {
-            if(!confirm("¿Eliminar definitivamente? Esta acción no se puede deshacer.")) return;
+            if(!confirm("¿Eliminar?")) return;
             await fetch(`${API_URL}/Animales/${id}`, { method: 'DELETE' });
             cargarMisPublicaciones();
         }

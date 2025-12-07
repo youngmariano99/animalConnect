@@ -23,14 +23,18 @@ namespace AnimalConnect.Backend.Controllers
             // Regla: Mostrar solo si se renovó en los últimos 15 días
             var fechaLimite = DateTime.Now.AddDays(-15);
 
-            // Estados válidos para mostrar: 1 (Adopción), 2 (Perdido), 3 (Encontrado - opcional mostrarlo un tiempo)
-            // Ocultamos los que ya se resolvieron hace mucho o vencieron.
+            // FILTRO CLAVE:
+            // Estado 1: Adopción
+            // Estado 2: Perdido (Alerta Roja)
+            // Estado 3: Encontrado (Alerta Verde - "Busco a su dueño")
+            // EXCLUIMOS Estado 4 (Reencuentro/Finalizado)
             
             var animales = await _context.Animales
-                                         .Include(a => a.Especie)
-                                         .Include(a => a.Estado)
-                                         .Where(a => a.FechaUltimaRenovacion >= fechaLimite) 
-                                         .ToListAsync();
+                                        .Include(a => a.Especie)
+                                        .Include(a => a.Estado)
+                                        .Where(a => a.FechaUltimaRenovacion >= fechaLimite && 
+                                                    (a.IdEstado == 1 || a.IdEstado == 2 || a.IdEstado == 3)) 
+                                        .ToListAsync();
 
             return Ok(animales);
         }

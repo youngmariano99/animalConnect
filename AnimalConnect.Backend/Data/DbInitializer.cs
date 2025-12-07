@@ -30,6 +30,16 @@ namespace AnimalConnect.Backend.Data
             {
                 context.Estados.AddRange(new Estado { Nombre = "En Adopción" }, new Estado { Nombre = "Perdido" }, new Estado { Nombre = "Encontrado" });
             }
+            if (!context.Estados.Any(e => e.Id == 4))
+            {
+                // Aseguramos que existan los 4 estados clave
+                // 1: En Adopción
+                // 2: Perdido
+                // 3: Encontrado (Aviso activo)
+                // 4: Reencuentro (Caso cerrado)
+                context.Estados.Add(new Estado { Nombre = "Reencuentro" });
+                context.SaveChanges();
+            }
             if (!context.Atributos.Any())
             {
                 context.Atributos.AddRange(

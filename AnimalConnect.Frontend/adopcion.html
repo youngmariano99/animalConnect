@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adopción - Animal Connect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-gray-50 text-gray-800 pb-20">
+
+    <header id="app-navbar" class="sticky top-0 z-50"></header>
+
+    <main class="container mx-auto px-4 mt-8">
+        <div class="flex justify-between items-end mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-800">Adopción Responsable</h1>
+                <p class="text-gray-500 text-sm">Estos animales buscan un hogar que se adapte a ellos.</p>
+            </div>
+            </div>
+
+        <div id="banner-login-adopcion" class="hidden bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg mb-8">
+            <h2 class="text-xl font-bold text-blue-800">Encuentra tu alma gemela</h2>
+            <p class="text-blue-600 mb-4">Para ver el % de compatibilidad real, necesitamos conocer tu estilo de vida.</p>
+            <a href="login.html" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700">Iniciar Sesión / Registrarme</a>
+        </div>
+
+        <div id="banner-match-ok" class="hidden mb-6">
+            <p class="text-green-600 font-medium bg-green-50 px-4 py-2 rounded-lg inline-block">
+                <i class="fa-solid fa-check-circle mr-2"></i> Algoritmo de compatibilidad activo.
+            </p>
+        </div>
+
+        <div id="filtros-match" class="hidden mb-6 flex flex-wrap gap-3">
+            <span class="text-sm text-gray-500 font-bold uppercase self-center mr-2">Filtrar por Match:</span>
+            
+            <button onclick="filtrarPorMatch('estricto')" id="btn-match-estricto" class="px-4 py-2 rounded-full text-sm font-bold bg-green-100 text-green-700 hover:bg-green-200 transition border border-green-200 ring-2 ring-green-500">
+                <i class="fa-solid fa-star mr-1"></i> Alto (+80%)
+            </button>
+            
+            <button onclick="filtrarPorMatch('intermedio')" id="btn-match-intermedio" class="px-4 py-2 rounded-full text-sm font-bold bg-white text-gray-600 hover:bg-gray-100 transition border border-gray-200">
+                <i class="fa-solid fa-star-half-stroke mr-1"></i> Medio (+50%)
+            </button>
+            
+            <button onclick="filtrarPorMatch('todos')" id="btn-match-todos" class="px-4 py-2 rounded-full text-sm font-bold bg-white text-gray-600 hover:bg-gray-100 transition border border-gray-200">
+                <i class="fa-solid fa-list mr-1"></i> Todos los viables
+            </button>
+        </div>
+
+        <div id="grid-adopcion" class="grid grid-cols-1 md:grid-cols-3 gap-8"></div>
+    </main>
+
+    <div id="modal-match" class="fixed inset-0 bg-black bg-opacity-70 hidden z-[110] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md relative animate-fade-in-up overflow-hidden">
+            <div class="relative h-32 bg-gray-200">
+                <img id="match-img" class="w-full h-full object-cover opacity-80" src="">
+                <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/70 to-transparent p-4">
+                    <h3 id="match-nombre" class="text-white font-bold text-2xl">Nombre</h3>
+                </div>
+                <button onclick="document.getElementById('modal-match').classList.add('hidden')" class="absolute top-2 right-2 bg-black/50 text-white w-8 h-8 rounded-full hover:bg-black/80">&times;</button>
+            </div>
+
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <p class="text-sm text-gray-500 font-bold uppercase">Compatibilidad General</p>
+                        <p class="text-xs text-gray-400">Basado en tu perfil de hogar y rutina</p>
+                    </div>
+                    <div id="match-badge-modal" class="text-xl font-bold px-4 py-2 rounded-lg shadow-sm">95%</div>
+                </div>
+
+                <h4 class="font-bold text-gray-700 mb-3 text-sm border-b pb-1">¿Por qué hacen match?</h4>
+                <ul id="match-razones" class="space-y-3 text-sm text-gray-600 mb-6"></ul>
+
+                <button onclick="document.getElementById('modal-match').classList.add('hidden')" class="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/layout.js"></script>
+    <script src="js/adopcion.js"></script>
+</body>
+</html>
