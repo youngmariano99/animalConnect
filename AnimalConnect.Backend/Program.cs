@@ -23,8 +23,11 @@ builder.Services.AddCors(options => // <--- NUEVO: SERVICIO CORS
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
+// CAMBIO CRÍTICO: Configuración para Fechas (Ver explicación abajo en Paso 4)
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseNpgsql(connectionString));
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
