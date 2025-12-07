@@ -16,17 +16,28 @@ namespace AnimalConnect.Backend.Controllers
             _context = context;
         }
 
-        // 1. GET: Obtener Muro Paginado
-        // Url ejemplo: api/Foro?pagina=1&cantidad=5
+        // 1. GET: Obtener Muro Paginado y FILTRADO
         [HttpGet]
-        public async Task<ActionResult> GetPosts([FromQuery] int pagina = 1, [FromQuery] int cantidad = 5)
+        public async Task<ActionResult> GetPosts([FromQuery] int pagina = 1, [FromQuery] int cantidad = 5, [FromQuery] string? categoria = null)
         {
+            // Iniciamos la consulta base
             var query = _context.Posts
                 .Include(p => p.Usuario).ThenInclude(u => u.PerfilVeterinario)
                 .Include(p => p.Usuario).ThenInclude(u => u.PerfilCiudadano)
-                .OrderByDescending(p => p.FechaPublicacion);
+                .Include(p => p.Comentarios).ThenInclude(c => c.Usuario).ThenInclude(u => u.PerfilVeterinario)
+                .Include(p => p.Comentarios).ThenInclude(c => c.Usuario).ThenInclude(u => u.PerfilCiudadano)
+                .AsQueryable(); // Importante para poder agregar filtros dinámicos
 
-            // Total para saber si hay más páginas
+            // APLICAR FILTRO SI EXISTE
+            if (!string.IsNullOrEmpty(categoria) && categoria != "Todas")
+            {
+                query = query.Where(p => p.Categoria == categoria);
+            }
+
+            // Ordenar por fecha
+            query = query.OrderByDescending(p => p.FechaPublicacion);
+
+            // Total para saber si hay más páginas (del filtro actual)
             var totalRegistros = await query.CountAsync();
 
             var posts = await query
@@ -48,8 +59,8 @@ namespace AnimalConnect.Backend.Controllers
                     AutorId = p.UsuarioId,
                     AutorPuntos = p.Usuario.Rol == "Ciudadano" && p.Usuario.PerfilCiudadano != null ? p.Usuario.PerfilCiudadano.Puntos : 0,
                     
-                    // OPTIMIZACIÓN: Solo traemos los últimos 3 comentarios inicialmente y el total real
                     TotalComentarios = p.Comentarios.Count(),
+                    // Solo traemos los últimos 3 comentarios para optimizar
                     Comentarios = p.Comentarios.OrderByDescending(c => c.Fecha).Take(3).Select(c => new {
                         c.Id,
                         c.Contenido,
@@ -59,7 +70,7 @@ namespace AnimalConnect.Backend.Controllers
                             : (c.Usuario.PerfilCiudadano != null && !string.IsNullOrEmpty(c.Usuario.PerfilCiudadano.NombreCompleto) ? c.Usuario.PerfilCiudadano.NombreCompleto : c.Usuario.NombreUsuario),
                         EsVeterinario = c.Usuario.Rol == "Veterinario",
                         AutorPuntos = c.Usuario.Rol == "Ciudadano" && c.Usuario.PerfilCiudadano != null ? c.Usuario.PerfilCiudadano.Puntos : 0
-                    }).OrderBy(c => c.Fecha).ToList() // Reordenamos cronológicamente para mostrar
+                    }).OrderBy(c => c.Fecha).ToList()
                 })
                 .ToListAsync();
 

@@ -294,6 +294,42 @@ namespace AnimalConnect.Backend.Migrations
                     b.ToTable("PerfilesCiudadanos");
                 });
 
+            modelBuilder.Entity("AnimalConnect.Backend.Models.PerfilMunicipio", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<double>("LatitudCentro")
+                        .HasColumnType("float");
+
+                    b.Property<double>("LongitudCentro")
+                        .HasColumnType("float");
+
+                    b.Property<string>("NombreMunicipio")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Provincia")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<double>("RadioCoberturaKm")
+                        .HasColumnType("float");
+
+                    b.Property<int>("UsuarioId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId")
+                        .IsUnique();
+
+                    b.ToTable("PerfilesMunicipios");
+                });
+
             modelBuilder.Entity("AnimalConnect.Backend.Models.PerfilVeterinario", b =>
                 {
                     b.Property<int>("Id")
@@ -532,6 +568,17 @@ namespace AnimalConnect.Backend.Migrations
                     b.Navigation("Usuario");
                 });
 
+            modelBuilder.Entity("AnimalConnect.Backend.Models.PerfilMunicipio", b =>
+                {
+                    b.HasOne("AnimalConnect.Backend.Models.Usuario", "Usuario")
+                        .WithOne("PerfilMunicipio")
+                        .HasForeignKey("AnimalConnect.Backend.Models.PerfilMunicipio", "UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Usuario");
+                });
+
             modelBuilder.Entity("AnimalConnect.Backend.Models.PerfilVeterinario", b =>
                 {
                     b.HasOne("AnimalConnect.Backend.Models.Usuario", "Usuario")
@@ -591,6 +638,8 @@ namespace AnimalConnect.Backend.Migrations
             modelBuilder.Entity("AnimalConnect.Backend.Models.Usuario", b =>
                 {
                     b.Navigation("PerfilCiudadano");
+
+                    b.Navigation("PerfilMunicipio");
 
                     b.Navigation("PerfilVeterinario");
                 });

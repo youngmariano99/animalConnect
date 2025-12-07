@@ -21,14 +21,13 @@ namespace AnimalConnect.Backend.Controllers
             public Animal Animal { get; set; } = null!;
             public int PorcentajeMatch { get; set; }
             public List<string> RazonesMatch { get; set; } = new();
-            public bool Bloqueado { get; set; } = false; // Nuevo: Para saber si fue rechazado
+            public bool Bloqueado { get; set; } = false; 
             public string MotivoBloqueo { get; set; } = string.Empty;
         }
 
         [HttpGet("{usuarioId}")]
         public async Task<ActionResult<IEnumerable<AnimalMatchDto>>> GetMatches(int usuarioId)
         {
-            // 1. Obtener Perfil completo
             var perfil = await _context.PerfilesAdoptantes
                                        .Include(p => p.Preferencias)
                                        .FirstOrDefaultAsync(p => p.UsuarioId == usuarioId);
@@ -36,17 +35,15 @@ namespace AnimalConnect.Backend.Controllers
             if (perfil == null || perfil.Preferencias == null)
                 return BadRequest("Perfil no encontrado.");
 
-            // 2. Extraer Valores del Usuario (Variables Locales para facilitar lógica)
-            // Buscamos en la lista de preferencias por el ID del atributo
-            var userEnergia = GetValor(perfil.Preferencias, 1); // Nivel Energía
+            // Variables del Usuario
+            var userEnergia = GetValor(perfil.Preferencias, 1);
             var userTienePatio = GetValor(perfil.Preferencias, 2) == 1;
-            var userTieneHijos = GetValor(perfil.Preferencias, 3) == 1; // Usamos ID 3 como "Tiene Hijos"
-            var userTieneMascotas = GetValor(perfil.Preferencias, 4) == 1; // Usamos ID 4 como "Tiene Mascotas"
-            var userTiempo = GetValor(perfil.Preferencias, 5); // Tiempo disponible
-            var userViviendaSize = GetValor(perfil.Preferencias, 6); // 1:Depto, 2:Casa, 3:Patio Grande (Tamaño max soportado)
+            var userTieneHijos = GetValor(perfil.Preferencias, 3) == 1;
+            var userTieneMascotas = GetValor(perfil.Preferencias, 4) == 1;
+            var userTiempo = GetValor(perfil.Preferencias, 5); 
+            var userViviendaSize = GetValor(perfil.Preferencias, 6);
             var userExperiencia = GetValor(perfil.Preferencias, 7);
 
-            // 3. Obtener Animales
             var animales = await _context.Animales
                                          .Include(a => a.Atributos)
                                          .Where(a => a.IdEstado == 1) // Solo Adopción
@@ -59,87 +56,88 @@ namespace AnimalConnect.Backend.Controllers
                 var dto = new AnimalMatchDto { Animal = animal };
                 var animalAttrs = animal.Atributos;
 
-                // --- FASE 1: REGLAS DURAS (BLOQUEOS) ---
-                // Si falla una, el puntaje es 0 y no se recomienda.
-
-                // 1. Niños: Animal NO apto + Usuario TIENE niños
+                // --- 1. FILTROS EXCLUYENTES (Bloqueos) ---
                 if (GetVal(animalAttrs, 3) == 0 && userTieneHijos) {
-                    dto.Bloqueado = true; dto.MotivoBloqueo = "No apto para niños"; resultados.Add(dto); continue;
+                    dto.Bloqueado = true; dto.MotivoBloqueo = "No convive con niños"; resultados.Add(dto); continue;
                 }
-
-                // 2. Mascotas: Animal NO apto + Usuario TIENE mascotas
                 if (GetVal(animalAttrs, 4) == 0 && userTieneMascotas) {
-                    dto.Bloqueado = true; dto.MotivoBloqueo = "No apto con otras mascotas"; resultados.Add(dto); continue;
+                    dto.Bloqueado = true; dto.MotivoBloqueo = "No convive con otras mascotas"; resultados.Add(dto); continue;
                 }
-
-                // 3. Patio: Animal REQUIERE patio + Usuario NO TIENE
                 if (GetVal(animalAttrs, 2) == 1 && !userTienePatio) {
-                    dto.Bloqueado = true; dto.MotivoBloqueo = "Requiere patio"; resultados.Add(dto); continue;
+                    dto.Bloqueado = true; dto.MotivoBloqueo = "Requiere patio obligatoriamente"; resultados.Add(dto); continue;
                 }
-
-                // 4. Experiencia: Animal COMPLEJO (Nivel 3) + Usuario PRINCIPIANTE (Nivel 1)
                 if (GetVal(animalAttrs, 7) == 3 && userExperiencia == 1) {
                     dto.Bloqueado = true; dto.MotivoBloqueo = "Requiere experiencia avanzada"; resultados.Add(dto); continue;
                 }
-
-                // 5. Tamaño vs Vivienda (Lógica Especial)
-                // Si animal es Grande (3) y Usuario vive en Depto/Chico (1) -> Bloqueo
                 int tamanoAnimal = GetVal(animalAttrs, 6);
                 if (tamanoAnimal > userViviendaSize) {
-                    dto.Bloqueado = true; dto.MotivoBloqueo = "Necesita más espacio"; resultados.Add(dto); continue;
+                    dto.Bloqueado = true; dto.MotivoBloqueo = "Necesita un espacio más grande"; resultados.Add(dto); continue;
                 }
 
-
-                // --- FASE 2: CÁLCULO DE PUNTAJE (100 Pts Total) ---
+                // --- 2. CÁLCULO DE DETALLES (Feedback Detallado) ---
                 double puntaje = 0;
 
-                // A. Compatibilidad Energética (30 pts)
+                // A. Energía
                 int energiaAnimal = GetVal(animalAttrs, 1);
                 int difEnergia = Math.Abs(energiaAnimal - userEnergia);
-                if (difEnergia == 0) puntaje += 30;      // Match exacto
-                else if (difEnergia == 1) puntaje += 20; // Diferencia leve
-                else if (difEnergia == 2) puntaje += 10; // Diferencia media
-                // Diferencia 3 = 0 pts
+                if (difEnergia == 0) {
+                    puntaje += 30;
+                    dto.RazonesMatch.Add("✅ Tienen el mismo nivel de energía.");
+                } else if (difEnergia == 1) {
+                    puntaje += 20;
+                    dto.RazonesMatch.Add("⚠️ Su energía es un poco diferente a la tuya.");
+                } else {
+                    puntaje += 5;
+                    dto.RazonesMatch.Add("❌ Sus niveles de actividad son opuestos.");
+                }
 
-                // B. Tamaño/Espacio (20 pts)
-                // Si ya pasó el bloqueo, damos puntos extra por holgura
-                if (userViviendaSize >= tamanoAnimal) puntaje += 20;
+                // B. Espacio
+                if (userViviendaSize > tamanoAnimal) {
+                    puntaje += 20;
+                    dto.RazonesMatch.Add("✅ Tu hogar es muy espacioso para él/ella.");
+                } else {
+                    puntaje += 20; // Es igual (ya filtramos los menores)
+                    dto.RazonesMatch.Add("✅ El tamaño de tu hogar es adecuado.");
+                }
 
-                // C. Tiempo Disponible (20 pts)
-                // Animal que requiere mucho tiempo (3) y usuario tiene poco (1) -> 0 pts
+                // C. Tiempo
                 int tiempoAnimal = GetVal(animalAttrs, 5);
-                if (userTiempo >= tiempoAnimal) puntaje += 20;
-                else if (userTiempo == tiempoAnimal - 1) puntaje += 10;
+                if (userTiempo >= tiempoAnimal) {
+                    puntaje += 20;
+                    dto.RazonesMatch.Add("✅ Tienes el tiempo libre que necesita.");
+                } else {
+                    // Penalización leve, no bloqueo
+                    puntaje += 5; 
+                    dto.RazonesMatch.Add("⚠️ Requiere más atención de la que dispones.");
+                }
 
-                // D. Compatibilidad Social (15 pts)
-                // Si tiene niños/mascotas y el animal es apto -> Suma puntos (Bonus)
-                if (userTieneHijos && GetVal(animalAttrs, 3) == 1) puntaje += 7.5;
-                else if (!userTieneHijos) puntaje += 7.5; // Neutro
+                // D. Social (Bonus)
+                if (userTieneHijos && GetVal(animalAttrs, 3) == 1) {
+                    puntaje += 7.5;
+                    dto.RazonesMatch.Add("✅ ¡Le encantan los niños!");
+                }
+                if (userTieneMascotas && GetVal(animalAttrs, 4) == 1) {
+                    puntaje += 7.5;
+                    dto.RazonesMatch.Add("✅ Se lleva genial con otras mascotas.");
+                }
 
-                if (userTieneMascotas && GetVal(animalAttrs, 4) == 1) puntaje += 7.5;
-                else if (!userTieneMascotas) puntaje += 7.5;
-
-                // E. Experiencia (15 pts)
-                // Si el usuario tiene más experiencia de la necesaria -> Full puntos
+                // E. Experiencia
                 int expAnimal = GetVal(animalAttrs, 7);
-                if (userExperiencia >= expAnimal) puntaje += 15;
-                else puntaje += 5;
+                if (userExperiencia >= expAnimal) {
+                    puntaje += 15;
+                    dto.RazonesMatch.Add("✅ Tienes la experiencia perfecta para cuidarlo.");
+                } else {
+                    puntaje += 10;
+                    dto.RazonesMatch.Add("⚠️ Podrías necesitar ayuda de un adiestrador al inicio.");
+                }
 
                 dto.PorcentajeMatch = (int)Math.Min(puntaje, 100);
-                
-                // Generar razones
-                if (puntaje >= 80) dto.RazonesMatch.Add("¡Gran compatibilidad de energía y espacio!");
-                if (userTiempo >= tiempoAnimal) dto.RazonesMatch.Add("Tienes el tiempo que necesita.");
-
-                // Solo agregamos si NO está bloqueado (o si quieres mostrar los bloqueados al final)
                 if (!dto.Bloqueado) resultados.Add(dto);
             }
 
-            // Devolver solo los NO bloqueados, ordenados por puntaje
             return Ok(resultados.Where(x => !x.Bloqueado).OrderByDescending(x => x.PorcentajeMatch));
         }
 
-        // Helpers para leer valores
         private int GetValor(ICollection<PreferenciaAdoptante> prefs, int attrId) {
             var p = prefs.FirstOrDefault(x => x.AtributoId == attrId);
             return p != null ? p.ValorPreferido : 0;

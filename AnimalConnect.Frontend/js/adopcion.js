@@ -3,9 +3,6 @@
 let listaMatchesGlobal = [];
 const currentUser = JSON.parse(localStorage.getItem('zoonosis_user'));
 
-// Variables para el modal de adopción (si está en esta página)
-let mapModalAdopcion, markerModalAdopcion, coordsReporteAdopcion;
-
 document.addEventListener('DOMContentLoaded', () => {
     cargarAdopcion();
 });
@@ -14,44 +11,43 @@ async function cargarAdopcion() {
     const grid = document.getElementById('grid-adopcion');
     const filtrosDiv = document.getElementById('filtros-match');
 
-    if(grid) grid.innerHTML = '<div class="col-span-3 text-center text-gray-400"><i class="fa-solid fa-spinner fa-spin"></i> Cargando...</div>';
+    if(grid) grid.innerHTML = '<div class="col-span-3 text-center text-gray-400 py-10"><i class="fa-solid fa-spinner fa-spin text-2xl"></i><p class="mt-2">Analizando compatibilidad...</p></div>';
     
-    // Ocultar banners
+    // Ocultar elementos UI
     if(document.getElementById('banner-login-adopcion')) document.getElementById('banner-login-adopcion').classList.add('hidden');
     if(document.getElementById('banner-match-ok')) document.getElementById('banner-match-ok').classList.add('hidden');
     if(filtrosDiv) filtrosDiv.classList.add('hidden');
 
-    // CASO 1: Invitado
-    if (!currentUser) {
-        mostrarBanner('banner-login-adopcion');
-        const res = await fetch(`${API_URL}/Animales`);
-        const todos = await res.json();
-        renderizarTarjetasAdopcion(todos.filter(a => a.idEstado === 1), false);
-    } 
-    // CASO 2: Logueado sin Quiz
-    else if (currentUser && !currentUser.tienePerfilMatch) {
-        const b = document.getElementById('banner-login-adopcion');
-        if(b) {
-            b.classList.remove('hidden');
+    // 1. USUARIO NO LOGUEADO O SIN PERFIL -> Mostrar todos sin match
+    if (!currentUser || (currentUser && !currentUser.tienePerfilMatch)) {
+        if (!currentUser) mostrarBanner('banner-login-adopcion');
+        else mostrarBanner('banner-login-adopcion'); // Reusamos el banner invitando al Quiz
+        
+        // Modificamos texto del banner si es usuario sin quiz
+        if(currentUser) {
+            const b = document.getElementById('banner-login-adopcion');
             b.querySelector('h2').innerText = `Hola ${currentUser.nombre}, completa tu perfil`;
-            b.querySelector('p').innerText = "Para calcular la compatibilidad, necesitamos saber sobre tu hogar.";
+            b.querySelector('p').innerText = "Para calcular la compatibilidad exacta, responde unas breves preguntas.";
             b.querySelector('a').innerText = "Ir al Cuestionario";
             b.querySelector('a').href = "quiz.html";
         }
-        
+
         const res = await fetch(`${API_URL}/Animales`);
         const todos = await res.json();
+        // Filtramos estado 1 (Adopción)
         renderizarTarjetasAdopcion(todos.filter(a => a.idEstado === 1), false);
     } 
-    // CASO 3: Match Activo
+    // 2. USUARIO CON PERFIL -> Mostrar con Match
     else {
         mostrarBanner('banner-match-ok');
         const res = await fetch(`${API_URL}/Match/${currentUser.id}`);
+        
         if (res.ok) {
             const matches = await res.json();
             
-            // Mapeamos respuesta
+            // Transformamos la data para que el renderizador la entienda
             listaMatchesGlobal = matches.map(m => {
+                // Inyectamos los detalles del match dentro del objeto animal
                 m.animal.matchDetails = m; 
                 m.animal.matchScore = m.porcentajeMatch;
                 return m.animal;
@@ -59,7 +55,7 @@ async function cargarAdopcion() {
 
             if(filtrosDiv) filtrosDiv.classList.remove('hidden');
             
-            // Default: Estricto
+            // Por defecto mostramos los de alta compatibilidad
             filtrarPorMatch('estricto');
         }
     }
@@ -70,8 +66,8 @@ function filtrarPorMatch(criterio) {
     ['estricto', 'intermedio', 'todos'].forEach(b => {
         const btn = document.getElementById(`btn-match-${b}`);
         if(btn) {
-            if (b === criterio) btn.className = "px-4 py-2 rounded-full text-sm font-bold bg-green-100 text-green-700 transition border border-green-200 ring-2 ring-green-500";
-            else btn.className = "px-4 py-2 rounded-full text-sm font-bold bg-white text-gray-600 hover:bg-gray-100 transition border border-gray-200";
+            if (b === criterio) btn.className = "px-4 py-2 rounded-full text-sm font-bold bg-green-100 text-green-700 transition border border-green-200 ring-2 ring-green-500 shadow-inner";
+            else btn.className = "px-4 py-2 rounded-full text-sm font-bold bg-white text-gray-600 hover:bg-gray-100 transition border border-gray-200 shadow-sm";
         }
     });
 
@@ -92,13 +88,14 @@ function renderizarTarjetasAdopcion(lista, conMatch) {
     if (lista.length === 0) {
         if (conMatch) {
             grid.innerHTML = `
-                <div class="col-span-3 text-center py-10">
-                    <i class="fa-solid fa-filter text-4xl text-gray-300 mb-3"></i>
-                    <p class="text-gray-500">No hay animales con este nivel de compatibilidad.</p>
-                    <button onclick="filtrarPorMatch('todos')" class="text-blue-500 hover:underline mt-2 text-sm">Ver todos</button>
+                <div class="col-span-3 text-center py-12 bg-white rounded-xl border border-dashed border-gray-300">
+                    <i class="fa-solid fa-filter-circle-xmark text-4xl text-gray-300 mb-3"></i>
+                    <p class="text-gray-500 font-medium">No encontramos mascotas con este nivel de compatibilidad.</p>
+                    <p class="text-sm text-gray-400 mb-4">Intenta ser más flexible con los filtros.</p>
+                    <button onclick="filtrarPorMatch('todos')" class="text-blue-600 font-bold hover:underline text-sm">Ver todas las mascotas disponibles</button>
                 </div>`;
         } else {
-            grid.innerHTML = '<p class="col-span-3 text-center text-gray-500">No hay animales en adopción por el momento.</p>';
+            grid.innerHTML = '<p class="col-span-3 text-center text-gray-500 py-10">No hay animales en adopción por el momento.</p>';
         }
         return;
     }
@@ -108,26 +105,35 @@ function renderizarTarjetasAdopcion(lista, conMatch) {
         let btnDetalles = '';
 
         if (conMatch && a.matchScore !== undefined) {
-            let color = a.matchScore >= 80 ? 'bg-green-500' : (a.matchScore >= 50 ? 'bg-yellow-500' : 'bg-red-500');
-            badge = `<div class="absolute top-2 right-2 ${color} text-white text-xs font-bold px-2 py-1 rounded shadow z-10">${a.matchScore}% Match</div>`;
+            let color = 'bg-gray-500';
+            if(a.matchScore >= 80) color = 'bg-green-500'; 
+            else if(a.matchScore >= 50) color = 'bg-yellow-500'; 
+            else color = 'bg-red-500';
+            
+            badge = `<div class="absolute top-3 right-3 ${color} text-white text-xs font-bold px-3 py-1 rounded-full shadow-md z-10 flex items-center"><i class="fa-solid fa-percent mr-1"></i>${a.matchScore} Match</div>`;
             
             btnDetalles = `
-                <button onclick="verDetalleMatch(${index})" class="w-full mt-3 border border-orange-100 text-orange-600 text-xs font-bold py-2 rounded hover:bg-orange-50 transition flex items-center justify-center">
-                    <i class="fa-solid fa-magnifying-glass-chart mr-1"></i> Ver Análisis
+                <button onclick="verDetalleMatch(${index})" class="w-full mt-3 border border-blue-100 text-blue-600 text-xs font-bold py-2 rounded-lg hover:bg-blue-50 transition flex items-center justify-center">
+                    <i class="fa-solid fa-magnifying-glass-chart mr-2"></i> Ver Análisis de Compatibilidad
                 </button>`;
         }
 
         grid.innerHTML += `
-            <div class="bg-white rounded-xl shadow-lg relative overflow-hidden group hover:-translate-y-1 transition duration-300 flex flex-col">
+            <div class="bg-white rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden group hover:shadow-xl transition duration-300 flex flex-col">
                 ${badge}
-                <div class="relative h-56">
-                    <img src="${a.imagenUrl || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover">
+                <div class="relative h-64 overflow-hidden">
+                    <img src="${a.imagenUrl || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+                    <div class="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/60 to-transparent p-4">
+                        <h3 class="text-2xl font-bold text-white">${a.nombre}</h3>
+                        <p class="text-white/90 text-xs flex items-center"><i class="fa-solid fa-paw mr-1"></i> ${a.especie?.nombre || 'Mascota'}</p>
+                    </div>
                 </div>
                 <div class="p-5 flex-1 flex flex-col">
-                    <h3 class="text-xl font-bold text-gray-800">${a.nombre}</h3>
-                    <p class="text-sm text-gray-600 mt-1 line-clamp-2 flex-1">${a.descripcion}</p>
+                    <p class="text-sm text-gray-600 line-clamp-3 mb-4 flex-1 leading-relaxed">${a.descripcion}</p>
+                    
                     ${btnDetalles}
-                    <div class="mt-4 pt-4 border-t border-gray-100 flex gap-2">
+
+                    <div class="mt-4 pt-4 border-t border-gray-100">
                         ${generarBotonWsp(a)}
                     </div>
                 </div>
@@ -135,7 +141,6 @@ function renderizarTarjetasAdopcion(lista, conMatch) {
         `;
     });
 
-    // Guardamos referencia para el modal de detalles
     window.listaAdopcionActual = lista;
 }
 
@@ -144,42 +149,70 @@ function verDetalleMatch(index) {
     const animal = window.listaAdopcionActual[index];
     const modal = document.getElementById('modal-match');
     
+    // Header Modal
     document.getElementById('match-img').src = animal.imagenUrl || 'https://via.placeholder.com/400';
     document.getElementById('match-nombre').innerText = animal.nombre;
-    const badge = document.getElementById('match-badge-modal');
-    badge.innerText = `${animal.matchScore}%`;
     
-    // Colores badge
-    badge.className = "text-xl font-bold px-4 py-2 rounded-lg shadow-sm " + 
-        (animal.matchScore >= 80 ? 'bg-green-100 text-green-700' : (animal.matchScore >= 50 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'));
+    // Badge Score
+    const badge = document.getElementById('match-badge-modal');
+    badge.innerText = `${animal.matchScore}% Compatible`;
+    
+    // Color dinámico del badge en modal
+    badge.className = "text-lg font-bold px-4 py-1 rounded-full shadow-sm border " + 
+        (animal.matchScore >= 80 ? 'bg-green-100 text-green-700 border-green-200' : 
+        (animal.matchScore >= 50 ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 
+                                   'bg-red-100 text-red-700 border-red-200'));
 
+    // Renderizar Lista de Razones (con íconos dinámicos)
     const listaUl = document.getElementById('match-razones');
     listaUl.innerHTML = '';
 
     if (animal.matchDetails.razonesMatch && animal.matchDetails.razonesMatch.length > 0) {
         animal.matchDetails.razonesMatch.forEach(razon => {
-            listaUl.innerHTML += `<li class="flex items-start"><i class="fa-solid fa-check text-green-500 mt-1 mr-2"></i><span>${razon}</span></li>`;
+            let icon = 'fa-check-circle text-green-500'; // Default positivo
+            let bgClass = 'bg-green-50 border-green-100';
+
+            // Detectar tipo de mensaje por el emoji que manda el backend
+            if (razon.includes('⚠️')) {
+                icon = 'fa-triangle-exclamation text-yellow-500';
+                bgClass = 'bg-yellow-50 border-yellow-100';
+            } else if (razon.includes('❌')) {
+                icon = 'fa-circle-xmark text-red-500';
+                bgClass = 'bg-red-50 border-red-100';
+            }
+
+            // Limpiamos el emoji del texto para que no se duplique con el FontAwesome
+            const textoLimpio = razon.replace(/✅|⚠️|❌/g, '').trim();
+
+            listaUl.innerHTML += `
+                <li class="flex items-start p-3 rounded-lg border ${bgClass} mb-2">
+                    <i class="fa-solid ${icon} mt-0.5 mr-3 text-lg flex-shrink-0"></i>
+                    <span class="text-gray-700 text-sm leading-snug">${textoLimpio}</span>
+                </li>
+            `;
         });
     } else {
-        listaUl.innerHTML = `<li class="flex items-start text-orange-600"><i class="fa-solid fa-triangle-exclamation mt-1 mr-2"></i><span>Baja compatibilidad detectada.</span></li>`;
+        // Caso raro: score bajo sin razones específicas
+        listaUl.innerHTML = `
+            <li class="flex items-center p-4 bg-orange-50 text-orange-700 rounded-lg border border-orange-100">
+                <i class="fa-solid fa-circle-info mr-3 text-xl"></i>
+                <span class="text-sm">No encontramos coincidencias fuertes en tu perfil, pero el amor todo lo puede.</span>
+            </li>
+        `;
     }
 
     modal.classList.remove('hidden');
 }
 
-// Helper UI
 function mostrarBanner(id) {
     const b = document.getElementById(id);
     if(b) b.classList.remove('hidden');
 }
 
-// Helper Botón Whatsapp (Duplicado para independencia, o pon en utils.js)
 function generarBotonWsp(a) {
     if (!a.telefonoContacto) return '';
     const num = a.telefonoContacto.replace(/\D/g, '');
-    return `<a href="https://wa.me/549${num}" target="_blank" class="flex-1 bg-green-500 text-white text-center px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-600 transition flex items-center justify-center"><i class="fa-brands fa-whatsapp mr-2"></i> Contactar</a>`;
+    return `<a href="https://wa.me/549${num}" target="_blank" class="block w-full bg-green-500 text-white text-center px-4 py-3 rounded-xl text-sm font-bold hover:bg-green-600 transition shadow-sm hover:shadow-md flex items-center justify-center group">
+        <i class="fa-brands fa-whatsapp text-lg mr-2 group-hover:scale-110 transition"></i> Contactar ahora
+    </a>`;
 }
-
-// NOTA: Si en adopcion.html también tienes el botón "Dar en Adopción",
-// deberías copiar aquí las funciones abrirModalReporte y enviarReporte
-// pero configuradas para estado = 1 (Adopción) y mostrando los atributos extra.

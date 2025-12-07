@@ -202,9 +202,21 @@ function mostrarWidgetTurno(vet) {
 // --- MODAL REPORTE ---
 function abrirModalReporte() {
     if (!currentUser) {
-        if (confirm("Para publicar un aviso debes estar registrado.\n¿Quieres iniciar sesión ahora?")) {
-            window.location.href = 'login.html';
-        }
+        // Reemplazo de confirm()
+        Swal.fire({
+            title: 'Inicia sesión',
+            text: "Para publicar un aviso debes estar registrado.",
+            icon: 'info',
+            showCancelButton: true,
+            confirmButtonColor: '#f97316', // Orange-500
+            cancelButtonColor: '#6b7280',
+            confirmButtonText: 'Ir a Login',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = 'login.html';
+            }
+        });
         return;
     }
 
@@ -267,17 +279,22 @@ async function enviarReporte(e) {
         });
 
         if (res.ok) {
-            alert("¡Aviso publicado con éxito!");
+            Swal.fire({
+                title: '¡Publicado!',
+                text: 'Tu aviso ya está visible en el mapa.',
+                icon: 'success',
+                confirmButtonColor: '#f97316'
+            });
             cerrarModal();
             e.target.reset();
             markerModal = null; coordsReporte = null;
             cargarPerdidos(); // Solo recargamos los pines
         } else {
-            alert("Error al publicar.");
+            Swal.fire('Error', 'No se pudo publicar el aviso.', 'error');
         }
     } catch (err) {
         console.error(err);
-        alert("Error de conexión");
+        Swal.fire('Error de conexión', 'Inténtalo nuevamente.', 'error');
     } finally {
         btn.innerText = btnTxt; btn.disabled = false;
     }

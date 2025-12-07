@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Perfil - Animal Connect</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 </head>
@@ -172,8 +174,40 @@
 
         // ... (Aquí van tus funciones finalizar, renovar y borrar que ya tenías) ...
         async function finalizar(id, estadoOrigen) {
-            const nuevoEstado = 4; // Todos van a cerrado
-            if(!confirm("¿Confirmar cambio de estado?")) return;
+            const nuevoEstado = 4;
+            
+            let tituloConfirm = "¿Caso Resuelto?";
+            let textoConfirm = "";
+            let textoHistoria = "";
+            let tituloHistoria = "";
+
+            if (estadoOrigen === 2) {
+                textoConfirm = "¡Qué alegría! Se marcará como encontrado y desaparecerá del mapa público.";
+                tituloHistoria = "🎉 ¡Final Feliz!";
+                textoHistoria = "¿Te gustaría contar cómo fue el reencuentro en la Comunidad para sumar puntos?";
+            } else if (estadoOrigen === 3) {
+                textoConfirm = "El aviso dejará de ser visible en el mapa.";
+                tituloHistoria = "👏 ¡Gran trabajo!";
+                textoHistoria = "¿Quieres compartir esta buena acción en el muro?";
+            } else {
+                textoConfirm = "¿Se concretó la adopción?";
+                tituloHistoria = "🏡 ¡Nueva Vida!";
+                textoHistoria = "¿Quieres compartir la adopción en la comunidad?";
+            }
+
+            // 1. PRIMERA CONFIRMACIÓN (Cambiar Estado)
+            const result = await Swal.fire({
+                title: tituloConfirm,
+                text: textoConfirm,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#22c55e', // Green
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Sí, confirmar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if(!result.isConfirmed) return;
 
             try {
                 const res = await fetch(`${API_URL}/Animales/estado/${id}`, {
@@ -183,7 +217,19 @@
                 });
                 
                 if(res.ok) {
-                    if (confirm("🎉 ¡Genial! ¿Quieres compartir esta buena noticia en la Comunidad?")) {
+                    // 2. SEGUNDA CONFIRMACIÓN (Compartir Historia)
+                    const shareResult = await Swal.fire({
+                        title: tituloHistoria,
+                        text: textoHistoria,
+                        icon: 'success',
+                        showCancelButton: true,
+                        confirmButtonColor: '#f97316',
+                        cancelButtonColor: '#6b7280',
+                        confirmButtonText: 'Sí, compartir',
+                        cancelButtonText: 'No, gracias'
+                    });
+
+                    if (shareResult.isConfirmed) {
                         window.location.href = 'comunidad.html?modo=historia';
                     } else {
                         cargarMisPublicaciones();
@@ -193,9 +239,39 @@
         }
 
         async function renovar(id) {
-            if(!confirm("Renovar por 15 días más?")) return;
-            await fetch(`${API_URL}/Animales/renovar/${id}`, { method: 'PUT' });
-            cargarMisPublicaciones();
+            const result = await Swal.fire({
+                title: '¿Renovar publicación?',
+                text: "Tu aviso estará visible por 15 días más.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#f97316',
+                confirmButtonText: 'Sí, renovar'
+            });
+
+            if(result.isConfirmed) {
+                await fetch(`${API_URL}/Animales/renovar/${id}`, { method: 'PUT' });
+                Swal.fire('Renovado', 'Tu publicación está activa nuevamente.', 'success');
+                cargarMisPublicaciones();
+            }
+        }
+
+        async function borrar(id) {
+            const result = await Swal.fire({
+                title: '¿Estás seguro?',
+                text: "Esta acción eliminará el registro permanentemente.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if(result.isConfirmed) {
+                await fetch(`${API_URL}/Animales/${id}`, { method: 'DELETE' });
+                Swal.fire('Eliminado', 'El registro ha sido borrado.', 'success');
+                cargarMisPublicaciones();
+            }
         }
 
         async function borrar(id) {

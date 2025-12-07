@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Zoonosis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.heat/0.2.0/leaflet-heat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="flex h-screen overflow-hidden">
+        
+        <aside class="w-64 bg-gray-900 text-white flex flex-col hidden md:flex">
+            <div class="p-6 text-2xl font-bold text-orange-500 border-b border-gray-800">
+                <i class="fa-solid fa-shield-dog mr-2"></i>Zoonosis
+            </div>
+            <nav class="flex-1 p-4 space-y-2">
+                <button onclick="cambiarVista('dashboard')" id="nav-dashboard" class="w-full text-left py-2.5 px-4 rounded bg-orange-600 text-white transition">
+                    <i class="fa-solid fa-chart-line mr-2"></i>Dashboard
+                </button>
+                <button onclick="cambiarVista('profesionales')" id="nav-profesionales" class="w-full text-left py-2.5 px-4 rounded hover:bg-gray-800 text-gray-400 transition">
+                    <i class="fa-solid fa-user-doctor mr-2"></i>Profesionales
+                    <span id="badge-solicitudes" class="hidden bg-red-500 text-white text-xs px-2 py-0.5 rounded-full ml-2">New</span>
+                </button>
+                <button onclick="cambiarVista('ingreso')" id="nav-ingreso" class="w-full text-left py-2.5 px-4 rounded hover:bg-gray-800 text-gray-400 transition">
+                    <i class="fa-solid fa-plus-circle mr-2"></i>Nuevo Ingreso
+                </button>
+                <button onclick="cambiarVista('campanas')" id="nav-campanas" class="w-full text-left py-2.5 px-4 rounded hover:bg-gray-800 text-gray-400 transition">
+                    <i class="fa-solid fa-calendar-days mr-2"></i>Campañas
+                </button>
+                
+                <div class="border-t border-gray-700 my-4"></div>
+                <button onclick="cerrarSesion()" class="w-full text-left py-2.5 px-4 rounded hover:bg-red-900 text-red-400 transition">
+                    <i class="fa-solid fa-right-from-bracket mr-2"></i>Cerrar Sesión
+                </button>
+            </nav>
+        </aside>
+
+        <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-6">
+            
+            <div id="view-dashboard" class="animate-fade-in">
+                <h1 class="text-3xl font-bold text-gray-800 mb-6">Resumen de Gestión</h1>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white rounded-lg shadow p-5 border-l-4 border-blue-500">
+                        <div><p class="text-gray-500 text-sm">Total Reportes</p><h2 class="text-3xl font-bold" id="total-count">0</h2></div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-5 border-l-4 border-orange-500">
+                        <div><p class="text-gray-500 text-sm">Perros</p><h2 class="text-3xl font-bold" id="dog-count">0</h2></div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-5 border-l-4 border-green-500">
+                        <div><p class="text-gray-500 text-sm">Gatos</p><h2 class="text-3xl font-bold" id="cat-count">0</h2></div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-5 border-l-4 border-red-500">
+                        <div><p class="text-gray-500 text-sm">Perdidos Activos</p><h2 class="text-3xl font-bold" id="lost-count">0</h2></div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <h3 class="font-bold text-gray-700 mb-4">📍 Mapa de Calor</h3>
+                        <div id="heatmap" class="h-80 w-full rounded border"></div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-4">
+                        <h3 class="font-bold text-gray-700 mb-4">📊 Especies</h3>
+                        <div class="h-80 flex justify-center"><canvas id="speciesChart"></canvas></div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow overflow-hidden">
+                    <div class="px-6 py-4 border-b"><h3 class="font-bold text-gray-700">📋 Últimos Registros</h3></div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <tbody id="admin-table-body" class="text-sm text-gray-600"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-profesionales" class="hidden animate-fade-in">
+                <h1 class="text-3xl font-bold text-gray-800 mb-6">Gestión de Profesionales</h1>
+                
+                <div class="bg-white rounded-lg shadow overflow-hidden mb-8 border-l-4 border-yellow-400">
+                    <div class="px-6 py-4 border-b flex justify-between items-center bg-yellow-50">
+                        <h3 class="font-bold text-yellow-800"><i class="fa-solid fa-clock mr-2"></i>Solicitudes Pendientes</h3>
+                        <button onclick="cargarSolicitudes()" class="text-sm text-yellow-700 hover:underline"><i class="fa-solid fa-sync mr-1"></i>Actualizar</button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <tbody id="solicitudes-table-body" class="text-sm text-gray-600">
+                                </tbody>
+                        </table>
+                        <div id="no-solicitudes" class="hidden p-4 text-center text-gray-400 text-sm">
+                            No hay solicitudes nuevas.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow overflow-hidden border-l-4 border-green-500">
+                    <div class="px-6 py-4 border-b bg-green-50">
+                        <h3 class="font-bold text-green-800"><i class="fa-solid fa-staff-snake mr-2"></i>Directorio & Guardia</h3>
+                        <p class="text-xs text-green-600 mt-1">Selecciona la veterinaria que se encuentra de turno actualmente.</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
+                                <tr>
+                                    <th class="py-3 px-6 text-center">De Turno</th>
+                                    <th class="py-3 px-6">Veterinaria</th>
+                                    <th class="py-3 px-6">Contacto</th>
+                                    <th class="py-3 px-6 text-center">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody id="profesionales-table-body" class="text-sm text-gray-600">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-ingreso" class="hidden animate-fade-in">
+                <h1 class="text-3xl font-bold text-gray-800 mb-6">Gestión de Pacientes</h1>
+                
+                <form onsubmit="guardarAnimalCompleto(event)" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-1 space-y-6">
+                        <div class="bg-white p-6 rounded-lg shadow border-t-4 border-orange-500">
+                            <h3 class="font-bold text-lg mb-4 text-gray-800">1. Datos Generales</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block font-bold text-sm text-gray-700 mb-1">Tipo de Ingreso</label>
+                                    <select id="alta-estado" class="w-full border-2 border-orange-200 rounded p-2 font-bold text-gray-700" onchange="toggleFormularioIngreso()">
+                                        <option value="1">🏡 En Adopción (Requiere Perfil)</option>
+                                        <option value="2">🚨 Perdido (Alerta)</option>
+                                        <option value="3">👀 Encontrado (Alerta)</option>
+                                    </select>
+                                </div>
+                                <input type="text" id="alta-nombre" class="w-full border rounded p-2" placeholder="Nombre / Apodo" required>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <select id="alta-especie" class="border rounded p-2"><option value="1">Perro</option><option value="2">Gato</option></select>
+                                    <input type="text" id="alta-edad" class="border rounded p-2" placeholder="Edad Aprox.">
+                                </div>
+                                <textarea id="alta-desc" rows="3" class="w-full border rounded p-2" placeholder="Descripción física y notas..."></textarea>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Fotografía</label>
+                                    <input type="file" id="alta-foto" class="w-full text-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-6 rounded-lg shadow">
+                            <h3 class="font-bold text-sm mb-2">Ubicación Geográfica</h3>
+                            <div id="map-alta" class="h-64 w-full border rounded cursor-crosshair"></div>
+                            <p id="alta-coords" class="text-xs text-gray-500 mt-1 text-center">Click en el mapa para marcar</p>
+                        </div>
+                        
+                        <button type="submit" id="btn-guardar-simple" class="w-full bg-gray-800 text-white py-3 rounded-lg font-bold hover:bg-gray-900 hidden">
+                            Guardar Alerta
+                        </button>
+                    </div>
+
+                    <div id="columna-atributos" class="lg:col-span-2 bg-white p-6 rounded-lg shadow border-t-4 border-blue-500">
+                        <h3 class="font-bold text-lg mb-4 text-blue-600 flex items-center">
+                            <i class="fa-solid fa-dna mr-2"></i> 2. Perfil de Compatibilidad (Match)
+                        </h3>
+                        <p class="text-sm text-gray-500 mb-6 bg-blue-50 p-3 rounded">
+                            Completa estos datos para que el algoritmo recomiende este animal al adoptante ideal.
+                        </p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <label class="font-bold text-gray-700 block mb-2">Nivel de Energía</label>
+                                <input type="range" id="alta-energia" min="1" max="5" value="3" class="w-full h-2 bg-gray-300 rounded-lg accent-blue-600">
+                                <div class="flex justify-between text-xs text-gray-500 mt-1"><span>Sofá</span><span>Moderado</span><span>Atleta</span></div>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <label class="font-bold text-gray-700 block mb-2">Experiencia Requerida</label>
+                                <select id="alta-exp" class="w-full border rounded p-2">
+                                    <option value="1">Baja (Para principiantes)</option>
+                                    <option value="2">Media</option>
+                                    <option value="3">Alta (Conducta compleja)</option>
+                                </select>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg md:col-span-2">
+                                <label class="font-bold text-gray-700 block mb-2">Tamaño Real</label>
+                                <div class="flex gap-4">
+                                    <label class="flex items-center"><input type="radio" name="alta-tamano" value="1" checked class="mr-2"> Pequeño</label>
+                                    <label class="flex items-center"><input type="radio" name="alta-tamano" value="2" class="mr-2"> Mediano</label>
+                                    <label class="flex items-center"><input type="radio" name="alta-tamano" value="3" class="mr-2"> Grande</label>
+                                </div>
+                            </div>
+                            <div class="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <label class="flex items-center p-3 border rounded"><input type="checkbox" id="alta-patio" class="w-5 h-5 mr-3"><span class="text-sm">Necesita Patio</span></label>
+                                <label class="flex items-center p-3 border rounded"><input type="checkbox" id="alta-ninos" class="w-5 h-5 mr-3"><span class="text-sm">Apto Niños</span></label>
+                                <label class="flex items-center p-3 border rounded"><input type="checkbox" id="alta-otros" class="w-5 h-5 mr-3"><span class="text-sm">Apto Mascotas</span></label>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 flex justify-end">
+                            <button type="submit" id="btn-guardar-full" class="bg-blue-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-blue-700 shadow-lg flex items-center">
+                                <i class="fa-solid fa-check-circle mr-2"></i> Ingresar Sistema Adopción
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div id="view-campanas" class="hidden animate-fade-in">
+                <h1 class="text-3xl font-bold text-gray-800 mb-6">Campañas de Salud</h1>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="bg-white p-6 rounded shadow h-fit">
+                        <h3 class="font-bold mb-4 border-b pb-2">Nueva Fecha</h3>
+                        <div class="space-y-3">
+                            <input type="text" id="camp-titulo" class="w-full border rounded p-2" placeholder="Título (Ej: Castración Barrio Sur)">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="text-xs font-bold text-gray-500">Inicio</label>
+                                    <input type="datetime-local" id="camp-fecha" class="w-full border rounded p-2 text-sm">
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-gray-500">Fin (Estimado)</label>
+                                    <input type="time" id="camp-fin" class="w-full border rounded p-2 text-sm">
+                                </div>
+                            </div>
+                            <textarea id="camp-desc" class="w-full border rounded p-2" rows="2" placeholder="Detalles (Ayuno, requisitos...)"></textarea>
+                            <input type="tel" id="camp-tel" class="w-full border rounded p-2" placeholder="WhatsApp Consultas (Opcional)">
+                            <label class="text-xs font-bold text-gray-500 uppercase">Ubicación del Móvil</label>
+                            <div id="map-picker" class="h-80 w-full border rounded cursor-crosshair shadow-inner"></div>
+                            <button onclick="guardarCampana()" class="w-full bg-gray-900 text-white py-3 rounded font-bold hover:bg-gray-800 transition">
+                                Crear Evento
+                            </button>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 bg-white rounded shadow p-4">
+                        <h3 class="font-bold text-gray-700 mb-4">🗓️ Calendario Activo</h3>
+                        <div id="lista-campanas-admin" class="space-y-2"></div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        const API_URL = 'http://127.0.0.1:5269/api';
+        
+        // Variables
+        let mapHeat = null, mapAlta = null, markerAlta = null, mapCamp = null, markerCamp = null;
+        let coordsAlta = null, coordsCamp = null;
+
+        // Obtener usuario logueado
+        const usuario = JSON.parse(localStorage.getItem('zoonosis_user'));
+
+        // --- SEGURIDAD ---
+        if(!localStorage.getItem('zoonosis_user')) window.location.href = 'login.html';
+
+        function cerrarSesion() {
+            localStorage.removeItem('zoonosis_user');
+            window.location.href = 'login.html';
+        }
+
+        // --- NAVEGACIÓN ---
+        function cambiarVista(vista) {
+            // Ocultar todo
+            ['dashboard', 'ingreso', 'campanas', 'profesionales'].forEach(v => { // Nota: cambiamos 'solicitudes' por 'profesionales'
+                const elView = document.getElementById(`view-${v}`);
+                const elNav = document.getElementById(`nav-${v}`);
+                if(elView) elView.classList.add('hidden');
+                if(elNav) elNav.className = "w-full text-left py-2.5 px-4 rounded hover:bg-gray-800 text-gray-400 transition";
+            });
+
+            // Mostrar actual
+            document.getElementById(`view-${vista}`).classList.remove('hidden');
+            document.getElementById(`nav-${vista}`).className = "w-full text-left py-2.5 px-4 rounded bg-orange-600 text-white transition";
+
+            if(vista === 'dashboard') cargarDashboard();
+            if(vista === 'ingreso') initMapAlta();
+            if(vista === 'campanas') initMapCampana();
+            if(vista === 'profesionales') cargarModuloProfesionales(); // Nueva función maestra
+        }
+
+        async function cargarModuloProfesionales() {
+            cargarSolicitudes(); // La que ya tenías
+            cargarDirectorioActivo(); // La nueva
+        }
+
+        // B. DIRECTORIO ACTIVO (Nueva: Para marcar turnos)
+        async function cargarDirectorioActivo() {
+            try {
+                const res = await fetch(`${API_URL}/Veterinarias`); 
+                if (res.ok) {
+                    const lista = await res.json();
+                    const tbody = document.getElementById('profesionales-table-body');
+                    tbody.innerHTML = '';
+
+                    lista.forEach(v => {
+                        const btnTurno = v.esDeTurno 
+                            ? `<button onclick="setTurno(${v.id})" class="w-8 h-8 rounded-full bg-red-500 text-white shadow-lg hover:bg-red-600 transition" title="Desactivar turno"><i class="fa-solid fa-power-off"></i></button>`
+                            : `<button onclick="setTurno(${v.id})" class="w-8 h-8 rounded-full bg-gray-200 text-gray-400 hover:bg-green-200 hover:text-green-600 transition" title="Activar turno"><i class="fa-solid fa-power-off"></i></button>`;
+
+                        const estadoVisual = v.esDeTurno 
+                            ? `<span class="bg-green-100 text-green-800 py-1 px-3 rounded-full text-xs font-bold border border-green-200 shadow-sm animate-pulse">🔴 ACTIVO</span>`
+                            : `<span class="text-gray-400 text-xs">Inactivo</span>`;
+
+                        // Logo o Avatar por defecto
+                        const logoHtml = v.logoUrl 
+                            ? `<img src="${v.logoUrl}" class="w-10 h-10 rounded-full object-cover border">`
+                            : `<div class="w-10 h-10 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center border"><i class="fa-solid fa-user-doctor"></i></div>`;
+
+                        tbody.innerHTML += `
+                            <tr class="border-b hover:bg-gray-50 ${v.esDeTurno ? 'bg-green-50' : ''}">
+                                <td class="py-3 px-4 text-center">${btnTurno}</td>
+                                <td class="py-3 px-4">
+                                    <div class="flex items-center">
+                                        ${logoHtml}
+                                        <div class="ml-3">
+                                            <p class="font-bold text-gray-800 text-sm">${v.nombreVeterinaria}</p>
+                                            <p class="text-xs text-gray-500">${v.direccion}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="py-3 px-4 text-xs text-gray-600">
+                                    <div class="flex items-center gap-1 mb-1">
+                                        <i class="fa-brands fa-whatsapp text-green-600"></i> ${v.telefonoProfesional}
+                                    </div>
+                                    <div class="flex items-center gap-1">
+                                        <i class="fa-regular fa-clock text-gray-400"></i> ${v.horariosAtencion}
+                                    </div>
+                                </td>
+                                <td class="py-3 px-4 text-center">${estadoVisual}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // C. ACCIÓN DE ASIGNAR TURNO
+        async function setTurno(id) {
+            if(!confirm("¿Confirmar cambio de veterinaria de turno?")) return;
+            try {
+                const res = await fetch(`${API_URL}/Veterinarias/turno/${id}`, { method: 'PUT' });
+                if(res.ok) {
+                    // Recargamos la tabla para ver el cambio visual (el botón verde se mueve)
+                    cargarDirectorioActivo();
+                } else {
+                    alert("Error al asignar turno.");
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        // --- LÓGICA DASHBOARD ---
+        async function cargarDashboard() {
+            try {
+                // 1. Cargar Estadísticas (Números y Mapa de Calor)
+                const resStats = await fetch(`${API_URL}/Admin/dashboard-stats/${usuario.id}`);
+                
+                if (resStats.ok) {
+                    const stats = await resStats.json();
+                    
+                    // Actualizar Tarjetas
+                    document.getElementById('total-count').innerText = stats.totalReportes;
+                    document.getElementById('dog-count').innerText = stats.perros;
+                    document.getElementById('cat-count').innerText = stats.gatos;
+                    document.getElementById('lost-count').innerText = stats.perdidosActivos;
+
+                    // Actualizar Mapa de Calor con puntos LOCALES
+                    renderizarHeatmap(stats.puntosCalor); // El backend ya devuelve solo los puntos cercanos
+                    
+                    // Actualizar Gráfico
+                    renderizarGrafico(stats.perros, stats.gatos);
+                }
+
+                // 2. Cargar Tabla de Registros (Filtrada por Zona)
+                const resTabla = await fetch(`${API_URL}/Admin/animales-zona/${usuario.id}`);
+                if (resTabla.ok) {
+                    const lista = await resTabla.json();
+                    renderizarTabla(lista);
+                }
+
+            } catch(e) { console.error("Error dashboard", e); }
+        }
+
+        function renderizarHeatmap(puntos) {
+            const container = document.getElementById('heatmap');
+            if (container.offsetWidth === 0) return; // Si está oculto no renderiza
+
+            if(mapHeat) mapHeat.remove();
+            
+            // CENTRO DEL MAPA: 
+            // Idealmente el backend debería devolver el centro del municipio en 'stats', 
+            // por ahora usamos el primer punto o un default.
+            const centro = puntos.length > 0 ? [puntos[0].lat, puntos[0].lng] : [-38.416, -63.616];
+
+            mapHeat = L.map('heatmap').setView(centro, 13);
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapHeat);
+            
+            // Convertir objetos {lat, lng} a array [lat, lng, intensidad]
+            const heatData = puntos.map(p => [p.lat, p.lng, 0.8]);
+            
+            if(heatData.length) L.heatLayer(heatData, {radius: 25}).addTo(mapHeat);
+        }
+
+        let chartInstance = null;
+       function renderizarGrafico(perros, gatos) {
+            const ctx = document.getElementById('speciesChart').getContext('2d');
+            if(chartInstance) chartInstance.destroy();
+            
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Perros', 'Gatos'],
+                    datasets: [{
+                        data: [perros, gatos], 
+                        backgroundColor: ['#f97316', '#22c55e']
+                    }]
+                }
+            });
+        }
+
+        function renderizarTabla(lista) {
+            const tbody = document.getElementById('admin-table-body');
+            tbody.innerHTML = '';
+            
+            if(lista.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500">No hay registros en tu jurisdicción.</td></tr>';
+                return;
+            }
+
+            lista.slice(0, 10).forEach(a => {
+                const estado = a.idEstado === 1 ? '<span class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs">Adopción</span>' : 
+                               (a.idEstado === 2 ? '<span class="bg-red-100 text-red-700 px-2 py-1 rounded text-xs">Perdido</span>' : 
+                               '<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs">Encontrado</span>');
+                
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="py-3 px-6 font-medium">${a.nombre}</td>
+                        <td class="py-3 px-6 text-xs text-gray-500">${a.descripcion.substring(0,30)}...</td>
+                        <td class="py-3 px-6">${estado}</td>
+                        <td class="py-3 px-6 text-center">
+                            <button onclick="borrarAnimal(${a.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // --- LÓGICA SOLICITUDES (NUEVO SPRINT A) ---
+        async function cargarSolicitudes() {
+            try {
+                const res = await fetch(`${API_URL}/Admin/solicitudes`);
+                if (res.ok) {
+                    const lista = await res.json();
+                    const tbody = document.getElementById('solicitudes-table-body');
+                    const emptyMsg = document.getElementById('no-solicitudes');
+                    const badge = document.getElementById('badge-solicitudes');
+                    
+                    tbody.innerHTML = '';
+
+                    if (lista.length === 0) {
+                        emptyMsg.classList.remove('hidden');
+                        badge.classList.add('hidden');
+                    } else {
+                        emptyMsg.classList.add('hidden');
+                        badge.classList.remove('hidden');
+                        lista.forEach(u => {
+                            tbody.innerHTML += `
+                                <tr class="border-b hover:bg-yellow-50 transition">
+                                    <td class="py-3 px-6">
+                                        <p class="font-bold text-gray-800">${u.nombreVeterinaria}</p>
+                                        <p class="text-xs text-gray-500">${u.matricula} | ${u.nombreUsuario}</p>
+                                    </td>
+                                    <td class="py-3 px-6 text-right space-x-2">
+                                        <button onclick="gestionarSolicitud(${u.id}, 'aprobar')" class="bg-green-100 text-green-700 hover:bg-green-200 py-1 px-3 rounded text-xs font-bold transition">
+                                            <i class="fa-solid fa-check"></i>
+                                        </button>
+                                        <button onclick="gestionarSolicitud(${u.id}, 'rechazar')" class="bg-red-100 text-red-700 hover:bg-red-200 py-1 px-3 rounded text-xs font-bold transition">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    }
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function renderizarSolicitudes(lista) {
+            const tbody = document.getElementById('solicitudes-table-body');
+            const emptyMsg = document.getElementById('no-solicitudes');
+            const badge = document.getElementById('badge-solicitudes');
+            
+            tbody.innerHTML = '';
+
+            // Badge y Mensaje Vacío
+            if (lista.length === 0) {
+                emptyMsg.classList.remove('hidden');
+                badge.classList.add('hidden');
+                return;
+            }
+            emptyMsg.classList.add('hidden');
+            badge.classList.remove('hidden');
+
+            lista.forEach(u => {
+                tbody.innerHTML += `
+                    <tr class="border-b hover:bg-gray-50 transition">
+                        <td class="py-3 px-6">
+                            <p class="font-bold text-gray-800">${u.nombreVeterinaria}</p>
+                            <p class="text-xs text-gray-500"><i class="fa-solid fa-location-dot mr-1"></i>${u.direccion}</p>
+                        </td>
+                        <td class="py-3 px-6 font-mono text-orange-600 font-bold">${u.matricula}</td>
+                        <td class="py-3 px-6 text-sm">${u.nombreUsuario}</td>
+                        <td class="py-3 px-6 text-center space-x-2">
+                            <button onclick="gestionarSolicitud(${u.id}, 'aprobar')" class="bg-green-100 text-green-700 hover:bg-green-200 py-1 px-3 rounded text-xs font-bold transition" title="Aprobar acceso">
+                                <i class="fa-solid fa-check mr-1"></i>Aprobar
+                            </button>
+                            <button onclick="gestionarSolicitud(${u.id}, 'rechazar')" class="bg-red-100 text-red-700 hover:bg-red-200 py-1 px-3 rounded text-xs font-bold transition" title="Rechazar y bloquear">
+                                <i class="fa-solid fa-xmark mr-1"></i>Rechazar
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function gestionarSolicitud(id, accion) {
+            const verbo = accion === 'aprobar' ? "Aprobar" : "Rechazar";
+            if(!confirm(`¿Estás seguro de que deseas ${verbo} esta solicitud?`)) return;
+
+            try {
+                const res = await fetch(`${API_URL}/Admin/${accion}/${id}`, { method: 'POST' });
+                if(res.ok) {
+                    alert(accion === 'aprobar' ? "¡Veterinario aprobado exitosamente!" : "Solicitud rechazada.");
+                    cargarSolicitudes(); // Recargar la tabla
+                } else {
+                    alert("Error al procesar la solicitud en el servidor.");
+                }
+            } catch(e) {
+                alert("Error de conexión.");
+            }
+        }
+
+        // --- LÓGICA INGRESO DINÁMICO ---
+        function toggleFormularioIngreso() {
+            const estado = document.getElementById('alta-estado').value;
+            const colAtributos = document.getElementById('columna-atributos');
+            const btnSimple = document.getElementById('btn-guardar-simple');
+            
+            if (estado === "1") { // Adopción -> Mostrar TODO
+                colAtributos.classList.remove('hidden');
+                btnSimple.classList.add('hidden');
+            } else { // Perdido/Encontrado -> Ocultar Match
+                colAtributos.classList.add('hidden');
+                btnSimple.classList.remove('hidden');
+            }
+        }
+
+        function initMapAlta() {
+            setTimeout(() => {
+                if(mapAlta) mapAlta.remove();
+                mapAlta = L.map('map-alta').setView([-37.994, -61.353], 13);
+                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapAlta);
+                mapAlta.on('click', e => {
+                    coordsAlta = e.latlng;
+                    if(markerAlta) markerAlta.setLatLng(e.latlng); else markerAlta = L.marker(e.latlng).addTo(mapAlta);
+                    document.getElementById('alta-coords').innerText = `${e.latlng.lat.toFixed(4)}, ${e.latlng.lng.toFixed(4)}`;
+                });
+                toggleFormularioIngreso();
+            }, 200);
+        }
+
+        async function guardarAnimalCompleto(e) {
+            e.preventDefault();
+            const btn = document.querySelector('button[type="submit"]:not(.hidden)');
+            const btnTxt = btn.innerText;
+            btn.innerText = "Procesando..."; btn.disabled = true;
+
+            try {
+                const fileInput = document.getElementById('alta-foto');
+                let imgUrl = "";
+                if(fileInput.files[0]) {
+                    const fd = new FormData(); fd.append('file', fileInput.files[0]);
+                    const resImg = await fetch(`${API_URL}/Archivos/subir`, {method:'POST', body:fd});
+                    const dataImg = await resImg.json();
+                    imgUrl = dataImg.url;
+                }
+
+                const estado = parseInt(document.getElementById('alta-estado').value);
+                const nuevoAnimal = {
+                    nombre: document.getElementById('alta-nombre').value,
+                    descripcion: document.getElementById('alta-desc').value,
+                    edadAproximada: document.getElementById('alta-edad').value || "Desconocida",
+                    idEspecie: parseInt(document.getElementById('alta-especie').value),
+                    idEstado: estado,
+                    imagenUrl: imgUrl,
+                    ubicacionLat: coordsAlta ? coordsAlta.lat : -37.994,
+                    ubicacionLon: coordsAlta ? coordsAlta.lng : -61.353,
+                    fechaPublicacion: new Date().toISOString(),
+                    atributos: []
+                };
+
+                if(estado === 1) {
+                    const add = (id, val) => nuevoAnimal.atributos.push({ atributoId: id, valor: val });
+                    add(1, parseInt(document.getElementById('alta-energia').value)); 
+                    add(2, document.getElementById('alta-patio').checked ? 1 : 0);
+                    add(3, document.getElementById('alta-ninos').checked ? 1 : 0);
+                    add(4, document.getElementById('alta-otros').checked ? 1 : 0);
+                    add(5, 2);
+                    add(6, parseInt(document.querySelector('input[name="alta-tamano"]:checked').value));
+                    add(7, parseInt(document.getElementById('alta-exp').value));
+                }
+
+                const res = await fetch(`${API_URL}/Animales`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(nuevoAnimal)
+                });
+
+                if(res.ok) {
+                    alert("Guardado correctamente");
+                    e.target.reset();
+                    if(markerAlta) { markerAlta.remove(); coordsAlta = null; }
+                    cambiarVista('dashboard');
+                } else {
+                    alert("Error al guardar");
+                }
+            } catch(err) {
+                console.error(err);
+                alert("Error de conexión");
+            } finally {
+                btn.innerText = btnTxt; btn.disabled = false;
+            }
+        }
+
+        async function borrarAnimal(id) {
+            if(confirm("¿Eliminar registro?")) {
+                await fetch(`${API_URL}/Animales/${id}`, { method: 'DELETE' });
+                cargarDashboard();
+            }
+        }
+
+        // --- CAMPAÑAS ---
+        function initMapCampana() {
+            setTimeout(() => {
+                if(mapCamp) mapCamp.remove();
+                mapCamp = L.map('map-picker').setView([-37.994, -61.353], 13);
+                L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(mapCamp);
+                mapCamp.on('click', e => {
+                    coordsCamp = e.latlng;
+                    if(markerCamp) markerCamp.setLatLng(e.latlng); else markerCamp = L.marker(e.latlng).addTo(mapCamp);
+                });
+                cargarCampanasAdmin();
+            }, 200);
+        }
+
+        async function cargarCampanasAdmin() {
+            const res = await fetch(`${API_URL}/Campanias`);
+            if(res.ok) {
+                const lista = await res.json();
+                const div = document.getElementById('lista-campanas-admin');
+                div.innerHTML = '';
+                lista.forEach(c => {
+                    div.innerHTML += `<div class="p-3 border rounded flex justify-between items-center bg-gray-50 mb-2">
+                        <div>
+                            <span class="font-bold text-orange-600 block">${new Date(c.fechaHora).toLocaleDateString()}</span>
+                            <span class="text-sm font-bold text-gray-700">${c.titulo}</span>
+                            <p class="text-xs text-gray-500 truncate w-40">${c.descripcion}</p>
+                        </div>
+                        <button onclick="borrarCampana(${c.id})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+                    </div>`;
+                });
+            }
+        }
+
+        async function guardarCampana() {
+            const titulo = document.getElementById('camp-titulo').value;
+            const fecha = document.getElementById('camp-fecha').value;
+            const fin = document.getElementById('camp-fin').value;
+            const tel = document.getElementById('camp-tel').value;
+            let desc = document.getElementById('camp-desc').value;
+
+            if(!titulo || !fecha || !coordsCamp) { alert("Completa Título, Fecha y Mapa."); return; }
+            if(fin) desc += ` | Fin: ${fin} hs`;
+            if(tel) desc += ` | Turnos: ${tel}`;
+
+            const nueva = { 
+                titulo, fechaHora: fecha, descripcion: desc, 
+                ubicacionLat: coordsCamp.lat, ubicacionLon: coordsCamp.lng 
+            };
+            
+            const res = await fetch(`${API_URL}/Campanias`, {
+                method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(nueva)
+            });
+            
+            if(res.ok) { 
+                alert("Campaña creada"); 
+                document.getElementById('camp-titulo').value='';
+                document.getElementById('camp-desc').value='';
+                cargarCampanasAdmin(); 
+            } else {
+                alert("Error al crear campaña");
+            }
+        }
+
+        async function borrarCampana(id) {
+            if(confirm("¿Borrar campaña?")) {
+                await fetch(`${API_URL}/Campanias/${id}`, { method: 'DELETE' });
+                cargarCampanasAdmin();
+            }
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => cargarDashboard());
+    </script>
+</body>
+</html>

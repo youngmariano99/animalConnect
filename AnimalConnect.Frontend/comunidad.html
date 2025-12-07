@@ -12,51 +12,93 @@
 
     <header id="app-navbar" class="sticky top-0 z-50"></header>
 
-    <div class="container mx-auto px-4 mt-8 max-w-3xl">
+    <div class="container mx-auto px-4 mt-8">
+        
         <div class="text-center mb-8">
-            <h1 class="text-2xl font-bold text-gray-800">Muro Comunitario</h1>
-            <p class="text-gray-500 text-sm">Dudas, historias y avisos vecinales.</p>
+            <h1 class="text-3xl font-bold text-gray-800">Muro Comunitario</h1>
+            <p class="text-gray-500 text-sm">El espacio de encuentro para los vecinos de Pringles.</p>
         </div>
 
-        <div id="box-publicar" class="bg-white p-5 rounded-xl shadow-md mb-8 border border-gray-100 hidden">
-            <div class="flex gap-4">
-                <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-orange-500 text-xl flex-shrink-0"><i class="fa-solid fa-pen"></i></div>
-                <div class="flex-1">
-                    <h3 class="font-bold text-gray-700 mb-2">¿Qué quieres compartir?</h3>
-                    <input type="text" id="post-titulo" placeholder="Título breve..." class="w-full border-b border-gray-200 focus:border-orange-500 outline-none py-2 mb-2 text-lg font-medium">
-                    <textarea id="post-contenido" rows="3" placeholder="Escribe tu duda, historia o aviso..." class="w-full bg-gray-50 rounded-lg p-3 outline-none focus:ring-2 focus:ring-orange-200 text-sm"></textarea>
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+            
+            <div class="lg:col-span-1 space-y-6">
+                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 sticky top-24">
+                    <h3 class="font-bold text-gray-800 mb-3 border-b pb-2">
+                        <i class="fa-solid fa-book-open mr-2 text-orange-500"></i>Guía del Muro
+                    </h3>
                     
-                    <div class="flex justify-between items-center mt-3">
-                        <select id="post-categoria" class="text-xs border rounded-full px-3 py-1 bg-white hover:bg-gray-50 cursor-pointer outline-none">
-                            <option value="Duda">❓ Consulta / Duda</option>
-                            <option value="Historia">❤️ Historia de Éxito</option>
-                            <option value="Aviso">📢 Aviso General</option>
-                        </select>
-                        <button onclick="publicarPost()" class="bg-orange-600 text-white px-6 py-1.5 rounded-full font-bold text-sm hover:bg-orange-700 transition shadow-sm hover:shadow-md">
-                            Publicar
-                        </button>
+                    <div id="lista-leyenda" class="space-y-3 text-sm mb-6">
+                        </div>
+
+                    <div class="bg-blue-50 p-3 rounded-lg text-xs text-blue-800 border border-blue-100">
+                        <p class="font-bold mb-1"><i class="fa-solid fa-shield-heart mr-1"></i> Convivencia</p>
+                        <p>Mantén siempre el respeto. Este es un espacio de ayuda mutua. Evita el spam y contenido ofensivo.</p>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div id="msg-login-comunidad" class="bg-blue-50 text-blue-700 p-4 rounded-lg text-center mb-8 hidden">
-            <i class="fa-solid fa-lock mr-2"></i> Inicia sesión para publicar o comentar.
-        </div>
+            <div class="lg:col-span-3">
+                
+                <div id="box-publicar" class="bg-white p-5 rounded-xl shadow-md mb-6 border border-gray-100 hidden">
+                   <div class="flex gap-4">
+                        <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-orange-500 text-xl flex-shrink-0">
+                            <i class="fa-solid fa-pen"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-bold text-gray-700 mb-2">¿Qué quieres compartir?</h3>
+                            <input type="text" id="post-titulo" placeholder="Título breve..." class="w-full border-b border-gray-200 focus:border-orange-500 outline-none py-2 mb-2 text-lg font-medium">
+                            <textarea id="post-contenido" rows="3" placeholder="Escribe tu mensaje aquí..." class="w-full bg-gray-50 rounded-lg p-3 outline-none focus:ring-2 focus:ring-orange-200 text-sm"></textarea>
+                            
+                            <div class="flex flex-col sm:flex-row justify-between items-center mt-3 gap-3">
+                                <select id="post-categoria" class="w-full sm:w-auto text-sm border border-gray-300 rounded-full px-4 py-2 bg-white hover:bg-gray-50 cursor-pointer outline-none focus:border-orange-500">
+                                    </select>
+                                <button onclick="publicarPost()" class="w-full sm:w-auto bg-orange-600 text-white px-6 py-2 rounded-full font-bold text-sm hover:bg-orange-700 transition shadow-sm hover:shadow-md">
+                                    Publicar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        <div id="contenedor-muro" class="space-y-6 pb-12">
-            <div class="text-center py-10 text-gray-400">
-                <i class="fa-solid fa-circle-notch fa-spin text-2xl"></i> Cargando muro...
+                <div id="msg-login-comunidad" class="bg-white border-l-4 border-blue-500 p-6 rounded-xl shadow-sm text-center mb-8 hidden">
+                    <i class="fa-solid fa-lock text-3xl text-blue-300 mb-2"></i>
+                    <h3 class="text-lg font-bold text-gray-700">Únete a la conversación</h3>
+                    <p class="text-gray-500 text-sm mb-4">Inicia sesión para publicar dudas, historias o avisos.</p>
+                    <a href="login.html" class="inline-block bg-blue-600 text-white px-6 py-2 rounded-full font-bold hover:bg-blue-700 transition">Ingresar</a>
+                </div>
+
+                <div class="flex flex-wrap gap-2 mb-6 border-b border-gray-200 pb-2">
+                    <button onclick="filtrarCategoria('Todas')" id="filtro-Todas" class="tab-filtro px-4 py-2 rounded-full text-sm font-bold transition bg-gray-800 text-white shadow-md">
+                        Todo
+                    </button>
+                    <button onclick="filtrarCategoria('Duda')" id="filtro-Duda" class="tab-filtro px-4 py-2 rounded-full text-sm font-bold text-gray-600 hover:bg-white hover:shadow-sm transition border border-transparent hover:border-gray-200">
+                        <i class="fa-solid fa-circle-question text-blue-500 mr-1"></i> Consultas
+                    </button>
+                    <button onclick="filtrarCategoria('Historia')" id="filtro-Historia" class="tab-filtro px-4 py-2 rounded-full text-sm font-bold text-gray-600 hover:bg-white hover:shadow-sm transition border border-transparent hover:border-gray-200">
+                        <i class="fa-solid fa-heart text-red-500 mr-1"></i> Historias
+                    </button>
+                    <button onclick="filtrarCategoria('Aviso')" id="filtro-Aviso" class="tab-filtro px-4 py-2 rounded-full text-sm font-bold text-gray-600 hover:bg-white hover:shadow-sm transition border border-transparent hover:border-gray-200">
+                        <i class="fa-solid fa-bullhorn text-yellow-600 mr-1"></i> Avisos
+                    </button>
+                </div>
+
+                <div id="contenedor-muro" class="space-y-6 pb-12">
+                    <div class="text-center py-10 text-gray-400">
+                        <i class="fa-solid fa-circle-notch fa-spin text-2xl"></i> Cargando muro...
+                    </div>
+                </div>
+
+                <div id="btn-load-more-container" class="text-center mt-8 mb-12 hidden">
+                    <button onclick="cargarMasPosts()" class="bg-white border border-gray-300 text-gray-600 px-6 py-2 rounded-full font-bold hover:bg-gray-50 transition shadow-sm group">
+                        <i class="fa-solid fa-arrow-down mr-2 group-hover:translate-y-1 transition-transform"></i> Cargar más publicaciones
+                    </button>
+                </div>
             </div>
-        </div>
 
-        <div id="btn-load-more-container" class="text-center mt-8 mb-12 hidden">
-            <button onclick="cargarMasPosts()" class="bg-white border border-gray-300 text-gray-600 px-6 py-2 rounded-full font-bold hover:bg-gray-50 transition shadow-sm">
-                <i class="fa-solid fa-arrow-down mr-2"></i> Cargar más publicaciones
-            </button>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="js/config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/layout.js"></script>

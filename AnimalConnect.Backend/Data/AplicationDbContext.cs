@@ -20,6 +20,7 @@ namespace AnimalConnect.Backend.Data
         public DbSet<PerfilVeterinario> PerfilesVeterinarios { get; set; }
         public DbSet<Post> Posts { get; set; }
         public DbSet<Comentario> Comentarios { get; set; }
+        public DbSet<PerfilMunicipio> PerfilesMunicipios { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -17,7 +17,7 @@ namespace AnimalConnect.Backend.Models
 
         public virtual PerfilCiudadano? PerfilCiudadano { get; set; }
         public virtual PerfilVeterinario? PerfilVeterinario { get; set; }
-    
+        public virtual PerfilMunicipio? PerfilMunicipio { get; set; }
         
         // Mantenemos la relación existente con adopción para no romper el Match
         // (Nota: En el futuro podríamos fusionar PerfilAdoptante dentro de Ciudadano, 
