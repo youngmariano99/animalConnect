@@ -2,6 +2,10 @@ using AnimalConnect.Backend.Data;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
+using DotNetEnv; // <--- 1. Importar librería
+
+// 2. Cargar el archivo .env ANTES de crear el builder
+Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +25,10 @@ builder.Services.AddCors(options => // <--- NUEVO: SERVICIO CORS
     });
 });
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// 3. Obtener la cadena de conexión desde las Variables de Entorno (del .env)
+// Si no encuentra la variable de entorno, intenta buscar en appsettings.json como respaldo
+var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL") 
+                       ?? builder.Configuration.GetConnectionString("DefaultConnection");
 
 // CAMBIO CRÍTICO: Configuración para Fechas (Ver explicación abajo en Paso 4)
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
