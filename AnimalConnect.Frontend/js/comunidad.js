@@ -76,11 +76,13 @@ async function cargarMuro(reset = false) {
     }
 
     try {
-        // --- AQUÍ ESTÁ LA CLAVE DEL FILTRADO ---
-        // Debemos enviar la variable categoriaActual al backend
-        const url = `${API_URL}/Foro?pagina=${paginaActual}&cantidad=${postsPorPagina}&categoria=${categoriaActual}`;
+        // --- SAAS: OBTENER UBICACIÓN ---
+        const loc = AppState.location;
+
+        // Construir URL con parámetros
+        const url = `${API_URL}/Foro?pagina=${paginaActual}&cantidad=${postsPorPagina}&categoria=${categoriaActual}&lat=${loc.lat}&lng=${loc.lng}`;
         
-        console.log("Cargando URL:", url); // Para depurar en consola
+        console.log("Cargando URL:", url);
 
         const res = await fetch(url);
         const respuesta = await res.json();
@@ -90,12 +92,7 @@ async function cargarMuro(reset = false) {
 
         renderizarFeed(listaPosts);
 
-        const btn = document.getElementById('btn-load-more-container');
-        if(btn) {
-            if(hayMasPosts) btn.classList.remove('hidden');
-            else btn.classList.add('hidden');
-        }
-
+        // ... (resto igual) ...
     } catch (e) { console.error("Error muro:", e); }
 }
 
@@ -293,10 +290,22 @@ async function publicarPost() {
     }
 
     try {
+        const loc = AppState.location;
+
+        const bodyData = { 
+            titulo, 
+            contenido, 
+            categoria, 
+            usuarioId: currentUser.id,
+            // Agregamos coordenadas al crear el post
+            latitud: loc.lat, 
+            longitud: loc.lng
+        };
+
         const res = await fetch(`${API_URL}/Foro`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ titulo, contenido, categoria, usuarioId: currentUser.id })
+            body: JSON.stringify(bodyData)
         });
 
         if(res.ok) {

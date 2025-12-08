@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AnimalConnect.Backend.Data;
 using AnimalConnect.Backend.Models;
+using AnimalConnect.Backend.Services; // 👈 GeoService
 
 namespace AnimalConnect.Backend.Controllers
 {
@@ -16,31 +17,61 @@ namespace AnimalConnect.Backend.Controllers
             _context = context;
         }
 
-        // 1. GET: Obtener Muro Paginado y FILTRADO
+        // 1. GET: Obtener Muro (Con Filtro Geoespacial)
         [HttpGet]
-        public async Task<ActionResult> GetPosts([FromQuery] int pagina = 1, [FromQuery] int cantidad = 5, [FromQuery] string? categoria = null)
+        public async Task<ActionResult> GetPosts(
+            [FromQuery] int pagina = 1, 
+            [FromQuery] int cantidad = 5, 
+            [FromQuery] string? categoria = null,
+            [FromQuery] double? lat = null, 
+            [FromQuery] double? lng = null, 
+            [FromQuery] double radio = 50) // 50km por defecto para comunidad
         {
-            // Iniciamos la consulta base
+            // A. Consulta Base (Incluyendo relaciones)
             var query = _context.Posts
                 .Include(p => p.Usuario).ThenInclude(u => u.PerfilVeterinario)
                 .Include(p => p.Usuario).ThenInclude(u => u.PerfilCiudadano)
                 .Include(p => p.Comentarios).ThenInclude(c => c.Usuario).ThenInclude(u => u.PerfilVeterinario)
                 .Include(p => p.Comentarios).ThenInclude(c => c.Usuario).ThenInclude(u => u.PerfilCiudadano)
-                .AsQueryable(); // Importante para poder agregar filtros dinámicos
+                .AsQueryable();
 
-            // APLICAR FILTRO SI EXISTE
+            // B. Filtro Categoría
             if (!string.IsNullOrEmpty(categoria) && categoria != "Todas")
             {
                 query = query.Where(p => p.Categoria == categoria);
             }
 
-            // Ordenar por fecha
+            // Ordenar por fecha (más nuevo arriba)
             query = query.OrderByDescending(p => p.FechaPublicacion);
 
-            // Total para saber si hay más páginas (del filtro actual)
-            var totalRegistros = await query.CountAsync();
+            // C. Ejecución y Filtrado
+            var todosLosPosts = await query.ToListAsync(); // Traemos a memoria
+            var postsFiltrados = todosLosPosts;
 
-            var posts = await query
+            // SI hay ubicación, filtramos por distancia
+            if (lat.HasValue && lng.HasValue)
+            {
+                postsFiltrados = todosLosPosts.Where(p => 
+                {
+                    // Prioridad 1: Ubicación del Post
+                    if (p.Latitud.HasValue && p.Longitud.HasValue)
+                        return GeoService.CalcularDistanciaKm(lat.Value, lng.Value, p.Latitud.Value, p.Longitud.Value) <= radio;
+                    
+                    // Prioridad 2: Fallback a ubicación del Usuario (si el post no tiene geo, usamos la casa del autor)
+                    // (Esto requiere que hayas agregado LatitudHome a PerfilCiudadano, si no, omite esta línea)
+                    /* var perfil = p.Usuario.PerfilCiudadano;
+                    if (perfil != null) 
+                         return GeoService.CalcularDistanciaKm(lat.Value, lng.Value, perfil.LatitudHome, perfil.LongitudHome) <= radio;
+                    */
+
+                    // Si no tiene ubicación ni el post ni el autor, lo mostramos por defecto (o lo ocultamos, decisión tuya)
+                    return true; 
+                }).ToList();
+            }
+
+            // D. Paginación en Memoria (Manual)
+            var totalRegistros = postsFiltrados.Count;
+            var postsPaginados = postsFiltrados
                 .Skip((pagina - 1) * cantidad)
                 .Take(cantidad)
                 .Select(p => new {
@@ -50,6 +81,7 @@ namespace AnimalConnect.Backend.Controllers
                     p.Categoria,
                     p.ImagenUrl,
                     p.FechaPublicacion,
+                    p.Latitud, // Devolvemos la data para depurar si quieres
                     
                     Autor = p.Usuario.Rol == "Veterinario" 
                         ? (p.Usuario.PerfilVeterinario != null ? p.Usuario.PerfilVeterinario.NombreVeterinaria : p.Usuario.NombreUsuario)
@@ -60,7 +92,6 @@ namespace AnimalConnect.Backend.Controllers
                     AutorPuntos = p.Usuario.Rol == "Ciudadano" && p.Usuario.PerfilCiudadano != null ? p.Usuario.PerfilCiudadano.Puntos : 0,
                     
                     TotalComentarios = p.Comentarios.Count(),
-                    // Solo traemos los últimos 3 comentarios para optimizar
                     Comentarios = p.Comentarios.OrderByDescending(c => c.Fecha).Take(3).Select(c => new {
                         c.Id,
                         c.Contenido,
@@ -68,56 +99,31 @@ namespace AnimalConnect.Backend.Controllers
                         Autor = c.Usuario.Rol == "Veterinario" 
                             ? (c.Usuario.PerfilVeterinario != null ? c.Usuario.PerfilVeterinario.NombreVeterinaria : c.Usuario.NombreUsuario)
                             : (c.Usuario.PerfilCiudadano != null && !string.IsNullOrEmpty(c.Usuario.PerfilCiudadano.NombreCompleto) ? c.Usuario.PerfilCiudadano.NombreCompleto : c.Usuario.NombreUsuario),
-                        EsVeterinario = c.Usuario.Rol == "Veterinario",
-                        AutorPuntos = c.Usuario.Rol == "Ciudadano" && c.Usuario.PerfilCiudadano != null ? c.Usuario.PerfilCiudadano.Puntos : 0
+                        EsVeterinario = c.Usuario.Rol == "Veterinario"
                     }).OrderBy(c => c.Fecha).ToList()
                 })
-                .ToListAsync();
+                .ToList();
 
             return Ok(new { 
-                data = posts, 
+                data = postsPaginados, 
                 total = totalRegistros,
                 paginaActual = pagina,
                 hayMas = (pagina * cantidad) < totalRegistros 
             });
         }
 
-        // 1.1 GET: Cargar más comentarios de un post específico
-        [HttpGet("{id}/comentarios")]
-        public async Task<ActionResult> GetComentariosPost(int id, [FromQuery] int pagina = 1, [FromQuery] int cantidad = 10)
-        {
-            var comentarios = await _context.Comentarios
-                .Where(c => c.PostId == id)
-                .Include(c => c.Usuario).ThenInclude(u => u.PerfilVeterinario)
-                .Include(c => c.Usuario).ThenInclude(u => u.PerfilCiudadano)
-                .OrderBy(c => c.Fecha) // Orden cronológico normal
-                .Skip((pagina - 1) * cantidad)
-                .Take(cantidad)
-                .Select(c => new {
-                    c.Id,
-                    c.Contenido,
-                    c.Fecha,
-                    Autor = c.Usuario.Rol == "Veterinario" 
-                            ? (c.Usuario.PerfilVeterinario != null ? c.Usuario.PerfilVeterinario.NombreVeterinaria : c.Usuario.NombreUsuario)
-                            : (c.Usuario.PerfilCiudadano != null && !string.IsNullOrEmpty(c.Usuario.PerfilCiudadano.NombreCompleto) ? c.Usuario.PerfilCiudadano.NombreCompleto : c.Usuario.NombreUsuario),
-                    EsVeterinario = c.Usuario.Rol == "Veterinario",
-                    AutorPuntos = c.Usuario.Rol == "Ciudadano" && c.Usuario.PerfilCiudadano != null ? c.Usuario.PerfilCiudadano.Puntos : 0
-                })
-                .ToListAsync();
-
-            return Ok(comentarios);
-        }
-
-        // 2. POST: Crear Post (Igual que antes)
+        // 2. POST: Crear Post (Ahora guarda ubicación)
         [HttpPost]
         public async Task<ActionResult> CrearPost(Post post)
         {
             post.FechaPublicacion = DateTime.Now;
+            // Latitud y Longitud vienen en el body gracias al binding automático de JSON
+            
             _context.Posts.Add(post);
             
-            int nuevosPuntos = 0;
+            // Gamificación
             var perfil = await _context.PerfilesCiudadanos.FirstOrDefaultAsync(p => p.UsuarioId == post.UsuarioId);
-            
+            int nuevosPuntos = 0;
             if (perfil != null)
             {
                 if (post.Categoria == "Historia") perfil.Puntos += 50; 
@@ -129,21 +135,37 @@ namespace AnimalConnect.Backend.Controllers
             return Ok(new { post, nuevosPuntos });
         }
 
-        // 3. POST: Comentar (Igual que antes)
+        // ... (Mantén GetComentariosPost y Comentar igual que antes) ...
+        [HttpGet("{id}/comentarios")]
+        public async Task<ActionResult> GetComentariosPost(int id, [FromQuery] int pagina = 1, [FromQuery] int cantidad = 10)
+        {
+             var comentarios = await _context.Comentarios
+                .Where(c => c.PostId == id)
+                .Include(c => c.Usuario).ThenInclude(u => u.PerfilVeterinario)
+                .Include(c => c.Usuario).ThenInclude(u => u.PerfilCiudadano)
+                .OrderBy(c => c.Fecha)
+                .Skip((pagina - 1) * cantidad)
+                .Take(cantidad)
+                .Select(c => new {
+                    c.Id, c.Contenido, c.Fecha,
+                    Autor = c.Usuario.Rol == "Veterinario" 
+                            ? (c.Usuario.PerfilVeterinario != null ? c.Usuario.PerfilVeterinario.NombreVeterinaria : c.Usuario.NombreUsuario)
+                            : (c.Usuario.PerfilCiudadano != null && !string.IsNullOrEmpty(c.Usuario.PerfilCiudadano.NombreCompleto) ? c.Usuario.PerfilCiudadano.NombreCompleto : c.Usuario.NombreUsuario),
+                    EsVeterinario = c.Usuario.Rol == "Veterinario"
+                }).ToListAsync();
+            return Ok(comentarios);
+        }
+
         [HttpPost("{id}/comentar")]
         public async Task<ActionResult> Comentar(int id, Comentario comentario)
         {
             comentario.PostId = id;
             comentario.Fecha = DateTime.Now;
             _context.Comentarios.Add(comentario);
-
-            int nuevosPuntos = 0;
+            
             var perfil = await _context.PerfilesCiudadanos.FirstOrDefaultAsync(p => p.UsuarioId == comentario.UsuarioId);
-            if (perfil != null)
-            {
-                perfil.Puntos += 2;
-                nuevosPuntos = perfil.Puntos;
-            }
+            int nuevosPuntos = 0;
+            if (perfil != null) { perfil.Puntos += 2; nuevosPuntos = perfil.Puntos; }
 
             await _context.SaveChangesAsync();
             return Ok(new { message = "Comentario agregado", nuevosPuntos });

@@ -43,7 +43,12 @@ async function cargarAdopcion() {
     // 2. USUARIO CON PERFIL -> Mostrar con Match
     else {
         mostrarBanner('banner-match-ok');
-        const res = await fetch(`${API_URL}/Match/${currentUser.id}`);
+        
+        // OBTENEMOS UBICACIÓN DEL ESTADO
+        const loc = AppState.location;
+
+        // AGREGAMOS QUERY PARAMS A LA PETICIÓN
+        const res = await fetch(`${API_URL}/Match/${currentUser.id}?lat=${loc.lat}&lng=${loc.lng}&radio=100`);
         
         if (res.ok) {
             const matches = await res.json();
