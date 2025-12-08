@@ -26,5 +26,7 @@ namespace AnimalConnect.Backend.Models
         public virtual Usuario? Usuario { get; set; }
 
         public virtual ICollection<Comentario>? Comentarios { get; set; }
+        public double? Latitud { get; set; }
+        public double? Longitud { get; set; }
     }
 }

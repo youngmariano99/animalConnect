@@ -27,5 +27,7 @@ namespace AnimalConnect.Backend.Models
         public DateTime FechaRegistro { get; set; } = DateTime.Now;
 
         public int Puntos { get; set; } = 0; // Se suman al aportar a la comunidad
+        public double LatitudHome { get; set; } = -37.994; // Default Pringles por ahora
+        public double LongitudHome { get; set; } = -61.353;
     }
 }

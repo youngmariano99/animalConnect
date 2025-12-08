@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AnimalConnect.Backend.Data;
 using AnimalConnect.Backend.Models;
+using AnimalConnect.Backend.Services;
 
 namespace AnimalConnect.Backend.Controllers
 {
@@ -18,28 +19,41 @@ namespace AnimalConnect.Backend.Controllers
 
         // --- 1. GET PÚBLICO: Obtener veterinarias aprobadas para el mapa ---
         [HttpGet]
-        public async Task<ActionResult> GetVeterinarias()
+        public async Task<ActionResult> GetVeterinarias([FromQuery] double? lat, [FromQuery] double? lng, [FromQuery] double radio = 20)
         {
-            var veterinarias = await _context.PerfilesVeterinarios
-                .Include(v => v.Usuario) // Para tener acceso a datos de usuario si hace falta
-                .Where(v => v.EstadoVerificacion == "Aprobado")
-                .Select(v => new
-                {
-                    v.Id,
-                    v.NombreVeterinaria,
-                    v.Direccion,
-                    v.TelefonoProfesional,
-                    v.HorariosAtencion,
-                    v.Biografia, // <--- NUEVO
-                    v.LogoUrl,   // <--- NUEVO
-                    v.Latitud,
-                    v.Longitud,
-                    v.EsDeTurno,
-                    v.MatriculaProfesional
-                })
-                .ToListAsync();
+            var query = _context.PerfilesVeterinarios
+                .Include(v => v.Usuario)
+                .Where(v => v.EstadoVerificacion == "Aprobado");
 
-            return Ok(veterinarias);
+            var lista = await query.ToListAsync();
+
+            // Lógica de proyección (Select)
+            var resultado = lista.Select(v => new
+            {
+                v.Id,
+                v.NombreVeterinaria,
+                v.Direccion,
+                v.TelefonoProfesional,
+                v.HorariosAtencion,
+                v.Biografia,
+                v.LogoUrl,
+                v.Latitud,
+                v.Longitud,
+                v.EsDeTurno,
+                v.MatriculaProfesional,
+                // Calculamos distancia si tenemos coordenadas del usuario
+                DistanciaKm = (lat.HasValue && lng.HasValue) 
+                    ? GeoService.CalcularDistanciaKm(lat.Value, lng.Value, v.Latitud, v.Longitud) 
+                    : 0
+            });
+
+            // Si hay coordenadas, filtramos por radio
+            if (lat.HasValue && lng.HasValue)
+            {
+                resultado = resultado.Where(v => v.DistanciaKm <= radio).ToList();
+            }
+
+            return Ok(resultado);
         }
 
         // --- 2. ADMIN: Establecer veterinaria de turno ---

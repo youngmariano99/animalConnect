@@ -8,35 +8,64 @@ let coordsReporte = null;
 const currentUser = JSON.parse(localStorage.getItem('zoonosis_user'));
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. PRIMERO: Inicializamos el mapa vacío (Síncrono)
-    inicializarMapaBase();
-    
-    // 2. DESPUÉS: Cargamos los datos (Asíncrono)
-    cargarPerdidos();
-    cargarVeterinarias();
+    // ESPERAMOS AL ESTADO GLOBAL
+    AppState.onReady((ubicacion) => {
+        // 1. Iniciamos mapa centrado donde esté el usuario
+        inicializarMapaBase(ubicacion);
+        
+        // 2. Cargamos datos (En la Fase 3 pasaremos 'ubicacion' a la API)
+        cargarPerdidos(); 
+        cargarVeterinarias();
+    });
 });
 
-// --- 1. INICIALIZACIÓN DEL MAPA ---
-function inicializarMapaBase() {
-    // Si ya existe, lo limpiamos (aunque al cargar página suele ser null)
+// Modificamos para recibir el centro dinámico
+function inicializarMapaBase(ubicacion) {
     if (mapPerdidos) mapPerdidos.remove();
     
-    // Crear el mapa inmediatamente
-    mapPerdidos = L.map('map-perdidos').setView([-37.994, -61.353], 14);
+    // Usamos la ubicación del AppState
+    mapPerdidos = L.map('map-perdidos').setView([ubicacion.lat, ubicacion.lng], 14);
     
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap'
     }).addTo(mapPerdidos);
 
-    // Agregar la leyenda visual
     agregarLeyenda(mapPerdidos);
+    
+    // 1. Círculo exterior (semitransparente para simular precisión)
+    L.circle([ubicacion.lat, ubicacion.lng], {
+        color: '#4285F4',       // Azul Google
+        fillColor: '#4285F4',
+        fillOpacity: 0.15,      // Muy transparente
+        radius: 100,            // Radio visual de "zona cercana" en metros
+        weight: 1               // Borde fino
+    }).addTo(mapPerdidos);
+
+    // 2. Punto central (El usuario)
+    const iconUsuario = L.divIcon({
+        className: 'user-location-dot',
+        html: '<div class="dot"></div><div class="pulse"></div>', // HTML para animar con CSS
+        iconSize: [20, 20]
+    });
+
+    L.marker([ubicacion.lat, ubicacion.lng], { icon: iconUsuario })
+     .addTo(mapPerdidos)
+     .bindPopup("<b>📍 Estás aquí</b>");
 }
 
 // --- 2. CARGAR ANIMALES (Perdidos/Encontrados) ---
 async function cargarPerdidos() {
     try {
-        const res = await fetch(`${API_URL}/Animales`);
+
+        // Obtenemos ubicación del estado global
+        const loc = AppState.location; 
+        
+        // Construimos la URL con query params
+        const url = `${API_URL}/Animales?lat=${loc.lat}&lng=${loc.lng}&radio=30`; // 30km para perdidos
+
+        const res = await fetch(url);
         const todos = await res.json();
+        
         
         // Filtramos solo Perdidos (2) y Encontrados-Avisos (3)
         const activos = todos.filter(a => a.idEstado === 2 || a.idEstado === 3);
@@ -96,7 +125,10 @@ async function cargarPerdidos() {
 // --- 3. CARGAR VETERINARIAS ---
 async function cargarVeterinarias() {
     try {
-        const res = await fetch(`${API_URL}/Veterinarias`);
+        const loc = AppState.location;
+        const url = `${API_URL}/Veterinarias?lat=${loc.lat}&lng=${loc.lng}`;
+
+        const res = await fetch(url);
         if (res.ok) {
             const lista = await res.json();
             

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AnimalConnect.Backend.Data;
 using AnimalConnect.Backend.Models;
+using AnimalConnect.Backend.Services;
 
 namespace AnimalConnect.Backend.Controllers
 {
@@ -18,13 +19,22 @@ namespace AnimalConnect.Backend.Controllers
 
         // GET: api/Campanias (Para el Ciudadano)
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Campania>>> GetCampanias()
+        public async Task<ActionResult<IEnumerable<Campania>>> GetCampanias([FromQuery] double? lat, [FromQuery] double? lng, [FromQuery] double radio = 50)
         {
-            // Ordenamos por fecha (la más próxima primero) y filtramos las que ya pasaron
-            return await _context.Campanias
+            var lista = await _context.Campanias
                                  .Where(c => c.FechaHora >= DateTime.Today)
                                  .OrderBy(c => c.FechaHora)
                                  .ToListAsync();
+
+            if (lat.HasValue && lng.HasValue)
+            {
+                // Filtramos campañas lejanas
+                lista = lista.Where(c => 
+                    GeoService.CalcularDistanciaKm(lat.Value, lng.Value, c.UbicacionLat, c.UbicacionLon) <= radio
+                ).ToList();
+            }
+
+            return Ok(lista);
         }
 
         // POST: api/Campanias (Para el Admin)

@@ -4,7 +4,9 @@ let listaMatchesGlobal = [];
 const currentUser = JSON.parse(localStorage.getItem('zoonosis_user'));
 
 document.addEventListener('DOMContentLoaded', () => {
-    cargarAdopcion();
+    AppState.onReady((location) => {
+        cargarAdopcion(); // A futuro: cargarAdopcion(location);
+    });
 });
 
 async function cargarAdopcion() {
@@ -32,9 +34,10 @@ async function cargarAdopcion() {
             b.querySelector('a').href = "quiz.html";
         }
 
-        const res = await fetch(`${API_URL}/Animales`);
+        const loc = AppState.location;
+        const res = await fetch(`${API_URL}/Animales?lat=${loc.lat}&lng=${loc.lng}&radio=100`); // Radio más amplio para adopción (100km)
+        
         const todos = await res.json();
-        // Filtramos estado 1 (Adopción)
         renderizarTarjetasAdopcion(todos.filter(a => a.idEstado === 1), false);
     } 
     // 2. USUARIO CON PERFIL -> Mostrar con Match

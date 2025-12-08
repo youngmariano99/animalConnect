@@ -3,13 +3,15 @@
 let mapCampanas;
 
 document.addEventListener('DOMContentLoaded', () => {
-    initMapCampanas();
+    AppState.onReady((location) => {
+        initMapCampanas(location);
+    });
 });
 
-async function initMapCampanas() {
+async function initMapCampanas(ubicacion) {
     // 1. Inicializar Mapa (Coordenadas por defecto de tu municipio)
     // Asegúrate de que coincidan con las de tu config o usas las de siempre
-    mapCampanas = L.map('map-campanas').setView([-37.994, -61.353], 14);
+    mapCampanas = L.map('map-campanas').setView([ubicacion.lat, ubicacion.lng], 14);
     
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap'
@@ -17,7 +19,10 @@ async function initMapCampanas() {
 
     // 2. Traer datos
     try {
-        const res = await fetch(`${API_URL}/Campanias`);
+        // Usamos la ubicación recibida por parámetro
+        const url = `${API_URL}/Campanias?lat=${ubicacion.lat}&lng=${ubicacion.lng}`;
+        
+        const res = await fetch(url);
         if (res.ok) {
             const lista = await res.json();
             renderizarCampanas(lista);

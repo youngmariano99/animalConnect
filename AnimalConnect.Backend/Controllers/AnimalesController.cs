@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AnimalConnect.Backend.Data;
 using AnimalConnect.Backend.Models;
+using AnimalConnect.Backend.Services;
 
 namespace AnimalConnect.Backend.Controllers
 {
@@ -17,26 +18,35 @@ namespace AnimalConnect.Backend.Controllers
         }
 
         // --- 1. OBTENER PÚBLICOS (Solo activos y recientes) ---
+        // GET: api/Animales?lat=-37.99&lng=-61.35&radio=50
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Animal>>> GetAnimales()
+        public async Task<ActionResult<IEnumerable<Animal>>> GetAnimales([FromQuery] double? lat, [FromQuery] double? lng, [FromQuery] double radio = 50)
         {
-            // Regla: Mostrar solo si se renovó en los últimos 15 días
             var fechaLimite = DateTime.Now.AddDays(-15);
 
-            // FILTRO CLAVE:
-            // Estado 1: Adopción
-            // Estado 2: Perdido (Alerta Roja)
-            // Estado 3: Encontrado (Alerta Verde - "Busco a su dueño")
-            // EXCLUIMOS Estado 4 (Reencuentro/Finalizado)
-            
-            var animales = await _context.Animales
-                                        .Include(a => a.Especie)
-                                        .Include(a => a.Estado)
-                                        .Where(a => a.FechaUltimaRenovacion >= fechaLimite && 
-                                                    (a.IdEstado == 1 || a.IdEstado == 2 || a.IdEstado == 3)) 
-                                        .ToListAsync();
+            // 1. Traemos los activos de la BD (Adopción, Perdido, Encontrado)
+            var query = _context.Animales
+                                .Include(a => a.Especie)
+                                .Include(a => a.Estado)
+                                .Where(a => a.FechaUltimaRenovacion >= fechaLimite && 
+                                            (a.IdEstado == 1 || a.IdEstado == 2 || a.IdEstado == 3));
 
-            return Ok(animales);
+            var listaInicial = await query.ToListAsync();
+
+            // 2. Si no hay coordenadas, devolvemos todo (Comportamiento legacy)
+            if (lat == null || lng == null)
+            {
+                return Ok(listaInicial);
+            }
+
+            // 3. FILTRO SAAS: Filtrar en memoria usando GeoService
+            // Solo devolvemos los que están dentro del radio km
+            var filtrados = listaInicial.Where(a => 
+                a.UbicacionLat.HasValue && a.UbicacionLon.HasValue &&
+                GeoService.CalcularDistanciaKm(lat.Value, lng.Value, a.UbicacionLat.Value, a.UbicacionLon.Value) <= radio
+            ).ToList();
+
+            return Ok(filtrados);
         }
 
         // --- 2. OBTENER MIS PUBLICACIONES (Panel Privado) ---
