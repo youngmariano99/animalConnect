@@ -55,5 +55,57 @@ namespace AnimalConnect.Backend.Controllers
 
             return Ok(new { message = "Municipio creado exitosamente." });
         }
+
+        // --- NUEVA GESTIÓN DE VETERINARIOS GLOBAL ---
+
+        // 1. Ver todas las solicitudes pendientes (De cualquier ciudad)
+        [HttpGet("veterinarios-pendientes")]
+        public async Task<ActionResult> GetVetsPendientes()
+        {
+            var pendientes = await _context.Usuarios
+                .Include(u => u.PerfilVeterinario)
+                .Where(u => u.Rol == "Veterinario" && u.PerfilVeterinario.EstadoVerificacion == "Pendiente")
+                .Select(u => new
+                    {
+                        u.Id,
+                        u.NombreUsuario,
+                        NombreVeterinaria = "Pendiente de Carga", // Aún no creó la clínica
+                        Matricula = u.PerfilVeterinario.MatriculaProfesional,
+                        // Eliminamos Direccion, Lat, Lng de aquí porque pertenecen a la Clinica, no al Perfil
+                    })
+                .ToListAsync();
+
+            return Ok(pendientes);
+        }
+
+        // 2. Aprobar Veterinario
+        [HttpPost("aprobar-vet/{id}")]
+        public async Task<IActionResult> AprobarVet(int id)
+        {
+            var usuario = await _context.Usuarios
+                .Include(u => u.PerfilVeterinario)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            if (usuario?.PerfilVeterinario == null) return NotFound("Veterinario no encontrado.");
+
+            usuario.PerfilVeterinario.EstadoVerificacion = "Aprobado";
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Veterinario aprobado y activo en el mapa." });
+        }
+
+        // 3. Rechazar Veterinario
+        [HttpPost("rechazar-vet/{id}")]
+        public async Task<IActionResult> RechazarVet(int id)
+        {
+            var usuario = await _context.Usuarios.Include(u => u.PerfilVeterinario).FirstOrDefaultAsync(u => u.Id == id);
+            if (usuario?.PerfilVeterinario == null) return NotFound();
+
+            usuario.PerfilVeterinario.EstadoVerificacion = "Rechazado";
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Solicitud rechazada." });
+        }
     }
 }
+ 

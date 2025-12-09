@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nueva Clínica - Animal Connect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .step-active { @apply border-orange-500 text-orange-600 font-bold; }
+        .step-inactive { @apply border-gray-200 text-gray-400; }
+        .step-check { @apply bg-green-500 border-green-500 text-white; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 h-screen flex flex-col">
+
+    <div class="bg-white shadow-sm p-4 sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center max-w-4xl">
+            <div class="flex items-center text-orange-600 font-bold text-xl">
+                <i class="fa-solid fa-staff-snake mr-2"></i> Alta de Clínica
+            </div>
+            <a href="perfil.html" class="text-sm text-gray-500 hover:text-gray-800">
+                <i class="fa-solid fa-xmark mr-1"></i> Cancelar
+            </a>
+        </div>
+    </div>
+
+    <main class="flex-1 container mx-auto px-4 py-8 max-w-4xl">
+        
+        <div class="flex justify-between mb-8 relative">
+            <div class="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -z-10 rounded"></div>
+            <div id="progress-bar" class="absolute top-1/2 left-0 h-1 bg-orange-500 -z-10 rounded transition-all duration-500" style="width: 0%"></div>
+
+            <div id="step-ind-1" class="w-10 h-10 bg-white border-2 border-orange-500 text-orange-600 rounded-full flex items-center justify-center font-bold transition-all shadow-sm">1</div>
+            <div id="step-ind-2" class="w-10 h-10 bg-white border-2 border-gray-200 text-gray-400 rounded-full flex items-center justify-center font-bold transition-all shadow-sm">2</div>
+            <div id="step-ind-3" class="w-10 h-10 bg-white border-2 border-gray-200 text-gray-400 rounded-full flex items-center justify-center font-bold transition-all shadow-sm">3</div>
+        </div>
+
+        <form id="wizard-form" onsubmit="finalizarWizard(event)" class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 min-h-[400px] flex flex-col">
+            
+            <div id="step-1" class="step-content">
+                <h2 class="text-2xl font-bold mb-2">Información del Local</h2>
+                <p class="text-gray-500 text-sm mb-6">Datos visibles para el público.</p>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">Nombre de Fantasía</label>
+                        <input type="text" id="cli-nombre" class="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-orange-200" placeholder="Ej: Veterinaria El Trebol" required>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Teléfono (WhatsApp)</label>
+                            <input type="tel" id="cli-tel" class="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-orange-200" placeholder="2922..." required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Dirección (Texto)</label>
+                            <input type="text" id="cli-dir" class="w-full border rounded-lg p-3 outline-none focus:ring-2 focus:ring-orange-200" placeholder="Calle 123" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="step-2" class="hidden step-content h-full">
+                <h2 class="text-2xl font-bold mb-2">Ubicación Exacta</h2>
+                <p class="text-gray-500 text-sm mb-4">Marca dónde está la puerta del local en el mapa.</p>
+                
+                <div id="map-wizard" class="h-64 w-full rounded-xl border-2 border-orange-100 shadow-inner z-0"></div>
+                <p id="coords-msg" class="text-center text-xs text-orange-600 font-bold mt-2 h-4">Haz clic en el mapa</p>
+            </div>
+
+            <div id="step-3" class="hidden step-content">
+                <h2 class="text-2xl font-bold mb-2">Horarios de Atención</h2>
+                <p class="text-gray-500 text-sm mb-6">Define tu disponibilidad general.</p>
+
+                <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="text-xs font-bold text-blue-800 uppercase block mb-1">Días</label>
+                            <select id="h-dias" class="w-full border rounded p-2 text-sm">
+                                <option value="Lun a Vie">Lunes a Viernes</option>
+                                <option value="Lun a Sab">Lunes a Sábado</option>
+                                <option value="Todos los días">Todos los días</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-bold text-blue-800 uppercase block mb-1">Jornada</label>
+                            <select id="h-tipo" class="w-full border rounded p-2 text-sm" onchange="toggleCorte(this.value)">
+                                <option value="corrido">Horario Corrido</option>
+                                <option value="cortado" selected>Horario Cortado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs text-gray-500 block">Mañana / Inicio</label>
+                            <div class="flex items-center gap-1">
+                                <input type="time" id="h-t1-start" value="09:00" class="border rounded p-1 w-full text-center">
+                                <span>-</span>
+                                <input type="time" id="h-t1-end" value="13:00" class="border rounded p-1 w-full text-center">
+                            </div>
+                        </div>
+                        <div id="box-tarde">
+                            <label class="text-xs text-gray-500 block">Tarde / Cierre</label>
+                            <div class="flex items-center gap-1">
+                                <input type="time" id="h-t2-start" value="16:00" class="border rounded p-1 w-full text-center">
+                                <span>-</span>
+                                <input type="time" id="h-t2-end" value="20:00" class="border rounded p-1 w-full text-center">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-white rounded border border-blue-100 text-center">
+                        <p class="text-xs text-gray-400 uppercase">Vista Previa</p>
+                        <p id="h-preview" class="font-bold text-blue-700 text-lg">Lun a Vie: 09:00-13:00 / 16:00-20:00</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-auto pt-8 flex justify-between">
+                <button type="button" id="btn-prev" onclick="cambiarPaso(-1)" class="px-6 py-2 rounded-lg font-bold text-gray-500 hover:bg-gray-100 disabled:opacity-0">
+                    Atrás
+                </button>
+                <button type="button" id="btn-next" onclick="cambiarPaso(1)" class="px-8 py-2 rounded-lg font-bold bg-orange-600 text-white hover:bg-orange-700 shadow-lg transition transform hover:-translate-y-0.5">
+                    Siguiente
+                </button>
+                <button type="submit" id="btn-submit" class="hidden px-8 py-2 rounded-lg font-bold bg-green-600 text-white hover:bg-green-700 shadow-lg animate-pulse">
+                    Confirmar Alta
+                </button>
+            </div>
+
+        </form>
+    </main>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/clinica-wizard.js"></script>
+</body>
+</html>

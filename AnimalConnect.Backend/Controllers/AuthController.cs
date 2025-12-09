@@ -28,20 +28,11 @@ namespace AnimalConnect.Backend.Controllers
         {
             public string Usuario { get; set; } = string.Empty;
             public string Password { get; set; } = string.Empty;
-            
-            // "Ciudadano" o "Veterinario"
-            public string Rol { get; set; } = "Ciudadano"; 
+            public string Rol { get; set; } = "Ciudadano";
 
-            // --- Datos exclusivos para registro de Veterinarios ---
+            // Solo datos personales para Vets
             public string? Matricula { get; set; }
-            public string? NombreVeterinaria { get; set; }
-            public string? Direccion { get; set; }
-            public string? Telefono { get; set; } // <--- NUEVO
-            public string? Horarios { get; set; } // <--- NUEVO
-            public string? Biografia { get; set; } // <--- NUEVO
-            public string? LogoUrl { get; set; }   // <--- NUEVO
-            public double? Latitud { get; set; } 
-            public double? Longitud { get; set; }
+            public string? Biografia { get; set; }
         }
 
         // --- 1. LOGIN ---
@@ -102,28 +93,21 @@ namespace AnimalConnect.Backend.Controllers
 
             // 2. Lógica según Rol (Creación automática de Perfil)
             if (request.Rol == "Veterinario")
-            {
-                // Validación estricta para vets
-                if (string.IsNullOrEmpty(request.Matricula) || string.IsNullOrEmpty(request.NombreVeterinaria))
                 {
-                    return BadRequest("Para registrarse como veterinario, la Matrícula y el Nombre del local son obligatorios.");
-                }
+                    // Validación simplificada (Solo matrícula)
+                    if (string.IsNullOrEmpty(request.Matricula))
+                    {
+                        return BadRequest("La matrícula es obligatoria.");
+                    }
 
-                nuevoUsuario.PerfilVeterinario = new PerfilVeterinario
-                {
-                    MatriculaProfesional = request.Matricula,
-                    NombreVeterinaria = request.NombreVeterinaria,
-                    Direccion = request.Direccion ?? "Sin dirección",
-                    TelefonoProfesional = request.Telefono ?? "No especificado",
-                    HorariosAtencion = request.Horarios ?? "Lunes a Viernes",
-                    Biografia = request.Biografia, // <--- NUEVO
-                    LogoUrl = request.LogoUrl,     // <--- NUEVO
-                    EstadoVerificacion = "Pendiente", // ¡Importante! Nace pendiente
-                    EsDeTurno = false,
-                    Latitud = request.Latitud ?? -37.994, // Si no manda, usa default
-                    Longitud = request.Longitud ?? -61.353
-                };
-            }
+                    nuevoUsuario.PerfilVeterinario = new PerfilVeterinario
+                    {
+                        MatriculaProfesional = request.Matricula,
+                        Biografia = request.Biografia,
+                        EstadoVerificacion = "Pendiente"
+                        // Clinicas = se agregan después en el Wizard paso 2
+                    };
+                }
             else if (request.Rol == "Ciudadano")
             {
                 // Creamos el cascarón del perfil para que no sea null

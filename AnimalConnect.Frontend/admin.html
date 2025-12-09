@@ -24,10 +24,6 @@
                 <button onclick="cambiarVista('dashboard')" id="nav-dashboard" class="w-full text-left py-2.5 px-4 rounded bg-orange-600 text-white transition">
                     <i class="fa-solid fa-chart-line mr-2"></i>Dashboard
                 </button>
-                <button onclick="cambiarVista('profesionales')" id="nav-profesionales" class="w-full text-left py-2.5 px-4 rounded hover:bg-gray-800 text-gray-400 transition">
-                    <i class="fa-solid fa-user-doctor mr-2"></i>Profesionales
-                    <span id="badge-solicitudes" class="hidden bg-red-500 text-white text-xs px-2 py-0.5 rounded-full ml-2">New</span>
-                </button>
                 <button onclick="cambiarVista('ingreso')" id="nav-ingreso" class="w-full text-left py-2.5 px-4 rounded hover:bg-gray-800 text-gray-400 transition">
                     <i class="fa-solid fa-plus-circle mr-2"></i>Nuevo Ingreso
                 </button>
@@ -84,46 +80,7 @@
                 </div>
             </div>
 
-            <div id="view-profesionales" class="hidden animate-fade-in">
-                <h1 class="text-3xl font-bold text-gray-800 mb-6">Gestión de Profesionales</h1>
-                
-                <div class="bg-white rounded-lg shadow overflow-hidden mb-8 border-l-4 border-yellow-400">
-                    <div class="px-6 py-4 border-b flex justify-between items-center bg-yellow-50">
-                        <h3 class="font-bold text-yellow-800"><i class="fa-solid fa-clock mr-2"></i>Solicitudes Pendientes</h3>
-                        <button onclick="cargarSolicitudes()" class="text-sm text-yellow-700 hover:underline"><i class="fa-solid fa-sync mr-1"></i>Actualizar</button>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <tbody id="solicitudes-table-body" class="text-sm text-gray-600">
-                                </tbody>
-                        </table>
-                        <div id="no-solicitudes" class="hidden p-4 text-center text-gray-400 text-sm">
-                            No hay solicitudes nuevas.
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow overflow-hidden border-l-4 border-green-500">
-                    <div class="px-6 py-4 border-b bg-green-50">
-                        <h3 class="font-bold text-green-800"><i class="fa-solid fa-staff-snake mr-2"></i>Directorio & Guardia</h3>
-                        <p class="text-xs text-green-600 mt-1">Selecciona la veterinaria que se encuentra de turno actualmente.</p>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-gray-50 text-gray-600 uppercase text-xs">
-                                <tr>
-                                    <th class="py-3 px-6 text-center">De Turno</th>
-                                    <th class="py-3 px-6">Veterinaria</th>
-                                    <th class="py-3 px-6">Contacto</th>
-                                    <th class="py-3 px-6 text-center">Estado</th>
-                                </tr>
-                            </thead>
-                            <tbody id="profesionales-table-body" class="text-sm text-gray-600">
-                                </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+           
 
             <div id="view-ingreso" class="hidden animate-fade-in">
                 <h1 class="text-3xl font-bold text-gray-800 mb-6">Gestión de Pacientes</h1>

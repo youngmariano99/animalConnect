@@ -12,67 +12,90 @@
 </head>
 <body class="bg-gray-900 text-gray-100 h-screen flex">
 
-    <aside class="w-64 bg-black p-6 border-r border-gray-800">
+    <aside class="w-64 bg-black p-6 border-r border-gray-800 flex flex-col">
         <h1 class="text-2xl font-bold text-orange-500 mb-8"><i class="fa-solid fa-code mr-2"></i>Dev Panel</h1>
-        <p class="text-gray-500 text-sm mb-4">Gestión de Clientes</p>
-        <button class="w-full bg-gray-800 text-white py-2 px-4 rounded text-left font-bold border-l-4 border-orange-500">
-            <i class="fa-solid fa-building-columns mr-2"></i> Municipios
-        </button>
+        
+        <nav class="flex-1 space-y-2">
+            <button onclick="verSeccion('municipios')" id="btn-municipios" class="w-full bg-gray-800 text-white py-2 px-4 rounded text-left font-bold border-l-4 border-orange-500 transition">
+                <i class="fa-solid fa-building-columns mr-2"></i> Municipios
+            </button>
+            <button onclick="verSeccion('vets')" id="btn-vets" class="w-full text-gray-400 py-2 px-4 rounded text-left font-bold hover:bg-gray-800 hover:text-white transition">
+                <i class="fa-solid fa-user-doctor mr-2"></i> Solicitudes Vets
+            </button>
+        </nav>
+
         <button onclick="logout()" class="w-full text-red-400 mt-10 text-left hover:text-red-300">
             <i class="fa-solid fa-power-off mr-2"></i> Salir
         </button>
     </aside>
 
     <main class="flex-1 p-8 overflow-y-auto">
-        <h2 class="text-3xl font-bold mb-6">Dar de Alta Municipio</h2>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
-                <form onsubmit="crearMunicipio(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-400 mb-1">Nombre Entidad</label>
-                        <input type="text" id="muni-nombre" class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white" placeholder="Municipalidad de..." required>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-400 mb-1">Provincia</label>
-                        <input type="text" id="muni-provincia" class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white" placeholder="Buenos Aires" required>
-                    </div>
-                    
-                    <div class="grid grid-cols-2 gap-4 border-t border-gray-700 pt-4 mt-4">
+        
+        <div id="sec-municipios">
+            <h2 class="text-3xl font-bold mb-6">Dar de Alta Municipio</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg border border-gray-700">
+                    <form onsubmit="crearMunicipio(event)" class="space-y-4">
                         <div>
-                            <label class="block text-sm font-bold text-orange-400 mb-1">Usuario Admin</label>
-                            <input type="text" id="muni-user" class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white" placeholder="zoonosis_pringles" required>
+                            <label class="block text-sm font-bold text-gray-400 mb-1">Nombre Entidad</label>
+                            <input type="text" id="muni-nombre" class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white" placeholder="Municipalidad de..." required>
                         </div>
                         <div>
-                            <label class="block text-sm font-bold text-orange-400 mb-1">Contraseña</label>
-                            <input type="password" id="muni-pass" class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white" required>
+                            <label class="block text-sm font-bold text-gray-400 mb-1">Provincia</label>
+                            <input type="text" id="muni-provincia" class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white" placeholder="Buenos Aires" required>
                         </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-gray-400 mb-1">Radio de Cobertura (KM)</label>
-                        <input type="number" id="muni-radio" value="15" class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white" onchange="actualizarRadioVisual()">
-                        <p class="text-xs text-gray-500 mt-1">Define qué datos verá este municipio en su panel.</p>
-                    </div>
-
-                    <input type="hidden" id="lat">
-                    <input type="hidden" id="lng">
-
-                    <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg mt-4 transition">
-                        CREAR CUENTA
-                    </button>
-                </form>
-            </div>
-
-            <div class="space-y-2">
-                <div class="bg-gray-800 p-1 rounded-xl shadow-lg border border-gray-700 h-[500px]">
-                    <div id="mapa-selector" class="w-full h-full rounded-lg"></div>
+                        
+                        <div class="grid grid-cols-2 gap-4 border-t border-gray-700 pt-4 mt-4">
+                            <div>
+                                <label class="block text-sm font-bold text-orange-400 mb-1">Usuario Admin</label>
+                                <input type="text" id="muni-user" class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white" placeholder="zoonosis_pringles" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-orange-400 mb-1">Contraseña</label>
+                                <input type="password" id="muni-pass" class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white" required>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-bold text-gray-400 mb-1">Radio de Cobertura (KM)</label>
+                            <input type="number" id="muni-radio" value="15" class="w-full bg-gray-700 border border-gray-600 rounded p-2 text-white" onchange="actualizarRadioVisual()">
+                        </div>
+                        <input type="hidden" id="lat">
+                        <input type="hidden" id="lng">
+                        <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg mt-4 transition">
+                            CREAR CUENTA
+                        </button>
+                    </form>
                 </div>
-                <p class="text-center text-sm text-gray-400">
-                    <i class="fa-solid fa-crosshairs text-orange-500"></i> Haz clic en el centro de la ciudad para definir la jurisdicción.
-                </p>
+                <div class="space-y-2">
+                    <div class="bg-gray-800 p-1 rounded-xl shadow-lg border border-gray-700 h-[500px]">
+                        <div id="mapa-selector" class="w-full h-full rounded-lg"></div>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <div id="sec-vets" class="hidden">
+            <h2 class="text-3xl font-bold mb-6">Solicitudes de Veterinarios</h2>
+            
+            <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-900 text-gray-400 uppercase text-xs">
+                        <tr>
+                            <th class="p-4">Profesional / Local</th>
+                            <th class="p-4">Matrícula</th>
+                            <th class="p-4">Ubicación</th>
+                            <th class="p-4 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-vets" class="text-sm divide-y divide-gray-700">
+                        </tbody>
+                </table>
+                <div id="msg-vets-empty" class="p-8 text-center text-gray-500 hidden">
+                    No hay solicitudes pendientes.
+                </div>
+            </div>
+        </div>
+
     </main>
 
     <script src="js/config.js"></script>
@@ -163,6 +186,89 @@
                 console.error(err);
                 Swal.fire('Error', 'No se pudo conectar con el servidor.', 'error');
             }
+        }
+    // --- NUEVA LÓGICA (VETERINARIOS) ---
+        
+        function verSeccion(sec) {
+            const m = document.getElementById('sec-municipios');
+            const v = document.getElementById('sec-vets');
+            const btnM = document.getElementById('btn-municipios');
+            const btnV = document.getElementById('btn-vets');
+
+            if(sec === 'municipios') {
+                m.classList.remove('hidden'); v.classList.add('hidden');
+                btnM.className = "w-full bg-gray-800 text-white py-2 px-4 rounded text-left font-bold border-l-4 border-orange-500 transition";
+                btnV.className = "w-full text-gray-400 py-2 px-4 rounded text-left font-bold hover:bg-gray-800 hover:text-white transition";
+            } else {
+                m.classList.add('hidden'); v.classList.remove('hidden');
+                btnV.className = "w-full bg-gray-800 text-white py-2 px-4 rounded text-left font-bold border-l-4 border-blue-500 transition";
+                btnM.className = "w-full text-gray-400 py-2 px-4 rounded text-left font-bold hover:bg-gray-800 hover:text-white transition";
+                cargarVetsPendientes();
+            }
+        }
+
+        async function cargarVetsPendientes() {
+            const tbody = document.getElementById('tabla-vets');
+            tbody.innerHTML = '<tr><td colspan="4" class="p-4 text-center"><i class="fa-solid fa-spinner fa-spin"></i> Cargando...</td></tr>';
+            
+            try {
+                const res = await fetch(`${API_URL}/SuperAdmin/veterinarios-pendientes`);
+                if(res.ok) {
+                    const lista = await res.json();
+                    renderizarTablaVets(lista);
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        function renderizarTablaVets(lista) {
+            const tbody = document.getElementById('tabla-vets');
+            const msg = document.getElementById('msg-vets-empty');
+            tbody.innerHTML = '';
+
+            if(lista.length === 0) {
+                msg.classList.remove('hidden');
+                return;
+            }
+            msg.classList.add('hidden');
+
+            lista.forEach(u => {
+                // Link a google maps para verificar dirección si quieres
+                const linkMap = `https://www.google.com/maps/search/?api=1&query=${u.lat},${u.lng}`;
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-gray-700/50 transition">
+                        <td class="p-4">
+                            <div class="font-bold text-white">${u.nombreVeterinaria}</div>
+                            <div class="text-xs text-gray-400">Usuario: ${u.nombreUsuario}</div>
+                        </td>
+                        <td class="p-4 font-mono text-orange-400">${u.matriculaProfesional}</td>
+                        <td class="p-4">
+                            <div class="text-sm text-gray-300">${u.direccion}</div>
+                            <a href="${linkMap}" target="_blank" class="text-xs text-blue-400 hover:underline"><i class="fa-solid fa-map-pin mr-1"></i>Ver ubicación</a>
+                        </td>
+                        <td class="p-4 text-center space-x-2">
+                            <button onclick="procesarVet(${u.id}, 'aprobar')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-bold transition">Aprobar</button>
+                            <button onclick="procesarVet(${u.id}, 'rechazar')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs font-bold transition">Rechazar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function procesarVet(id, accion) {
+            if(!confirm(`¿Seguro deseas ${accion} a este profesional?`)) return;
+            
+            try {
+                const endpoint = accion === 'aprobar' ? 'aprobar-vet' : 'rechazar-vet';
+                const res = await fetch(`${API_URL}/SuperAdmin/${endpoint}/${id}`, { method: 'POST' });
+                
+                if(res.ok) {
+                    Swal.fire('Listo', `Solicitud procesada (${accion}).`, 'success');
+                    cargarVetsPendientes();
+                } else {
+                    Swal.fire('Error', 'No se pudo procesar.', 'error');
+                }
+            } catch(e) { console.error(e); }
         }
     </script>
 </body>

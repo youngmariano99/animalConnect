@@ -17,37 +17,34 @@ namespace AnimalConnect.Backend.Controllers
             _context = context;
         }
 
-        // --- 1. GET PÚBLICO: Obtener veterinarias aprobadas para el mapa ---
+        // GET: api/Veterinarias (Para el Mapa)
         [HttpGet]
         public async Task<ActionResult> GetVeterinarias([FromQuery] double? lat, [FromQuery] double? lng, [FromQuery] double radio = 20)
         {
-            var query = _context.PerfilesVeterinarios
-                .Include(v => v.Usuario)
-                .Where(v => v.EstadoVerificacion == "Aprobado");
+            // Buscamos en la tabla CLINICAS, pero filtramos por dueños APROBADOS
+            var query = _context.Clinicas
+                .Include(c => c.Dueño) // Incluimos al dueño para verificar estado
+                .Where(c => c.Dueño != null && c.Dueño.EstadoVerificacion == "Aprobado");
 
             var lista = await query.ToListAsync();
 
-            // Lógica de proyección (Select)
-            var resultado = lista.Select(v => new
+            var resultado = lista.Select(c => new
             {
-                v.Id,
-                v.NombreVeterinaria,
-                v.Direccion,
-                v.TelefonoProfesional,
-                v.HorariosAtencion,
-                v.Biografia,
-                v.LogoUrl,
-                v.Latitud,
-                v.Longitud,
-                v.EsDeTurno,
-                v.MatriculaProfesional,
-                // Calculamos distancia si tenemos coordenadas del usuario
+                c.Id,
+                NombreVeterinaria = c.Nombre, // Mapeamos al nombre que espera el frontend
+                c.Direccion,
+                TelefonoProfesional = c.Telefono,
+                HorariosAtencion = c.HorariosEstructurados, // Mapeo temporal
+                c.LogoUrl,
+                c.Latitud,
+                c.Longitud,
+                c.EsDeTurno,
+                MatriculaProfesional = c.Dueño?.MatriculaProfesional ?? "N/A",
                 DistanciaKm = (lat.HasValue && lng.HasValue) 
-                    ? GeoService.CalcularDistanciaKm(lat.Value, lng.Value, v.Latitud, v.Longitud) 
+                    ? GeoService.CalcularDistanciaKm(lat.Value, lng.Value, c.Latitud, c.Longitud) 
                     : 0
             });
 
-            // Si hay coordenadas, filtramos por radio
             if (lat.HasValue && lng.HasValue)
             {
                 resultado = resultado.Where(v => v.DistanciaKm <= radio).ToList();
@@ -56,33 +53,28 @@ namespace AnimalConnect.Backend.Controllers
             return Ok(resultado);
         }
 
-        // --- 2. ADMIN: Establecer veterinaria de turno ---
-        // PUT: api/Veterinarias/turno/5
-        // Este endpoint desmarca a todas y marca solo a la elegida (Lógica "Radio Button")
+        // PUT: Establecer Turno (Sobre una CLÍNICA, no sobre una persona)
         [HttpPut("turno/{id}")]
         public async Task<IActionResult> SetTurno(int id)
         {
-            var todas = await _context.PerfilesVeterinarios.ToListAsync();
-            var seleccionada = todas.FirstOrDefault(v => v.Id == id);
+            var todas = await _context.Clinicas.ToListAsync();
+            var seleccionada = todas.FirstOrDefault(c => c.Id == id);
 
-            if (seleccionada == null) return NotFound("Veterinaria no encontrada.");
+            if (seleccionada == null) return NotFound("Clínica no encontrada.");
 
-            // LÓGICA TOGGLE:
-            // Si la seleccionada YA estaba de turno, la apagamos (nadie queda de turno).
             if (seleccionada.EsDeTurno)
             {
                 seleccionada.EsDeTurno = false;
                 await _context.SaveChangesAsync();
-                return Ok(new { message = $"Se ha desactivado el turno de {seleccionada.NombreVeterinaria}." });
+                return Ok(new { message = $"Se desactivó el turno de {seleccionada.Nombre}." });
             }
 
-            // Si NO estaba de turno, apagamos a todas las demás y la encendemos a ella.
-            foreach (var v in todas) v.EsDeTurno = false;
-            
+            // Apagamos todas, prendemos una
+            foreach (var c in todas) c.EsDeTurno = false;
             seleccionada.EsDeTurno = true;
-            await _context.SaveChangesAsync();
             
-            return Ok(new { message = $"Ahora {seleccionada.NombreVeterinaria} está de turno." });
+            await _context.SaveChangesAsync();
+            return Ok(new { message = $"Ahora {seleccionada.Nombre} está de turno." });
         }
     }
 }

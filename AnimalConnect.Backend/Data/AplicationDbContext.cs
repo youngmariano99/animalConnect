@@ -21,6 +21,8 @@ namespace AnimalConnect.Backend.Data
         public DbSet<Post> Posts { get; set; }
         public DbSet<Comentario> Comentarios { get; set; }
         public DbSet<PerfilMunicipio> PerfilesMunicipios { get; set; }
+        public DbSet<Clinica> Clinicas { get; set; }
+        public DbSet<HorarioClinica> HorariosClinicas { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

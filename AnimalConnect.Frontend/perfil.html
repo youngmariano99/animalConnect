@@ -47,6 +47,19 @@
             </div>
         </div>
 
+        <div id="sec-veterinario" class="hidden mt-12 pt-8 border-t border-gray-200">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-700 border-l-4 border-blue-500 pl-3">Mis Clínicas & Consultorios</h3>
+                <a href="clinica-wizard.html" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-blue-700 shadow-md transition flex items-center">
+                    <i class="fa-solid fa-plus-circle mr-2"></i> Nueva Clínica
+                </a>
+            </div>
+            
+            <div id="grid-mis-clinicas" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="text-gray-400 text-sm italic">Cargando tus consultorios...</div>
+            </div>
+        </div>
+
     </div>
 
    <script>
@@ -57,6 +70,10 @@
             if(!usuario) {
                 window.location.href = 'login.html';
                 return;
+            }
+            if (usuario.rol === 'Veterinario') {
+                document.getElementById('sec-veterinario').classList.remove('hidden');
+                cargarMisClinicas();
             }
             const htmlPuntos = usuario.puntos ? `<span class="ml-2 text-sm bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full"><i class="fa-solid fa-trophy text-yellow-500 mr-1"></i>${usuario.puntos} Ptos</span>` : '';
             document.getElementById('user-name').innerHTML = `${usuario.nombre} ${htmlPuntos}`;
@@ -278,6 +295,52 @@
             if(!confirm("¿Eliminar?")) return;
             await fetch(`${API_URL}/Animales/${id}`, { method: 'DELETE' });
             cargarMisPublicaciones();
+        }
+
+        async function cargarMisClinicas() {
+            const contenedor = document.getElementById('grid-mis-clinicas');
+            try {
+                const res = await fetch(`${API_URL}/Clinicas/mis-clinicas/${usuario.id}`);
+                if(res.ok) {
+                    const lista = await res.json();
+                    contenedor.innerHTML = '';
+                    
+                    if(lista.length === 0) {
+                        contenedor.innerHTML = '<p class="text-gray-500 text-sm">Aún no has registrado ningún consultorio.</p>';
+                        return;
+                    }
+
+                    lista.forEach(c => {
+                        const estadoTurno = c.esDeTurno 
+                            ? `<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold border border-green-200 ml-2 animate-pulse">EN TURNO</span>` 
+                            : `<span class="text-gray-400 text-xs ml-2">(Sin turno)</span>`;
+
+                        contenedor.innerHTML += `
+                            <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 flex justify-between items-center">
+                                <div>
+                                    <h4 class="font-bold text-gray-800 text-lg flex items-center">
+                                        ${c.nombre} ${estadoTurno}
+                                    </h4>
+                                    <p class="text-sm text-gray-500"><i class="fa-solid fa-map-pin mr-1"></i> ${c.direccion}</p>
+                                    <p class="text-xs text-blue-600 mt-1 font-mono">${c.horariosEstructurados}</p>
+                                </div>
+                                <div class="text-right">
+                                    <button onclick="toggleTurno(${c.id})" class="text-xs font-bold border border-gray-300 px-3 py-1 rounded hover:bg-gray-50 mb-1 block w-full">
+                                        ${c.esDeTurno ? 'Apagar Turno' : 'Poner de Turno'}
+                                    </button>
+                                    <button class="text-xs text-red-400 hover:text-red-600">Editar</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        async function toggleTurno(id) {
+            if(!confirm("¿Cambiar estado de turno?")) return;
+            await fetch(`${API_URL}/Veterinarias/turno/${id}`, { method: 'PUT' });
+            cargarMisClinicas(); // Recargar para ver cambio
         }
     </script>
 </body>

@@ -84,8 +84,8 @@ namespace AnimalConnect.Backend.Controllers
                     p.Latitud, // Devolvemos la data para depurar si quieres
                     
                     Autor = p.Usuario.Rol == "Veterinario" 
-                        ? (p.Usuario.PerfilVeterinario != null ? p.Usuario.PerfilVeterinario.NombreVeterinaria : p.Usuario.NombreUsuario)
-                        : (p.Usuario.PerfilCiudadano != null && !string.IsNullOrEmpty(p.Usuario.PerfilCiudadano.NombreCompleto) ? p.Usuario.PerfilCiudadano.NombreCompleto : p.Usuario.NombreUsuario),
+                    ? p.Usuario.NombreUsuario // <--- CAMBIO: Usamos el nombre de usuario directo
+                    : (p.Usuario.PerfilCiudadano != null && !string.IsNullOrEmpty(p.Usuario.PerfilCiudadano.NombreCompleto) ? p.Usuario.PerfilCiudadano.NombreCompleto : p.Usuario.NombreUsuario),
                     
                     EsVeterinario = p.Usuario.Rol == "Veterinario",
                     AutorId = p.UsuarioId,
@@ -96,9 +96,9 @@ namespace AnimalConnect.Backend.Controllers
                         c.Id,
                         c.Contenido,
                         c.Fecha,
-                        Autor = c.Usuario.Rol == "Veterinario" 
-                            ? (c.Usuario.PerfilVeterinario != null ? c.Usuario.PerfilVeterinario.NombreVeterinaria : c.Usuario.NombreUsuario)
-                            : (c.Usuario.PerfilCiudadano != null && !string.IsNullOrEmpty(c.Usuario.PerfilCiudadano.NombreCompleto) ? c.Usuario.PerfilCiudadano.NombreCompleto : c.Usuario.NombreUsuario),
+                         Autor = p.Usuario.Rol == "Veterinario" 
+                        ? p.Usuario.NombreUsuario // <--- CAMBIO: Usamos el nombre de usuario directo
+                        : (p.Usuario.PerfilCiudadano != null && !string.IsNullOrEmpty(p.Usuario.PerfilCiudadano.NombreCompleto) ? p.Usuario.PerfilCiudadano.NombreCompleto : p.Usuario.NombreUsuario),
                         EsVeterinario = c.Usuario.Rol == "Veterinario"
                     }).OrderBy(c => c.Fecha).ToList()
                 })
@@ -149,8 +149,8 @@ namespace AnimalConnect.Backend.Controllers
                 .Select(c => new {
                     c.Id, c.Contenido, c.Fecha,
                     Autor = c.Usuario.Rol == "Veterinario" 
-                            ? (c.Usuario.PerfilVeterinario != null ? c.Usuario.PerfilVeterinario.NombreVeterinaria : c.Usuario.NombreUsuario)
-                            : (c.Usuario.PerfilCiudadano != null && !string.IsNullOrEmpty(c.Usuario.PerfilCiudadano.NombreCompleto) ? c.Usuario.PerfilCiudadano.NombreCompleto : c.Usuario.NombreUsuario),
+                    ? c.Usuario.NombreUsuario // <--- CAMBIO
+                    : (c.Usuario.PerfilCiudadano != null && !string.IsNullOrEmpty(c.Usuario.PerfilCiudadano.NombreCompleto) ? c.Usuario.PerfilCiudadano.NombreCompleto : c.Usuario.NombreUsuario),
                     EsVeterinario = c.Usuario.Rol == "Veterinario"
                 }).ToListAsync();
             return Ok(comentarios);
