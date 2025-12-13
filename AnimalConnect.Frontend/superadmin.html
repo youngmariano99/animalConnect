@@ -22,6 +22,9 @@
             <button onclick="verSeccion('vets')" id="btn-vets" class="w-full text-gray-400 py-2 px-4 rounded text-left font-bold hover:bg-gray-800 hover:text-white transition">
                 <i class="fa-solid fa-user-doctor mr-2"></i> Solicitudes Vets
             </button>
+            <button onclick="verSeccion('ongs')" id="btn-ongs" class="w-full text-gray-400 py-2 px-4 rounded text-left font-bold hover:bg-gray-800 hover:text-white transition">
+                <i class="fa-solid fa-hand-holding-heart mr-2"></i> Solicitudes ONG
+            </button>
         </nav>
 
         <button onclick="logout()" class="w-full text-red-400 mt-10 text-left hover:text-red-300">
@@ -92,6 +95,34 @@
                 </table>
                 <div id="msg-vets-empty" class="p-8 text-center text-gray-500 hidden">
                     No hay solicitudes pendientes.
+                </div>
+            </div>
+        </div>
+
+        <div id="sec-ongs" class="hidden">
+            <h2 class="text-3xl font-bold mb-6 flex items-center">
+                <span class="bg-purple-600 w-10 h-10 rounded-lg flex items-center justify-center text-lg mr-3 shadow-lg">
+                    <i class="fa-solid fa-users"></i>
+                </span>
+                Organizaciones Pendientes
+            </h2>
+            
+            <div class="bg-gray-800 rounded-xl border border-gray-700 overflow-hidden shadow-xl">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-900 text-gray-400 uppercase text-xs">
+                        <tr>
+                            <th class="p-4">Organización</th>
+                            <th class="p-4">Contacto</th>
+                            <th class="p-4">Ubicación</th>
+                            <th class="p-4 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-ongs" class="text-sm divide-y divide-gray-700">
+                        </tbody>
+                </table>
+                <div id="msg-ongs-empty" class="p-12 text-center text-gray-500 hidden flex flex-col items-center">
+                    <i class="fa-regular fa-folder-open text-4xl mb-2 opacity-50"></i>
+                    <p>No hay solicitudes de organizaciones pendientes.</p>
                 </div>
             </div>
         </div>
@@ -190,22 +221,31 @@
     // --- NUEVA LÓGICA (VETERINARIOS) ---
         
         function verSeccion(sec) {
-            const m = document.getElementById('sec-municipios');
-            const v = document.getElementById('sec-vets');
-            const btnM = document.getElementById('btn-municipios');
-            const btnV = document.getElementById('btn-vets');
+        // IDs de las secciones
+        const secciones = ['municipios', 'vets', 'ongs'];
+        
+        secciones.forEach(s => {
+            const div = document.getElementById(`sec-${s}`);
+            const btn = document.getElementById(`btn-${s}`);
+            
+            if (s === sec) {
+                div.classList.remove('hidden');
+                // Estilo Activo (Diferente color según sección para UX)
+                let color = 'border-orange-500'; // Default Municipios
+                if(s === 'vets') color = 'border-blue-500';
+                if(s === 'ongs') color = 'border-purple-500';
 
-            if(sec === 'municipios') {
-                m.classList.remove('hidden'); v.classList.add('hidden');
-                btnM.className = "w-full bg-gray-800 text-white py-2 px-4 rounded text-left font-bold border-l-4 border-orange-500 transition";
-                btnV.className = "w-full text-gray-400 py-2 px-4 rounded text-left font-bold hover:bg-gray-800 hover:text-white transition";
+                btn.className = `w-full bg-gray-800 text-white py-2 px-4 rounded text-left font-bold border-l-4 ${color} transition shadow-md`;
             } else {
-                m.classList.add('hidden'); v.classList.remove('hidden');
-                btnV.className = "w-full bg-gray-800 text-white py-2 px-4 rounded text-left font-bold border-l-4 border-blue-500 transition";
-                btnM.className = "w-full text-gray-400 py-2 px-4 rounded text-left font-bold hover:bg-gray-800 hover:text-white transition";
-                cargarVetsPendientes();
+                div.classList.add('hidden');
+                btn.className = "w-full text-gray-400 py-2 px-4 rounded text-left font-bold hover:bg-gray-800 hover:text-white transition";
             }
-        }
+        });
+
+        // Cargar datos según corresponda
+        if (sec === 'vets') cargarVetsPendientes();
+        if (sec === 'ongs') cargarOngsPendientes(); // <--- NUEVA LLAMADA
+    }
 
         async function cargarVetsPendientes() {
             const tbody = document.getElementById('tabla-vets');
@@ -270,6 +310,101 @@
                 }
             } catch(e) { console.error(e); }
         }
+
+        // --- NUEVAS FUNCIONES PARA ONGS ---
+
+    async function cargarOngsPendientes() {
+        const tbody = document.getElementById('tabla-ongs');
+        tbody.innerHTML = '<tr><td colspan="4" class="p-8 text-center text-gray-400"><i class="fa-solid fa-spinner fa-spin text-2xl"></i><p class="mt-2">Consultando solicitudes...</p></td></tr>';
+        
+        try {
+            const res = await fetch(`${API_URL}/SuperAdmin/ongs-pendientes`);
+            if (res.ok) {
+                const lista = await res.json();
+                renderizarTablaOngs(lista);
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    function renderizarTablaOngs(lista) {
+        const tbody = document.getElementById('tabla-ongs');
+        const msg = document.getElementById('msg-ongs-empty');
+        tbody.innerHTML = '';
+
+        if (lista.length === 0) {
+            msg.classList.remove('hidden');
+            return;
+        }
+        msg.classList.add('hidden');
+
+        lista.forEach(o => {
+            // Generar link a redes si existe
+            let redesHtml = o.redesSociales ? `<div class="text-xs text-purple-300 mt-1"><i class="fa-brands fa-instagram mr-1"></i>${o.redesSociales}</div>` : '';
+            
+            tbody.innerHTML += `
+                <tr class="hover:bg-gray-700/50 transition group">
+                    <td class="p-4">
+                        <div class="font-bold text-white text-lg">${o.nombre}</div>
+                        <p class="text-xs text-gray-400 line-clamp-1 italic max-w-xs">"${o.descripcion}"</p>
+                        ${redesHtml}
+                    </td>
+                    <td class="p-4">
+                        <div class="flex flex-col gap-1">
+                            <span class="text-xs bg-gray-700 px-2 py-1 rounded w-fit text-gray-300"><i class="fa-solid fa-phone mr-1"></i>${o.telefonoContacto}</span>
+                            ${o.emailContacto ? `<span class="text-xs text-gray-400"><i class="fa-solid fa-envelope mr-1"></i>${o.emailContacto}</span>` : ''}
+                        </div>
+                    </td>
+                    <td class="p-4">
+                        <div class="text-sm text-gray-300 font-medium">${o.ciudad}</div>
+                        <div class="text-xs text-gray-500">${o.barrio || 'Zona general'}</div>
+                    </td>
+                    <td class="p-4 text-center">
+                        <div class="flex justify-center gap-2 opacity-80 group-hover:opacity-100 transition">
+                            <button onclick="procesarOng(${o.id}, 'aprobar')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow hover:shadow-green-900/50 flex items-center">
+                                <i class="fa-solid fa-check mr-1.5"></i> Aprobar
+                            </button>
+                            <button onclick="procesarOng(${o.id}, 'rechazar')" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow hover:shadow-red-900/50 flex items-center">
+                                <i class="fa-solid fa-xmark mr-1.5"></i> Rechazar
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    async function procesarOng(id, accion) {
+        const verbo = accion === 'aprobar' ? 'Habilitar' : 'Rechazar';
+        
+        const result = await Swal.fire({
+            title: `¿${verbo} Organización?`,
+            text: accion === 'aprobar' ? "Podrá gestionar hogares y publicar tránsitos." : "Se bloqueará el acceso a las funciones de ONG.",
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: accion === 'aprobar' ? '#16a34a' : '#dc2626',
+            confirmButtonText: `Sí, ${accion}`,
+            background: '#1f2937', // Estilo oscuro para el modal
+            color: '#fff'
+        });
+
+        if (!result.isConfirmed) return;
+        
+        try {
+            const endpoint = accion === 'aprobar' ? 'aprobar-ong' : 'rechazar-ong';
+            const res = await fetch(`${API_URL}/SuperAdmin/${endpoint}/${id}`, { method: 'POST' });
+            
+            if (res.ok) {
+                const Toast = Swal.mixin({
+                    toast: true, position: 'top-end', showConfirmButton: false, timer: 3000,
+                    background: '#1f2937', color: '#fff'
+                });
+                Toast.fire({ icon: 'success', title: `Organización ${accion}da con éxito` });
+                cargarOngsPendientes();
+            } else {
+                Swal.fire('Error', 'No se pudo procesar la solicitud.', 'error');
+            }
+        } catch (e) { console.error(e); }
+    }
     </script>
 </body>
 </html>

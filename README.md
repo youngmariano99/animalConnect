@@ -3,7 +3,7 @@
 > **Plataforma Integral de Gestión de Zoonosis, Adopción Inteligente y Red Profesional.**
 
 ## 📄 Descripción del Proyecto
-**Animal Connect** ha evolucionado de un simple registro de mascotas a un **Ecosistema de Salud Pública** completo. Es una plataforma web diseñada para centralizar y profesionalizar la gestión de la fauna urbana en comunidades medianas.
+**Animal Connect** ha .evolucionado a una Plataforma SaaS Geolocalizada. El sistema ahora adapta su contenido dinámicamente según la ubicación del usuario, permitiendo que una sola instancia del software sirva a múltiples municipios simultáneamente (Multi-tenant Lógico)
 
 
 El sistema conecta ahora a **cuatro actores estratégicos**:
@@ -22,6 +22,7 @@ El proyecto aborda problemáticas reales con tecnología escalable:
 2.  **Seguridad Ciudadana:** Validación de identidad para profesionales (Matrícula/Bio) para evitar fraudes y garantizar confianza en la comunidad.
 3.  **Inteligencia de Datos:** "Mapas de Calor" para que el municipio optimice recursos en campañas de castración y vacunación.
 4.  **Adopción Eficiente (Match):** Algoritmos de compatibilidad que conectan mascotas con dueños ideales según estilo de vida, reduciendo la tasa de devolución.
+5. **Arquitectura SaaS Georreferenciada (Nuevo)**: Filtrado inteligente de contenidos. Un usuario en Pringles solo ve mascotas y veterinarias de su zona (radio de 50km), gracias a un "cerebro" de ubicación en el Frontend (state.js) y cálculos matemáticos en el Backend.
 
 ---
 
@@ -33,7 +34,8 @@ Este proyecto utiliza una arquitectura moderna, escalable y segura, dividida en 
 * **Lenguaje:** C# (.NET 8).
 * **Framework:** ASP.NET Core Web API.
 * **ORM:** Entity Framework Core.
-* **Base de Datos:** SQL Server.
+* **Base de Datos:** PostgreSQL + Entity Framework Core 9.
+* **Arquitectura:** Monolito Modular SaaS.
 
 ### Frontend
 * **Lenguaje:** JavaScript (ES6+).
@@ -73,7 +75,7 @@ Planificación basada en metodología ágil (adaptada para desarrollador único)
 
 * **Sprint 1: Cimientos**
     * Diseño de DER (Base de datos).
-    * Configuración de proyecto .NET y SQL Server.
+    * Configuración inicial .NET y PostgreSQL (Migrado desde SQL Server).
     * Autenticación básica.
 * **Sprint 2: Core Backend**
     * API Endpoints para Animales (CRUD).
@@ -103,6 +105,19 @@ Planificación basada en metodología ágil (adaptada para desarrollador único)
     * Foro de dudas y consultas.
     * Muro de "Finales Felices".
     * Gamificación para usuarios activos.
+
+* **Sprint D: Transformación SaaS (Completado)**
+    * Migración a PostgreSQL: Cambio de motor de base de datos.
+    * Geo-Core: Implementación de GeoService y filtrado por radio (Km).
+    * Seguridad: Manejo de secretos con .env.
+
+* **Sprint E: Ecosistema Profesional B2B (Completado)**
+    * Refactorización: Separación de Veterinario (Persona) vs Clínica (Lugar).
+    * Wizard de Alta: Formulario paso a paso para clínicas con horarios complejos.
+    * Gestión de Aprobaciones: Panel SuperAdmin para validación de matrículas.
+
+* **Sprint F: Marketplace (Próximo)**
+    * Guía de Servicios y Comercios (PetShops).
 
 
 ---

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ofrecer Tránsito - Animal Connect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .option-card { @apply border-2 border-gray-100 rounded-xl p-4 cursor-pointer hover:border-teal-400 transition text-center h-full flex flex-col justify-center items-center; }
+        .peer-checked + .option-card { @apply border-teal-500 bg-teal-50 text-teal-800; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen flex flex-col">
+
+    <div class="bg-white shadow-sm p-4 sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center max-w-3xl">
+            <div class="flex items-center text-teal-600 font-bold text-xl">
+                <i class="fa-solid fa-house-chimney-heart mr-2"></i> Alta de Hogar
+            </div>
+            <a href="perfil.html" class="text-sm text-gray-500 hover:text-gray-800"><i class="fa-solid fa-xmark mr-1"></i> Cancelar</a>
+        </div>
+    </div>
+
+    <main class="flex-1 container mx-auto px-4 py-8 max-w-3xl">
+        
+        <div class="flex justify-between mb-8 relative px-4">
+            <div class="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -z-10 rounded"></div>
+            <div id="progress-bar" class="absolute top-1/2 left-0 h-1 bg-teal-500 -z-10 rounded transition-all duration-500" style="width: 0%"></div>
+            
+            <div id="ind-1" class="w-8 h-8 bg-teal-600 text-white rounded-full flex items-center justify-center font-bold text-sm shadow-md">1</div>
+            <div id="ind-2" class="w-8 h-8 bg-white border-2 border-gray-200 text-gray-400 rounded-full flex items-center justify-center font-bold text-sm">2</div>
+            <div id="ind-3" class="w-8 h-8 bg-white border-2 border-gray-200 text-gray-400 rounded-full flex items-center justify-center font-bold text-sm">3</div>
+        </div>
+
+        <form id="hogar-form" onsubmit="finalizarHogarWizard(event)" class="bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-100 min-h-[500px] flex flex-col">
+            
+            <div id="step-1" class="step-content h-full flex flex-col">
+                <h2 class="text-2xl font-bold mb-2 text-gray-800">¿Dónde alojarás al animal?</h2>
+                <p class="text-gray-500 text-sm mb-4">Esta ubicación solo será visible para Organizaciones Verificadas.</p>
+                
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Dirección Aproximada</label>
+                    <input type="text" id="h-direccion" class="w-full border rounded p-2 text-sm" placeholder="Ej: Barrio Roca, cerca de la plaza..." required>
+                </div>
+
+                <div id="map-hogar" class="flex-1 min-h-[300px] w-full rounded-xl border-2 border-teal-100 shadow-inner z-0 cursor-pointer"></div>
+                <p id="coords-msg" class="text-center text-xs text-teal-600 font-bold mt-2">Toca el mapa para marcar tu casa</p>
+            </div>
+
+            <div id="step-2" class="hidden step-content">
+                <h2 class="text-2xl font-bold mb-2 text-gray-800">Características del Hogar</h2>
+                <p class="text-gray-500 text-sm mb-6">Ayúdanos a saber qué animales encajan mejor contigo.</p>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Tipo de Vivienda</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            
+                            <label class="cursor-pointer">
+                                <input type="radio" name="tipo" value="Casa" class="peer hidden" checked>
+                                <div class="border-2 border-gray-100 rounded-xl p-4 hover:border-teal-400 transition text-center h-full flex flex-col justify-center items-center peer-checked:border-teal-500 peer-checked:bg-teal-50 peer-checked:text-teal-800 shadow-sm">
+                                    <i class="fa-solid fa-house text-2xl mb-1"></i>
+                                    <span class="font-bold text-sm">Casa</span>
+                                </div>
+                            </label>
+
+                            <label class="cursor-pointer">
+                                <input type="radio" name="tipo" value="Depto" class="peer hidden">
+                                <div class="border-2 border-gray-100 rounded-xl p-4 hover:border-teal-400 transition text-center h-full flex flex-col justify-center items-center peer-checked:border-teal-500 peer-checked:bg-teal-50 peer-checked:text-teal-800 shadow-sm">
+                                    <i class="fa-solid fa-building text-2xl mb-1"></i>
+                                    <span class="font-bold text-sm">Depto</span>
+                                </div>
+                            </label>
+
+                            <label class="cursor-pointer">
+                                <input type="radio" name="tipo" value="PH" class="peer hidden">
+                                <div class="border-2 border-gray-100 rounded-xl p-4 hover:border-teal-400 transition text-center h-full flex flex-col justify-center items-center peer-checked:border-teal-500 peer-checked:bg-teal-50 peer-checked:text-teal-800 shadow-sm">
+                                    <i class="fa-solid fa-door-closed text-2xl mb-1"></i>
+                                    <span class="font-bold text-sm">PH</span>
+                                </div>
+                            </label>
+
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="checkbox" id="chk-patio" class="w-5 h-5 text-teal-600 rounded mr-3">
+                            <span class="text-sm font-medium">Tiene Patio Cerrado / Seguro</span>
+                        </label>
+                        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="checkbox" id="chk-mascotas" class="w-5 h-5 text-teal-600 rounded mr-3">
+                            <span class="text-sm font-medium">Hay otras mascotas</span>
+                        </label>
+                        <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+                            <input type="checkbox" id="chk-ninos" class="w-5 h-5 text-teal-600 rounded mr-3">
+                            <span class="text-sm font-medium">Hay niños en casa</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div id="step-3" class="hidden step-content">
+                <h2 class="text-2xl font-bold mb-2 text-gray-800">Tu Compromiso</h2>
+                <p class="text-gray-500 text-sm mb-6">Define cuánto tiempo puedes dedicarles.</p>
+
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Tiempo diario libre</label>
+                        <div class="grid grid-cols-3 gap-3">
+                            
+                            <label class="cursor-pointer">
+                                <input type="radio" name="disp" value="1" class="peer hidden">
+                                <div class="border-2 border-gray-100 rounded-xl p-4 hover:border-teal-400 transition text-center h-full flex flex-col justify-center items-center peer-checked:border-teal-500 peer-checked:bg-teal-50 peer-checked:text-teal-800 shadow-sm">
+                                    <span class="text-xl">⚡</span>
+                                    <span class="text-xs mt-1 font-bold">Poco (&lt;2hs)</span>
+                                </div>
+                            </label>
+
+                            <label class="cursor-pointer">
+                                <input type="radio" name="disp" value="2" class="peer hidden" checked>
+                                <div class="border-2 border-gray-100 rounded-xl p-4 hover:border-teal-400 transition text-center h-full flex flex-col justify-center items-center peer-checked:border-teal-500 peer-checked:bg-teal-50 peer-checked:text-teal-800 shadow-sm">
+                                    <span class="text-xl">🕒</span>
+                                    <span class="text-xs mt-1 font-bold">Medio (3-5hs)</span>
+                                </div>
+                            </label>
+
+                            <label class="cursor-pointer">
+                                <input type="radio" name="disp" value="3" class="peer hidden">
+                                <div class="border-2 border-gray-100 rounded-xl p-4 hover:border-teal-400 transition text-center h-full flex flex-col justify-center items-center peer-checked:border-teal-500 peer-checked:bg-teal-50 peer-checked:text-teal-800 shadow-sm">
+                                    <span class="text-xl">💖</span>
+                                    <span class="text-xs mt-1 font-bold">Total (+5hs)</span>
+                                </div>
+                            </label>
+
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 mb-1">¿Por cuánto tiempo podrías transitar?</label>
+                        <select id="sel-tiempo" class="w-full border rounded p-3 text-sm">
+                            <option value="Emergencia">Solo emergencias (1-3 días)</option>
+                            <option value="Corto">Corto plazo (hasta 15 días)</option>
+                            <option value="Medio">Mediano plazo (hasta 1 mes)</option>
+                            <option value="Indefinido" selected>Hasta que sea adoptado ❤️</option>
+                        </select>
+                    </div>
+
+                    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
+                        <label class="flex items-start cursor-pointer">
+                            <input type="checkbox" id="chk-cuidados" class="w-5 h-5 text-yellow-600 mt-1 mr-3">
+                            <div class="text-sm">
+                                <span class="font-bold text-yellow-800">¿Aceptas Cuidados Especiales?</span>
+                                <p class="text-yellow-700 text-xs mt-1">Animales que requieren medicación, curaciones diarias o post-operatorios.</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-auto pt-8 flex justify-between">
+                <button type="button" id="btn-prev" onclick="cambiarPaso(-1)" class="px-6 py-2 rounded-lg font-bold text-gray-500 hover:bg-gray-100 disabled:opacity-0 transition">Atrás</button>
+                <button type="button" id="btn-next" onclick="cambiarPaso(1)" class="px-8 py-2 rounded-lg font-bold bg-teal-600 text-white hover:bg-teal-700 shadow-lg transition transform hover:-translate-y-0.5">Siguiente</button>
+                <button type="submit" id="btn-submit" class="hidden px-8 py-2 rounded-lg font-bold bg-green-600 text-white hover:bg-green-700 shadow-lg animate-pulse">Confirmar y Unirme</button>
+            </div>
+
+        </form>
+    </main>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/hogar-wizard.js"></script>
+</body>
+</html>

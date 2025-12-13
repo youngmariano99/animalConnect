@@ -115,6 +115,8 @@ Se reestructuró el Frontend para diferenciar claramente los casos de uso.
 ## 🚀 FASE 2: SHOWCASE (En Progreso)
 *Transformación hacia una plataforma comunitaria, segura y profesional para la muestra municipal.*
 
+---
+
 ### 📅 Sprint A: Identidad y Roles Profesionales (Completado)
 **Estado:** ✅ Finalizado | **Fecha:** [03/12/2025]
 **Objetivo:** Expandir el ecosistema para incluir Veterinarios con geolocalización y validación administrativa.
@@ -134,22 +136,82 @@ Se reestructuró el Frontend para diferenciar claramente los casos de uso.
     * **Sistema de Guardia:** Lógica de "Radio Button" en el backend para asignar una única veterinaria de turno.
     * **Widget de Guardia:** Aviso visual en el Navbar público que conecta directo al WhatsApp del profesional de turno.
 
+---
+
+
 ### 📅 Sprint B: Ciclo de Vida y Separación de Flujos
 **Objetivo:** Aislar "Pérdidas" de "Adopciones" y automatizar la higiene de datos.
 * [x] **Separación Estricta:** Dividir formularios y vistas. El reporte de perdido no debe pedir datos de adopción y viceversa.
 * [x] **Lógica "Marketplace":** Implementar fecha de vencimiento (15 días) y sistema de renovación de publicaciones.
-* [ ] **Estados Finales:** Reemplazar el borrado por cambios de estado (`Encontrado`, `Adoptado`, `Vencido`).
+* [x] **Estados Finales:** Reemplazar el borrado por cambios de estado (`Encontrado`, `Adoptado`, `Vencido`).
 * [x] **Panel "Mis Publicaciones":** Área privada donde el usuario gestiona sus reportes (Renovar, Marcar Encontrado).
+
+---
 
 ### 📅 Sprint C: Comunidad y Gamificación
 **Objetivo:** Fomentar la retención de usuarios y crear una red de apoyo.
 * [x] **Foro/Muro Comunitario:** Sección para "Dudas", "Finales Felices" y "Avisos".
 * [x] **Interacción Profesional:** Distintivos visuales para comentarios de veterinarios verificados.
 * [x] **Historias de Éxito:** Flujo automático para convertir un animal "Adoptado/Encontrado" en un post del muro.
-* [ ] **Gamificación:** Sistema básico de reputación o medallas por ayudar/adoptar.
+* [x] **Gamificación:** Sistema básico de reputación o medallas por ayudar/adoptar.
+
+---
 
 ### 📅 Sprint D: Pulido Visual y Match Detallado
 **Objetivo:** Maximizar el impacto visual para la demo.
-* [ ] **Ficha de Animal v2:** Detalle profundo con visualización semáforo de compatibilidad (Match estricto vs flexible).
-* [ ] **Botón "Veterinaria de Turno":** Widget destacado en home gestionado por Admin.
-* [ ] **UX/UI Final:** Revisión de estilos, textos de ayuda y tour guiado para nuevos usuarios.
+* [x] **Ficha de Animal v2:** Detalle profundo con visualización semáforo de compatibilidad (Match estricto vs flexible).
+* [x] **Botón "Veterinaria de Turno":** Widget destacado en home gestionado por Admin.
+
+---
+
+### 📅 Sprint D: La Gran Migración y Arquitectura SaaS (Completado)
+**Objetivo:** Transformar la app local en una plataforma global escalable.
+* [x] **Migración a PostgreSQL:** Cambio de proveedor de base de datos para reducir costos y mejorar performance en la nube.
+* [x] **Seguridad:** Implementación de `DotNetEnv` para proteger credenciales de BD.
+* [x] **Cerebro de Ubicación (Frontend):** Creación de `state.js` (Observer Pattern) para gestionar la ubicación del usuario de forma centralizada.
+* [x] **Lógica Geoespacial (Backend):** Implementación de `GeoService` (Fórmula Haversine) y refactorización de TODOS los Controllers (`Animales`, `Veterinarias`, `Foro`, `Match`) para filtrar data por radio (km).
+* [x] **Pruebas de Estrés:** Verificación de comportamiento cambiando sensores de ubicación (Ej: Bs As vs Pringles).
+
+---
+
+### 📅 Sprint E: Profesionalización del Ecosistema (Completado)
+**Objetivo:** Crear un modelo de negocio B2B sólido para veterinarios y clínicas.
+* [x] **Refactorización de Modelos:** Separación de la entidad `PerfilVeterinario` (Persona) de la entidad `Clinica` (Lugar Físico).
+* [x] **Sistema de Horarios:** Creación de tabla `HorarioClinica` para soportar turnos cortados y múltiples días.
+* [x] **Wizard de Alta:** Desarrollo de `clinica-wizard.html` y su lógica JS para facilitar la carga de consultorios.
+* [x] **Gestión de Aprobaciones:** Traspaso de la responsabilidad de aprobación de profesionales del Municipio al SuperAdmin (Dev).
+* [x] **Panel "Mis Clínicas":** Dashboard para que el veterinario gestione sus sucursales y active turnos.
+
+---
+
+### 📅 Sprint F: Marketplace y Servicios (Próximo)
+**Objetivo:** Expansión a comercios y monetización.
+* [ ] **Modelado de Rubros:** Tablas para `Comercio`, `Rubro` y `PerfilComerciante`.
+* [ ] **Guía de Servicios:** Frontend tipo "Páginas Amarillas" con filtros por tags.
+* [ ] **Wizard de Comercios:** Adaptación del Wizard de clínicas para PetShops.
+
+### 📅 Sprint G: Ecosistema de Organizaciones y Tránsitos.
+**Objetivo:** Introducir la Organización (ONG) y el Hogar de Tránsito. Esto eleva la plataforma de ser un "registro civil de mascotas" a una herramienta de gestión operativa para el rescate animal.
+
+**Paso 1: Backend - Estructura de Organizaciones**
+* [ ] **Crear entidad PerfilOrganizacion** (Nombre, Logo, Redes, Zona, EstadoVerificacion).
+* [ ] **Crear entidad MiembrosOrganizacion** (Vincula Usuario <-> Organizacion).
+* [ ] **Endpoint para crear Organización** (solicitud).
+* [ ] **Endpoint para que Admin apruebe/rechace Organización.**
+
+**Paso 2: Backend - Estructura de Hogares**
+* [ ] **Crear entidad HogarTransitorio vinculada a Usuario.**
+* [ ] **Definir los campos del "Wizard" (Tipo vivienda, Patio, etc.) en el modelo.**
+* [ ] **Reutilización: Veremos si usamos la tabla Atributos actual o columnas directas.** Para cosas booleanas fijas (tiene patio, tiene rejas),columnas directas es más fácil de filtrar en SQL. Para cosas subjetivas, Atributos.
+
+**Paso 3: Frontend - Wizard de Organización**
+* [ ] **Crear vista para dar de alta la ONG** (Similar al de Vets).
+* [ ] **Panel de Organización:** "Mi Staff", "Mis Búsquedas".**
+
+**Paso 4: Frontend - Wizard de Hogar Transitorio (Ciudadano)**
+* [ ] **En el perfil del ciudadano, botón "Quiero ser Hogar de Tránsito".**
+* [ ] **Formulario paso a paso** (Vivienda, Disponibilidad, Preferencias).
+
+**Paso 5: Lógica de Negocio - Buscador Privado**
+* [ ] **Endpoint GET /api/Hogares/buscar protegido** (Solo para roles ONG/Admin).
+* [ ] **Interfaz de búsqueda con mapa** (pines ofuscados o zonas) y filtros.

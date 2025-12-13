@@ -106,6 +106,38 @@ namespace AnimalConnect.Backend.Controllers
 
             return Ok(new { message = "Solicitud rechazada." });
         }
+
+        // --- GESTIÓN DE ORGANIZACIONES ---
+
+        [HttpGet("ongs-pendientes")]
+        public async Task<ActionResult> GetOngsPendientes()
+        {
+            return Ok(await _context.PerfilesOrganizaciones
+                .Where(o => o.EstadoVerificacion == "Pendiente")
+                .ToListAsync());
+        }
+
+        [HttpPost("aprobar-ong/{id}")]
+        public async Task<IActionResult> AprobarOng(int id)
+        {
+            var ong = await _context.PerfilesOrganizaciones.FindAsync(id);
+            if (ong == null) return NotFound();
+
+            ong.EstadoVerificacion = "Aprobado";
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Organización aprobada." });
+        }
+
+        [HttpPost("rechazar-ong/{id}")]
+        public async Task<IActionResult> RechazarOng(int id)
+        {
+            var ong = await _context.PerfilesOrganizaciones.FindAsync(id);
+            if (ong == null) return NotFound();
+
+            ong.EstadoVerificacion = "Rechazado";
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Organización rechazada." });
+        }
     }
 }
  
