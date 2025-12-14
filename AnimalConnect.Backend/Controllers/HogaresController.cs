@@ -106,9 +106,15 @@ namespace AnimalConnect.Backend.Controllers
             }
 
             // 2. FILTRADO
+
+            // Solo mostramos hogares actualizados en los últimos 30 días
+            var fechaLimite = DateTime.Now.AddDays(-30);
+            
             var query = _context.HogaresTransitorios
                                 .Include(h => h.Usuario) // Para mostrar nombre/teléfono
                                 .AsQueryable();
+            query = query.Where(h => h.UltimaActualizacion >= fechaLimite);
+
 
             // Filtros básicos
             if (!string.IsNullOrEmpty(tipo)) query = query.Where(h => h.TipoVivienda == tipo);
@@ -147,6 +153,20 @@ namespace AnimalConnect.Backend.Controllers
             }
 
             return Ok(resultado.OrderBy(x => x.Distancia));
+        }
+
+        // PUT: api/Hogares/renovar/{id}
+        [HttpPut("renovar/{id}")]
+        public async Task<IActionResult> RenovarHogar(int id)
+        {
+            var hogar = await _context.HogaresTransitorios.FindAsync(id);
+            if (hogar == null) return NotFound();
+
+            // Actualizamos la fecha a HOY
+            hogar.UltimaActualizacion = DateTime.Now;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Disponibilidad renovada por 30 días." });
         }
     }
 }

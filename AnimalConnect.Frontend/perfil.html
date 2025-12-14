@@ -98,19 +98,113 @@
         const API_URL = 'http://127.0.0.1:5269/api';
         const usuario = JSON.parse(localStorage.getItem('zoonosis_user'));
 
-        document.addEventListener('DOMContentLoaded', () => {
-            if(!usuario) {
-                window.location.href = 'login.html';
-                return;
-            }
+       document.addEventListener('DOMContentLoaded', async () => {
+            if(!usuario) { window.location.href = 'login.html'; return; }
+            
+            // 1. Cargar Header Usuario
+            const htmlPuntos = usuario.puntos ? `<span class="ml-2 text-sm bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full"><i class="fa-solid fa-trophy text-yellow-500 mr-1"></i>${usuario.puntos} Ptos</span>` : '';
+            document.getElementById('user-name').innerHTML = `${usuario.nombre} ${htmlPuntos}`;
+
+            // 2. Cargar datos básicos
+            cargarMisPublicaciones();
+            
             if (usuario.rol === 'Veterinario') {
                 document.getElementById('sec-veterinario').classList.remove('hidden');
                 cargarMisClinicas();
             }
-            const htmlPuntos = usuario.puntos ? `<span class="ml-2 text-sm bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full"><i class="fa-solid fa-trophy text-yellow-500 mr-1"></i>${usuario.puntos} Ptos</span>` : '';
-            document.getElementById('user-name').innerHTML = `${usuario.nombre} ${htmlPuntos}`;
-            cargarMisPublicaciones();
+
+            // 3. VERIFICAR ESTADOS (NUEVO)
+            await verificarEstadoHogar();
+            await verificarEstadoOng();
         });
+
+        // --- LÓGICA DE ESTADOS ---
+
+    async function verificarEstadoOng() {
+        try {
+            // Consultamos si tiene ONGs vinculadas
+            const res = await fetch(`${API_URL}/Organizaciones/mis-ongs/${usuario.id}`);
+            if (res.ok) {
+                const lista = await res.json();
+                const ongUsuario = lista.length > 0 ? lista[0] : null; // Asumimos 1 por ahora
+                
+                const container = document.querySelector('#sec-ongs-container'); // Necesitamos darle ID al div padre en el HTML
+                const btnCrear = document.getElementById('btn-crear-ong'); // Necesitamos darle ID al botón en el HTML
+
+                if (ongUsuario) {
+                    if (ongUsuario.estadoVerificacion === 'Pendiente') {
+                        // CASO 1: PENDIENTE
+                        btnCrear.outerHTML = `
+                            <button disabled class="bg-yellow-100 text-yellow-700 px-5 py-2 rounded-lg font-bold border border-yellow-300 cursor-not-allowed flex items-center">
+                                <i class="fa-solid fa-clock mr-2"></i> Verificación Pendiente
+                            </button>`;
+                    } else if (ongUsuario.estadoVerificacion === 'Aprobado') {
+                        // CASO 2: APROBADO (Botón de Acceso)
+                        btnCrear.outerHTML = `
+                            <a href="panel-ong.html" class="bg-purple-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-purple-700 shadow-md transition flex items-center">
+                                <i class="fa-solid fa-chart-pie mr-2"></i> Ir al Panel de Gestión
+                            </a>`;
+                        
+                        // Mostrar nombre de la ONG
+                        const titulo = document.querySelector('#sec-ongs-title'); // Darle ID al h3
+                        if(titulo) titulo.innerHTML += ` <span class="text-sm font-normal text-gray-500">(${ongUsuario.nombre})</span>`;
+                    }
+                }
+            }
+        } catch (e) { console.error("Error verificando ONG", e); }
+    }
+
+    async function verificarEstadoHogar() {
+        try {
+            const res = await fetch(`${API_URL}/Hogares/mi-hogar/${usuario.id}`);
+            const btnHogar = document.getElementById('btn-ofrecer-hogar'); // Darle ID al botón en HTML
+
+            if (res.ok) {
+                const hogar = await res.json();
+                // Si existe, calculamos si está vencido (Punto 4)
+                const fechaAct = new Date(hogar.ultimaActualizacion);
+                const diasSinAct = (new Date() - fechaAct) / (1000 * 60 * 60 * 24);
+                
+                if (diasSinAct > 30) {
+                    // VENCIDO
+                    btnHogar.outerHTML = `
+                        <button onclick="renovarHogar(${hogar.id})" class="bg-red-500 text-white px-5 py-2 rounded-lg font-bold hover:bg-red-600 shadow-md transition flex items-center animate-pulse">
+                            <i class="fa-solid fa-rotate-right mr-2"></i> Reconfirmar Disponibilidad
+                        </button>`;
+                } else {
+                    // ACTIVO
+                    btnHogar.outerHTML = `
+                        <div class="flex gap-2">
+                            <span class="bg-teal-100 text-teal-700 px-4 py-2 rounded-lg font-bold border border-teal-200 flex items-center cursor-default">
+                                <i class="fa-solid fa-check-circle mr-2"></i> Hogar Activo
+                            </span>
+                            <button onclick="darBajaHogar(${hogar.id})" class="text-gray-400 hover:text-red-500 px-2" title="Dejar de transitar">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+        } catch (e) { console.error("Error verificando Hogar", e); }
+    }
+
+    // Lógica de renovación
+    async function renovarHogar(id) {
+        if(!confirm("¿Sigues disponible para recibir animales?")) return;
+        try {
+            await fetch(`${API_URL}/Hogares/renovar/${id}`, { method: 'PUT' });
+            Swal.fire('¡Gracias!', 'Tu hogar vuelve a estar visible en el mapa.', 'success');
+            verificarEstadoHogar(); // Recargar botón
+        } catch(e) { console.error(e); }
+    }
+
+    async function darBajaHogar(id) {
+        if(!confirm("¿Deseas dar de baja tu hogar de tránsito?")) return;
+        // Aquí deberías implementar el DELETE en el backend si quieres borrarlo físico
+        // await fetch(`${API_URL}/Hogares/${id}`, { method: 'DELETE' });
+        // location.reload();
+        alert("Función pendiente de backend (DELETE)"); 
+    }
 
         function logout() {
             localStorage.removeItem('zoonosis_user');

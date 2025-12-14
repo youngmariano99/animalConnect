@@ -56,14 +56,15 @@ function initMap(loc) {
 
 // --- LÓGICA DE FILTROS ---
 function toggleFiltro(el, key) {
-    if (el.classList.contains('active')) {
-        el.classList.remove('active');
-        el.classList.add('inactive');
-        filtros[key] = false;
+    // Invertimos el valor lógico
+    filtros[key] = !filtros[key];
+
+    if (filtros[key]) {
+        // ACTIVO: Fondo morado, texto blanco
+        el.className = "filter-chip active bg-purple-600 text-white border-purple-600 px-3 py-1 rounded-full border text-xs font-bold cursor-pointer select-none transition";
     } else {
-        el.classList.remove('inactive');
-        el.classList.add('active');
-        filtros[key] = true;
+        // INACTIVO: Fondo blanco, texto gris
+        el.className = "filter-chip inactive bg-white text-gray-500 border-gray-300 hover:border-purple-300 px-3 py-1 rounded-full border text-xs font-bold cursor-pointer select-none transition";
     }
 }
 
@@ -120,46 +121,72 @@ function renderizarResultados(lista) {
     contador.innerText = lista.length;
 
     if (lista.length === 0) {
-        contenedor.innerHTML = '<p class="text-center text-sm text-gray-500 py-4">No se encontraron hogares con estos criterios.</p>';
+        contenedor.innerHTML = '<div class="text-center py-10 text-gray-400 text-sm"><i class="fa-solid fa-filter-circle-xmark text-2xl mb-2"></i><br>No hay hogares disponibles con estos filtros.</div>';
         return;
     }
 
     lista.forEach(h => {
-        // 1. Crear Card
+        // Iconos de características
+        let iconos = '';
+        if (h.tienePatioCerrado) iconos += `<span title="Patio Cerrado" class="text-green-600 bg-green-100 px-1.5 py-0.5 rounded mr-1"><i class="fa-solid fa-tree"></i></span>`;
+        if (h.aceptaCuidadosEspeciales) iconos += `<span title="Cuidados Especiales" class="text-yellow-600 bg-yellow-100 px-1.5 py-0.5 rounded mr-1"><i class="fa-solid fa-kit-medical"></i></span>`;
+        if (!h.tieneNinos) iconos += `<span title="Sin Niños" class="text-blue-600 bg-blue-100 px-1.5 py-0.5 rounded mr-1"><i class="fa-solid fa-child-reaching"></i>🚫</span>`;
+        if (!h.tieneOtrasMascotas) iconos += `<span title="Sin Mascotas" class="text-purple-600 bg-purple-100 px-1.5 py-0.5 rounded mr-1"><i class="fa-solid fa-paw"></i>🚫</span>`;
+
+        // 1. Crear Card con más detalle
         const card = document.createElement('div');
-        card.className = "bg-white p-3 rounded-lg border border-gray-200 shadow-sm hover:border-purple-400 cursor-pointer transition";
+        card.className = "bg-white p-4 rounded-xl border border-gray-200 shadow-sm hover:border-purple-400 hover:shadow-md cursor-pointer transition group";
         card.innerHTML = `
-            <div class="flex justify-between items-start">
+            <div class="flex justify-between items-start mb-2">
                 <div>
-                    <h4 class="font-bold text-gray-800 text-sm">${h.tipoVivienda} ${h.tienePatioCerrado ? '(con Patio)' : ''}</h4>
-                    <p class="text-xs text-gray-500"><i class="fa-solid fa-location-dot mr-1"></i>${h.direccionAproximada}</p>
+                    <h4 class="font-bold text-gray-800 text-sm group-hover:text-purple-700 transition">
+                        ${h.tipoVivienda} en ${h.direccionAproximada.split(',')[0]}
+                    </h4>
+                    <p class="text-xs text-gray-500 mt-0.5"><i class="fa-solid fa-user mr-1"></i>${h.nombreContacto || 'Usuario'}</p>
                 </div>
-                <span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full">
-                    ${h.disponibilidadHoraria === 3 ? 'Full Time' : 'Part Time'}
-                </span>
+                <div class="text-right">
+                    <span class="block text-xs font-bold text-purple-600">${h.distancia.toFixed(1)} km</span>
+                </div>
             </div>
-            <div class="mt-2 text-xs text-gray-600 flex gap-2">
-                ${h.aceptaCuidadosEspeciales ? '<span class="bg-yellow-50 text-yellow-700 px-1 rounded border border-yellow-200">Enfermería</span>' : ''}
-                <span class="bg-gray-100 px-1 rounded">⏳ ${h.tiempoCompromiso}</span>
+            
+            <div class="flex flex-wrap gap-1 mb-3 text-[10px]">
+                ${iconos || '<span class="text-gray-400 italic">Estándar</span>'}
+            </div>
+
+            <div class="flex justify-between items-center pt-2 border-t border-gray-100">
+                <span class="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded">
+                    <i class="fa-solid fa-hourglass-half mr-1"></i>${h.tiempoCompromiso}
+                </span>
+                <button class="text-xs bg-purple-100 text-purple-700 px-3 py-1 rounded-full font-bold hover:bg-purple-200 transition">
+                    Ver contacto
+                </button>
             </div>
         `;
         
-        // Evento al clickear tarjeta: centrar mapa
+        // Al hacer click, viajamos en el mapa
         card.onclick = () => {
             mapOng.flyTo([h.latitud, h.longitud], 16);
+            marker.openPopup(); // Abrir el popup del marcador correspondiente
         };
         contenedor.appendChild(card);
 
-        // 2. Crear Pin en Mapa
-        const color = h.tipoVivienda === 'Casa' ? 'teal' : 'blue'; // Colores simulados
-        // Aquí podrías usar iconos personalizados de colores
-        
-        const marker = L.marker([h.latitud, h.longitud])
+        // 2. Marcador en mapa
+        const markerIcon = L.divIcon({
+            html: `<i class="fa-solid fa-location-dot text-3xl ${h.tipoVivienda === 'Casa' ? 'text-teal-600' : 'text-blue-600'} drop-shadow-md"></i>`,
+            className: 'bg-transparent',
+            iconSize: [30, 30],
+            iconAnchor: [15, 30],
+            popupAnchor: [0, -30]
+        });
+
+        const marker = L.marker([h.latitud, h.longitud], {icon: markerIcon})
             .bindPopup(`
                 <div class="text-center">
-                    <strong>Hogar de ${h.nombreContacto || 'Usuario'}</strong><br>
-                    ${h.direccionAproximada}<br>
-                    <a href="#" class="text-purple-600 font-bold text-xs mt-1 block">Ver contacto completo</a>
+                    <strong class="text-purple-700 block mb-1">${h.tipoVivienda} - ${h.nombreContacto || 'Usuario'}</strong>
+                    <p class="text-xs text-gray-600 mb-2">${h.direccionAproximada}</p>
+                    <a href="#" class="bg-green-500 text-white px-3 py-1 rounded text-xs font-bold hover:bg-green-600 block w-full">
+                        <i class="fa-brands fa-whatsapp"></i> Contactar
+                    </a>
                 </div>
             `);
         
