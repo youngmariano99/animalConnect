@@ -116,16 +116,19 @@ namespace AnimalConnect.Backend.Controllers
             query = query.Where(h => h.UltimaActualizacion >= fechaLimite);
 
 
-            // Filtros básicos
+            // Filtros básicos CORREGIDOS
             if (!string.IsNullOrEmpty(tipo)) query = query.Where(h => h.TipoVivienda == tipo);
-            if (patio.HasValue && patio.Value) query = query.Where(h => h.TienePatioCerrado);
-            if (mascotas.HasValue && mascotas.Value) query = query.Where(h => h.TieneOtrasMascotas); // Si busca que TENGA, filtra true. Si busca que NO tenga, filtra false? Depende la lógica.
-            // Corrección lógica filtro: Generalmente la ONG busca "Que NO tenga mascotas" o "Que acepte con mascotas".
-            // Para simplificar: Los filtros booleanos aquí funcionan como "Requisito Excluyente".
-            // Si mando patio=true, SOLO traigo los que tienen patio.
+            
+            // Lógica corregida: Filtra si es true O false. 
+            // Si el front manda patio=true, busca con patio. Si manda patio=false, busca sin patio.
+            if (patio.HasValue) query = query.Where(h => h.TienePatioCerrado == patio.Value);
+            
+            // Aquí está el error clave: Antes tenías (mascotas.Value) lo que ignoraba el false.
+            if (mascotas.HasValue) query = query.Where(h => h.TieneOtrasMascotas == mascotas.Value);
             
             if (ninos.HasValue) query = query.Where(h => h.TieneNinos == ninos.Value);
-            if (cuidados.HasValue && cuidados.Value) query = query.Where(h => h.AceptaCuidadosEspeciales);
+            
+            if (cuidados.HasValue) query = query.Where(h => h.AceptaCuidadosEspeciales == cuidados.Value);
 
             var lista = await query.ToListAsync();
 
@@ -155,18 +158,61 @@ namespace AnimalConnect.Backend.Controllers
             return Ok(resultado.OrderBy(x => x.Distancia));
         }
 
-        // PUT: api/Hogares/renovar/{id}
+        // 1. EDITAR HOGAR (PUT)
+        [HttpPut("{id}")]
+        public async Task<IActionResult> EditarHogar(int id, [FromBody] NuevoHogarDto dto)
+        {
+            var hogar = await _context.HogaresTransitorios.FindAsync(id);
+            if (hogar == null) return NotFound("Hogar no encontrado.");
+
+            // Validar que el usuario sea el dueño
+            if (hogar.UsuarioId != dto.UsuarioId) return Unauthorized();
+
+            // Actualizamos campos
+            hogar.DireccionAproximada = dto.Direccion;
+            hogar.Latitud = dto.Latitud;
+            hogar.Longitud = dto.Longitud;
+            hogar.TipoVivienda = dto.TipoVivienda;
+            hogar.TienePatioCerrado = dto.TienePatio;
+            hogar.TieneOtrasMascotas = dto.TieneMascotas;
+            hogar.TieneNinos = dto.TieneNinos;
+            hogar.DisponibilidadHoraria = dto.Disponibilidad;
+            hogar.TiempoCompromiso = dto.Tiempo;
+            hogar.AceptaCuidadosEspeciales = dto.CuidadosEsp;
+            
+            // Al editar, también renovamos la fecha para que suba en el listado
+            hogar.UltimaActualizacion = DateTime.Now;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Datos del hogar actualizados correctamente." });
+        }
+
+        // 2. ELIMINAR HOGAR (DELETE)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> EliminarHogar(int id)
+        {
+            var hogar = await _context.HogaresTransitorios.FindAsync(id);
+            if (hogar == null) return NotFound();
+
+            _context.HogaresTransitorios.Remove(hogar);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Hogar eliminado y dado de baja del sistema." });
+        }
+
+        // 3. RENOVAR / REACTIVAR (PUT) - (Asegúrate de que este esté presente)
         [HttpPut("renovar/{id}")]
         public async Task<IActionResult> RenovarHogar(int id)
         {
             var hogar = await _context.HogaresTransitorios.FindAsync(id);
             if (hogar == null) return NotFound();
 
-            // Actualizamos la fecha a HOY
             hogar.UltimaActualizacion = DateTime.Now;
+            // Si estaba en pausa o inactivo, lo reactivamos
+            hogar.Estado = "Activo"; 
+            
             await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Disponibilidad renovada por 30 días." });
+            return Ok(new { message = "Publicación renovada por 30 días más." });
         }
     }
 }

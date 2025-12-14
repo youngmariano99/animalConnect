@@ -60,36 +60,36 @@
             </div>
         </div>
 
-        <div class="mt-8 pt-8 border-t border-gray-200">
-            <div class="bg-purple-50 p-6 rounded-xl border border-purple-100 flex flex-col md:flex-row justify-between items-center">
+        <div class="mt-8 pt-8 border-t border-gray-200" id="sec-ongs-container"> <div class="bg-purple-50 p-6 rounded-xl border border-purple-100 flex flex-col md:flex-row justify-between items-center">
                 <div class="mb-4 md:mb-0">
-                    <h3 class="text-lg font-bold text-purple-800"><i class="fa-solid fa-users-rectangle mr-2"></i>Organizaciones y Refugios</h3>
-                    <p class="text-sm text-purple-600">¿Tienes un refugio o grupo de rescate? Regístralo para gestionar tránsitos y adopciones.</p>
+                    <h3 id="sec-ongs-title" class="text-lg font-bold text-purple-800">
+                        <i class="fa-solid fa-users-rectangle mr-2"></i>Organizaciones y Refugios
+                    </h3>
+                    <p class="text-sm text-purple-600">¿Tienes un refugio? Regístralo para gestionar tránsitos.</p>
                 </div>
-                <a href="ong-wizard.html" class="bg-purple-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-purple-700 shadow-md transition">
+                <a href="ong-wizard.html" id="btn-crear-ong" class="bg-purple-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-purple-700 shadow-md transition">
                     Crear Organización
                 </a>
             </div>
-            
-        <div id="mis-ongs-list" class="mt-4 space-y-2"></div>
-
-        <div class="mt-4 pt-4 border-t border-gray-200">
-        <div class="bg-teal-50 p-6 rounded-xl border border-teal-100 flex flex-col md:flex-row justify-between items-center relative overflow-hidden">
-            <i class="fa-solid fa-house-chimney-medical absolute -right-4 -bottom-4 text-8xl text-teal-100 opacity-50 pointer-events-none"></i>
-            
-            <div class="mb-4 md:mb-0 z-10">
-                <h3 class="text-lg font-bold text-teal-800 flex items-center">
-                    <i class="fa-solid fa-hand-holding-heart mr-2"></i> Quiero ser Hogar de Tránsito
-                </h3>
-                <p class="text-sm text-teal-600 max-w-md">
-                    Ofrece un espacio temporal en tu casa para mascotas que esperan adopción. ¡Salvas vidas sin compromiso de por vida!
-                </p>
-            </div>
-            <a href="hogar-wizard.html" class="z-10 bg-teal-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-teal-700 shadow-md transition flex items-center">
-                <i class="fa-solid fa-plus-circle mr-2"></i> Ofrecer mi Hogar
-            </a>
+            <div id="mis-ongs-list" class="mt-4 space-y-2"></div>
         </div>
-    </div>
+
+                <div class="mt-4 pt-4 border-t border-gray-200">
+            <div class="bg-teal-50 p-6 rounded-xl border border-teal-100 flex flex-col md:flex-row justify-between items-center relative overflow-hidden">
+                <i class="fa-solid fa-house-chimney-medical absolute -right-4 -bottom-4 text-8xl text-teal-100 opacity-50 pointer-events-none"></i>
+                
+                <div class="mb-4 md:mb-0 z-10">
+                    <h3 class="text-lg font-bold text-teal-800 flex items-center">
+                        <i class="fa-solid fa-hand-holding-heart mr-2"></i> Quiero ser Hogar de Tránsito
+                    </h3>
+                    <p class="text-sm text-teal-600 max-w-md">Ofrece un espacio temporal en tu casa.</p>
+                </div>
+                
+                <a href="hogar-wizard.html" id="btn-ofrecer-hogar" class="z-10 bg-teal-600 text-white px-5 py-2 rounded-lg font-bold hover:bg-teal-700 shadow-md transition flex items-center">
+                    <i class="fa-solid fa-plus-circle mr-2"></i> Ofrecer mi Hogar
+                </a>
+            </div>
+        </div>
 </div>
 
     </div>
@@ -157,53 +157,114 @@
     async function verificarEstadoHogar() {
         try {
             const res = await fetch(`${API_URL}/Hogares/mi-hogar/${usuario.id}`);
-            const btnHogar = document.getElementById('btn-ofrecer-hogar'); // Darle ID al botón en HTML
+            const btnHogar = document.getElementById('btn-ofrecer-hogar'); 
 
             if (res.ok) {
                 const hogar = await res.json();
-                // Si existe, calculamos si está vencido (Punto 4)
-                const fechaAct = new Date(hogar.ultimaActualizacion);
-                const diasSinAct = (new Date() - fechaAct) / (1000 * 60 * 60 * 24);
                 
-                if (diasSinAct > 30) {
-                    // VENCIDO
-                    btnHogar.outerHTML = `
-                        <button onclick="renovarHogar(${hogar.id})" class="bg-red-500 text-white px-5 py-2 rounded-lg font-bold hover:bg-red-600 shadow-md transition flex items-center animate-pulse">
-                            <i class="fa-solid fa-rotate-right mr-2"></i> Reconfirmar Disponibilidad
-                        </button>`;
-                } else {
-                    // ACTIVO
-                    btnHogar.outerHTML = `
-                        <div class="flex gap-2">
-                            <span class="bg-teal-100 text-teal-700 px-4 py-2 rounded-lg font-bold border border-teal-200 flex items-center cursor-default">
-                                <i class="fa-solid fa-check-circle mr-2"></i> Hogar Activo
-                            </span>
-                            <button onclick="darBajaHogar(${hogar.id})" class="text-gray-400 hover:text-red-500 px-2" title="Dejar de transitar">
-                                <i class="fa-solid fa-trash"></i>
+                // Calculamos días desde última actualización
+                const fechaAct = new Date(hogar.ultimaActualizacion);
+                const hoy = new Date();
+                const diffTime = Math.abs(hoy - fechaAct);
+                const diasPasados = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                const diasRestantes = 30 - diasPasados;
+
+                let contenidoHtml = '';
+
+                // Lógica de "Semáforo" y Botón Reactivar
+                if (diasPasados >= 30) {
+                    // --- VENCIDO (ROJO) ---
+                    contenidoHtml = `
+                        <div class="flex flex-col sm:flex-row gap-3 w-full">
+                            <button onclick="renovarHogar(${hogar.id})" class="flex-1 bg-red-50 text-red-600 px-4 py-2 rounded-lg font-bold border border-red-200 hover:bg-red-100 transition animate-pulse text-sm">
+                                <i class="fa-solid fa-triangle-exclamation mr-2"></i> Publicación Pausada (Reactivar)
                             </button>
-                        </div>
-                    `;
+                            ${generarBotonesGestion(hogar.id)}
+                        </div>`;
+                } else if (diasPasados >= 25) {
+                    // --- POR VENCER (AMARILLO) - Mostramos botón renovar preventivo ---
+                    contenidoHtml = `
+                        <div class="flex flex-col sm:flex-row gap-3 w-full">
+                            <button onclick="renovarHogar(${hogar.id})" class="flex-1 bg-yellow-50 text-yellow-700 px-4 py-2 rounded-lg font-bold border border-yellow-200 hover:bg-yellow-100 transition text-sm">
+                                <i class="fa-solid fa-clock mr-2"></i> Renovar (Vence en ${diasRestantes} días)
+                            </button>
+                            ${generarBotonesGestion(hogar.id)}
+                        </div>`;
+                } else {
+                    // --- ACTIVO (VERDE) ---
+                    contenidoHtml = `
+                        <div class="flex flex-col sm:flex-row gap-3 w-full items-center justify-between">
+                            <span class="text-teal-700 font-bold text-sm bg-teal-50 px-3 py-1 rounded border border-teal-100">
+                                <i class="fa-solid fa-check-circle mr-1"></i> Activo (${diasRestantes} días)
+                            </span>
+                            ${generarBotonesGestion(hogar.id)}
+                        </div>`;
                 }
+
+                btnHogar.outerHTML = contenidoHtml;
             }
         } catch (e) { console.error("Error verificando Hogar", e); }
     }
 
+    // Función auxiliar para no repetir código de botones Editar/Eliminar
+    function generarBotonesGestion(id) {
+        return `
+            <div class="flex gap-2">
+                <a href="hogar-wizard.html?editar=true" class="bg-white text-gray-600 border border-gray-300 px-3 py-2 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition shadow-sm" title="Editar datos">
+                    <i class="fa-solid fa-pen"></i>
+                </a>
+                <button onclick="darBajaHogar(${id})" class="bg-white text-gray-600 border border-gray-300 px-3 py-2 rounded-lg hover:bg-red-50 hover:text-red-600 transition shadow-sm" title="Eliminar Hogar">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </div>
+        `;
+    }
+
     // Lógica de renovación
     async function renovarHogar(id) {
-        if(!confirm("¿Sigues disponible para recibir animales?")) return;
+        const btn = event.target.closest('button');
+        const icono = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+        
         try {
-            await fetch(`${API_URL}/Hogares/renovar/${id}`, { method: 'PUT' });
-            Swal.fire('¡Gracias!', 'Tu hogar vuelve a estar visible en el mapa.', 'success');
-            verificarEstadoHogar(); // Recargar botón
-        } catch(e) { console.error(e); }
+            const res = await fetch(`${API_URL}/Hogares/renovar/${id}`, { method: 'PUT' });
+            if(res.ok) {
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Publicación Renovada!',
+                    text: 'Tu hogar estará visible por 30 días más.',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                setTimeout(() => location.reload(), 2000);
+            }
+        } catch(e) { 
+            console.error(e);
+            btn.innerHTML = icono; 
+        }
     }
 
     async function darBajaHogar(id) {
-        if(!confirm("¿Deseas dar de baja tu hogar de tránsito?")) return;
-        // Aquí deberías implementar el DELETE en el backend si quieres borrarlo físico
-        // await fetch(`${API_URL}/Hogares/${id}`, { method: 'DELETE' });
-        // location.reload();
-        alert("Función pendiente de backend (DELETE)"); 
+        const result = await Swal.fire({
+            title: '¿Eliminar Hogar?',
+            text: "Dejarás de aparecer en las búsquedas. Tendrás que registrarte de nuevo si quieres volver.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#9ca3af',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                const res = await fetch(`${API_URL}/Hogares/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    Swal.fire('Eliminado', 'Tu hogar ha sido dado de baja.', 'success')
+                        .then(() => location.reload());
+                }
+            } catch(e) { console.error(e); }
+        }
     }
 
         function logout() {

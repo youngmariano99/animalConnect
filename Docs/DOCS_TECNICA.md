@@ -301,3 +301,28 @@ Se modificó el `AuthController` para realizar una validación en dos pasos:
     * *Pendiente:* Retorna error 403 o mensaje de advertencia "En espera de aprobación".
     * *Rechazado:* Bloquea el acceso.
     * *Aprobado:* Permite el ingreso y emisión de token (o sesión local).
+
+## 15. Arquitectura del Ecosistema de Organizaciones y Tránsitos (Sprint G)
+
+Este módulo introduce dos nuevos actores estratégicos con reglas de negocio específicas de privacidad y validación.
+
+### Modelo de Datos
+* **Organizaciones:** Se modelaron como perfiles independientes (`PerfilOrganizacion`) vinculados a usuarios mediante una tabla intermedia `MiembrosOrganizacion`. Esto permite escalabilidad futura (varios admins por ONG).
+* **Hogares Transitorios:** Entidad 1 a 1 con el `Usuario`. Almacena capacidades logísticas (Patio, Vehículo) y preferencias de convivencia.
+
+### Estrategia de Privacidad y Seguridad
+A diferencia de las veterinarias (públicas), los hogares de tránsito son direcciones privadas.
+* **Acceso Restringido:** El endpoint de búsqueda (`GET /api/Hogares/buscar`) implementa una validación de seguridad en dos niveles:
+    1.  Verifica el token del usuario solicitante.
+    2.  Consulta si dicho usuario pertenece a una Organización con `EstadoVerificacion = 'Aprobado'`.
+* **Resultado:** Si la validación falla, la API retorna `401 Unauthorized`, protegiendo la base de datos de hogares de accesos no autorizados o scrapping.
+
+### Motor de Búsqueda y Filtros
+Se implementó un filtrado en servidor (`IQueryable`) para optimizar la respuesta:
+* **Lógica Excluyente:** Los filtros booleanos (ej: `tieneMascotas`) funcionan con lógica estricta. Si la ONG busca "Sin Mascotas", el sistema filtra activamente `TieneMascotas == false`.
+* **Geolocalización Dinámica:** Se reutilizó el `GeoService` para calcular distancias en tiempo real desde el punto de referencia de la búsqueda (no necesariamente la sede de la ONG, permitiendo búsquedas en otras zonas).
+
+### Ciclo de Vida y "Higiene de Datos"
+Para evitar la frustración de contactar hogares inactivos:
+* **Caducidad Automática:** La API filtra por defecto cualquier hogar cuya `UltimaActualizacion` sea mayor a 30 días.
+* **Renovación:** El usuario dispone de un botón "Reconfirmar Disponibilidad" en su perfil que ejecuta un `PUT` ligero para actualizar el *timestamp*, volviendo a hacer visible el hogar en el mapa operativo.

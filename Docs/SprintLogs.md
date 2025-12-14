@@ -190,28 +190,25 @@ Se reestructuró el Frontend para diferenciar claramente los casos de uso.
 * [ ] **Guía de Servicios:** Frontend tipo "Páginas Amarillas" con filtros por tags.
 * [ ] **Wizard de Comercios:** Adaptación del Wizard de clínicas para PetShops.
 
-### 📅 Sprint G: Ecosistema de Organizaciones y Tránsitos.
-**Objetivo:** Introducir la Organización (ONG) y el Hogar de Tránsito. Esto eleva la plataforma de ser un "registro civil de mascotas" a una herramienta de gestión operativa para el rescate animal.
+### 📅 Sprint G: Ecosistema de Organizaciones y Tránsitos (Completado)
+**Estado:** ✅ Finalizado 
+**Objetivo:** Crear un sistema integral para conectar Organizaciones de Rescate con Hogares de Tránsito voluntarios, garantizando privacidad y eficiencia operativa.
 
-**Paso 1: Backend - Estructura de Organizaciones**
-* [ ] **Crear entidad PerfilOrganizacion** (Nombre, Logo, Redes, Zona, EstadoVerificacion).
-* [ ] **Crear entidad MiembrosOrganizacion** (Vincula Usuario <-> Organizacion).
-* [ ] **Endpoint para crear Organización** (solicitud).
-* [ ] **Endpoint para que Admin apruebe/rechace Organización.**
-
-**Paso 2: Backend - Estructura de Hogares**
-* [ ] **Crear entidad HogarTransitorio vinculada a Usuario.**
-* [ ] **Definir los campos del "Wizard" (Tipo vivienda, Patio, etc.) en el modelo.**
-* [ ] **Reutilización: Veremos si usamos la tabla Atributos actual o columnas directas.** Para cosas booleanas fijas (tiene patio, tiene rejas),columnas directas es más fácil de filtrar en SQL. Para cosas subjetivas, Atributos.
-
-**Paso 3: Frontend - Wizard de Organización**
-* [ ] **Crear vista para dar de alta la ONG** (Similar al de Vets).
-* [ ] **Panel de Organización:** "Mi Staff", "Mis Búsquedas".**
-
-**Paso 4: Frontend - Wizard de Hogar Transitorio (Ciudadano)**
-* [ ] **En el perfil del ciudadano, botón "Quiero ser Hogar de Tránsito".**
-* [ ] **Formulario paso a paso** (Vivienda, Disponibilidad, Preferencias).
-
-**Paso 5: Lógica de Negocio - Buscador Privado**
-* [ ] **Endpoint GET /api/Hogares/buscar protegido** (Solo para roles ONG/Admin).
-* [ ] **Interfaz de búsqueda con mapa** (pines ofuscados o zonas) y filtros.
+* [x] **Arquitectura de Entidades (Backend):**
+    * Creación de `PerfilOrganizacion` y `MiembroOrganizacion` para gestión multi-usuario de ONGs.
+    * Creación de `HogarTransitorio` con atributos específicos (patio, niños, disponibilidad).
+    * Migración de base de datos (`AgregarOrganizacionesYHogares`).
+* [x] **Gestión de Organizaciones:**
+    * Wizard de registro para ONGs (`ong-wizard.html`).
+    * Módulo de aprobación en Panel SuperAdmin (Validación municipal).
+    * Bloqueo de funciones avanzadas hasta obtener verificación "Aprobado".
+* [x] **Red de Hogares de Tránsito:**
+    * Wizard de postulación para ciudadanos (`hogar-wizard.html`) con geolocalización privada.
+    * Lógica de higiene de datos: Filtro automático de hogares inactivos (>30 días) y endpoint de renovación.
+* [x] **Panel de Operaciones (ONG):**
+    * Desarrollo de `panel-ong.html` exclusivo para organizaciones verificadas.
+    * **Buscador Inteligente:** Endpoint `GET /api/Hogares/buscar` con filtros combinados (Geo + Requisitos + Excluyentes).
+    * Visualización en mapa con protección de datos (solo visible para ONGs).
+* [x] **UX/UI y Estados:**
+    * Lógica reactiva en `perfil.html` para mostrar estados (Pendiente/Aprobado/Vencido).
+    * Corrección de estilos en filtros y tarjetas interactivas.
