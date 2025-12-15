@@ -26,16 +26,7 @@
                     <span class="text-xs text-purple-200 uppercase tracking-wider">Panel de Gestión</span>
                 </div>
             </div>
-            <a href="index.html" class="text-sm bg-purple-800 hover:bg-purple-900 px-3 py-1 rounded transition">
-                <i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> Salir
-            </a>
-        </div>
-    </nav>
 
-    <div class="flex flex-1 overflow-hidden">
-        
-        <aside id="sidebar-filtros" class="w-80 bg-white shadow-xl z-40 flex flex-col overflow-y-auto">
-            
             <div class="p-4 bg-purple-800 text-white flex gap-2">
                 <button onclick="cambiarTab('mapa')" id="tab-mapa" class="flex-1 py-1 px-2 bg-white/20 rounded font-bold text-xs hover:bg-white/30 transition">
                     <i class="fa-solid fa-map mr-1"></i> Mapa
@@ -44,6 +35,18 @@
                     <i class="fa-solid fa-users mr-1"></i> Equipo
                 </button>
             </div>
+            
+            <a href="index.html" class="text-sm bg-purple-800 hover:bg-purple-900 px-3 py-1 rounded transition">
+                <i class="fa-solid fa-arrow-right-from-bracket mr-1"></i> Salir
+            </a>
+        </div>
+    </nav>
+
+    <div id="layout-principal" class="flex flex-1 overflow-hidden hidden">
+        
+        <aside id="sidebar-filtros" class="w-80 bg-white shadow-xl z-40 flex flex-col overflow-y-auto">
+            
+            
 
             <div class="p-5 border-b border-gray-100">
                 <h2 class="font-bold text-gray-700 mb-4 flex items-center">

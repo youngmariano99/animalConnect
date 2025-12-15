@@ -31,38 +31,61 @@ async function verificarAccesoOng() {
     try {
         const res = await fetch(`${API_URL}/Organizaciones/mis-ongs/${user.id}`);
         const ongs = await res.json();
-        
-        // Buscamos si tiene alguna aprobada
         const aprobada = ongs.find(o => o.estadoVerificacion === 'Aprobado');
         
         if (!aprobada) {
-            bloquearAcceso();
-        } else {
-            // NUEVO: Verificar que sea ADMIN
-            if (aprobada.rol !== 'Admin' && aprobada.rol !== 'Creador') {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Acceso Restringido',
-                    text: 'Solo los administradores pueden gestionar el panel. Tu rol es: ' + aprobada.rol,
-                    confirmButtonText: 'Entendido'
-                }).then(() => window.location.href = 'index.html'); // Volver al inicio
-                return;
-            }
-
-            currentOngId = aprobada.id;
-            document.getElementById('ong-nombre-header').innerText = aprobada.nombre;
-            cargarMiembros();
+            bloquearAcceso("No tienes ninguna organización aprobada.");
+            return;
         }
-    } catch (e) { console.error(e); }
+
+        // --- VALIDACIÓN DE ROL MEJORADA (Manejo de Mayúsculas/Minúsculas) ---
+        // Algunos servidores devuelven 'Rol', otros 'rol'. Verificamos ambos.
+        const rolRaw = aprobada.rol || aprobada.Rol || ''; 
+        const rol = rolRaw.toLowerCase(); 
+
+        console.log("Rol detectado:", rol); // Para depurar en consola (F12)
+
+        if (rol !== 'admin' && rol !== 'creador') {
+            bloquearAcceso(`Tu rol es '${rolRaw}'. Se requiere Admin o Creador.`);
+            return;
+        }
+
+        // --- SI PASA LA SEGURIDAD ---
+        currentOngId = aprobada.id;
+        document.getElementById('ong-nombre-header').innerText = aprobada.nombre;
+        
+        // 1. Mostrar la pantalla
+        const layout = document.getElementById('layout-principal');
+        layout.classList.remove('hidden');
+
+        // 2. CORRECCIÓN DEL MAPA (IMPORTANTE)
+        // Le damos 100ms para que el navegador renderice el div y luego ajustamos el mapa
+        setTimeout(() => {
+            if (mapOng) mapOng.invalidateSize();
+        }, 100);
+
+        cargarMiembros(); 
+    } catch (e) { 
+        console.error(e);
+        bloquearAcceso("Error de conexión.");
+    }
 }
 
-function bloquearAcceso() {
+function bloquearAcceso(mensaje) {
+    // Ocultar todo por si acaso
+    document.getElementById('layout-principal').classList.add('hidden');
+    
     Swal.fire({
         icon: 'error',
-        title: 'Acceso Denegado',
-        text: 'No tienes permisos para ver este panel.',
-        confirmButtonText: 'Volver'
-    }).then(() => window.location.href = 'perfil.html');
+        title: 'Acceso Restringido',
+        text: mensaje,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        confirmButtonText: 'Volver al Perfil',
+        confirmButtonColor: '#7e22ce'
+    }).then(() => {
+        window.location.href = 'perfil.html';
+    });
 }
 
 function initMap(loc) {
@@ -140,23 +163,33 @@ function cambiarTab(tab) {
     const sidebar = document.getElementById('sidebar-filtros');
     const viewMapa = document.getElementById('view-mapa');
     const viewEquipo = document.getElementById('view-equipo');
-    const tabMapa = document.getElementById('tab-mapa');
-    const tabEquipo = document.getElementById('tab-equipo');
+    
+    // Botones del Navbar
+    const btnMapa = document.getElementById('tab-mapa');
+    const btnEquipo = document.getElementById('tab-equipo');
+
+    // Estilos de estado activo/inactivo
+    const claseActiva = "px-3 py-1 bg-white text-purple-800 rounded shadow-sm font-bold text-xs transition flex items-center";
+    const claseInactiva = "px-3 py-1 text-purple-200 hover:bg-white/10 rounded font-bold text-xs transition flex items-center";
 
     if(tab === 'mapa') {
-        sidebar.classList.remove('hidden'); // Mostrar filtros
+        // Mostrar Mapa y Filtros
+        sidebar.classList.remove('hidden'); 
         viewMapa.classList.remove('hidden');
         viewEquipo.classList.add('hidden');
         
-        tabMapa.className = "flex-1 py-1 px-2 bg-white/20 rounded font-bold text-xs transition";
-        tabEquipo.className = "flex-1 py-1 px-2 bg-transparent rounded font-bold text-xs hover:bg-white/10 transition";
+        // Actualizar botones
+        btnMapa.className = claseActiva;
+        btnEquipo.className = claseInactiva;
     } else {
-        sidebar.classList.add('hidden'); // Ocultar filtros
+        // Mostrar Equipo (Ocultar Sidebar lateral)
+        sidebar.classList.add('hidden');
         viewMapa.classList.add('hidden');
         viewEquipo.classList.remove('hidden');
         
-        tabEquipo.className = "flex-1 py-1 px-2 bg-white/20 rounded font-bold text-xs transition";
-        tabMapa.className = "flex-1 py-1 px-2 bg-transparent rounded font-bold text-xs hover:bg-white/10 transition";
+        // Actualizar botones
+        btnEquipo.className = claseActiva;
+        btnMapa.className = claseInactiva;
     }
 }
 
