@@ -185,6 +185,9 @@ function renderizarFeed(posts) {
             ? `<span class="badge-vet text-[10px] px-2 py-0.5 rounded-full font-bold ml-2">Vet</span>` 
             : ``; 
 
+        const badgeOng = p.nombreOng 
+        ? `<span class="bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded-full ml-2 border border-purple-200" title="Miembro de Organización"><i class="fa-solid fa-heart mr-1"></i>${p.nombreOng}</span>`
+        : '';
         let htmlComentarios = p.comentarios.map(c => crearHtmlComentario(c)).join('');
         
         let btnMasComentarios = '';
@@ -217,11 +220,10 @@ function renderizarFeed(posts) {
                 <div class="flex items-center">
                     <img src="${avatarUrl}" class="w-10 h-10 rounded-full mr-3 border border-gray-100">
                     <div>
-                        <div class="flex items-center">
-                            <p class="font-bold text-sm text-gray-800">${p.autor}</p>
-                            ${badgeAutor}
-                            ${puntosHtml}
-                        </div>
+                        <div class="flex items-center flex-wrap"> <p class="font-bold text-sm text-gray-800">${p.autor}</p>
+                        ${badgeAutor}
+                        ${badgeOng} ${puntosHtml}
+                    </div>
                         <p class="text-xs text-gray-400 flex items-center">
                             <i class="fa-regular fa-clock mr-1"></i> ${new Date(p.fechaPublicacion).toLocaleDateString()}
                         </p>
@@ -253,6 +255,10 @@ function crearHtmlComentario(c) {
     const badgeCom = c.esVeterinario 
         ? `<i class="fa-solid fa-circle-check text-blue-500 ml-1" title="Profesional Verificado"></i>` 
         : '';
+
+    const badgeOng = c.nombreOng 
+        ? `<span class="bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded-full ml-2 border border-purple-200" title="Miembro de Organización"><i class="fa-solid fa-heart mr-1"></i>${c.nombreOng}</span>`
+        : '';
     
     const avatarUrl = `https://ui-avatars.com/api/?name=${c.autor}&background=ffffff&color=9ca3af&size=24`;
 
@@ -261,7 +267,7 @@ function crearHtmlComentario(c) {
             <img src="${avatarUrl}" class="w-6 h-6 rounded-full mt-1 opacity-70">
             <div class="bg-white p-2.5 rounded-lg rounded-tl-none border border-gray-200 shadow-sm text-sm flex-1 ${c.esVeterinario ? 'border-blue-200 bg-blue-50/30' : ''}">
                 <div class="flex justify-between items-baseline mb-0.5">
-                    <span class="font-bold text-gray-800 text-xs mr-2">${c.autor} ${badgeCom}</span>
+                    <span class="font-bold text-gray-800 text-xs mr-2">${c.autor} ${badgeCom} ${badgeOng}</span>
                     <span class="text-[10px] text-gray-400">${new Date(c.fecha).toLocaleDateString()}</span>
                 </div>
                 <p class="text-gray-600 leading-snug">${c.contenido}</p>

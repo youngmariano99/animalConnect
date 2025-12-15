@@ -224,3 +224,16 @@ function generarBotonWsp(a) {
         <i class="fa-brands fa-whatsapp text-lg mr-2 group-hover:scale-110 transition"></i> Contactar ahora
     </a>`;
 }
+
+function obtenerBadgeOng(animal) {
+    if (animal.usuario && animal.usuario.organizaciones && animal.usuario.organizaciones.length > 0) {
+        // Buscamos alguna aprobada
+        const ong = animal.usuario.organizaciones.find(o => o.organizacion && o.organizacion.estadoVerificacion === 'Aprobado');
+        if (ong) {
+            return `<div class="absolute top-2 left-2 bg-purple-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-md z-10">
+                        <i class="fa-solid fa-hand-holding-heart mr-1"></i> ${ong.organizacion.nombre}
+                    </div>`;
+        }
+    }
+    return '';
+}

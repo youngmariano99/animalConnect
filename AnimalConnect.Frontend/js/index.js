@@ -101,10 +101,14 @@ async function cargarPerdidos() {
 
                 const iconoEspecie = a.idEspecie === 1 ? '<i class="fa-solid fa-dog"></i>' : '<i class="fa-solid fa-cat"></i>';
 
+                // 1. LLAMAMOS A LA FUNCIÓN AQUÍ
+                const htmlOng = obtenerBadgeOng(a); 
+
                 grid.innerHTML += `
                     <div class="bg-white rounded-lg shadow overflow-hidden border-l-4 ${colorBorde} hover:shadow-md transition">
                         <div class="relative h-40">
-                            <img src="${a.imagenUrl || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover">
+                            
+                            ${htmlOng} <img src="${a.imagenUrl || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover">
                             <div class="absolute top-2 right-2">${badge}</div>
                             <div class="absolute bottom-2 right-2 bg-white/80 px-2 rounded-full text-gray-700 text-xs shadow">
                                 ${iconoEspecie}
@@ -336,4 +340,17 @@ function generarBotonWsp(a) {
     if (!a.telefonoContacto) return '';
     const num = a.telefonoContacto.replace(/\D/g, '');
     return `<a href="https://wa.me/549${num}" target="_blank" class="flex-1 bg-green-500 text-white text-center px-4 py-2 rounded-lg text-sm font-bold hover:bg-green-600 transition flex items-center justify-center"><i class="fa-brands fa-whatsapp mr-2"></i> Contactar</a>`;
+}
+
+function obtenerBadgeOng(animal) {
+    if (animal.usuario && animal.usuario.organizaciones && animal.usuario.organizaciones.length > 0) {
+        // Buscamos alguna aprobada
+        const ong = animal.usuario.organizaciones.find(o => o.organizacion && o.organizacion.estadoVerificacion === 'Aprobado');
+        if (ong) {
+            return `<div class="absolute top-2 left-2 bg-purple-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-md z-10">
+                        <i class="fa-solid fa-hand-holding-heart mr-1"></i> ${ong.organizacion.nombre}
+                    </div>`;
+        }
+    }
+    return '';
 }

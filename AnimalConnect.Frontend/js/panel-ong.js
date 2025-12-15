@@ -3,6 +3,7 @@
 let mapOng, userLocation;
 let markersGroup = L.layerGroup();
 let filtros = { patio: false, cuidados: false, sinMascotas: false, sinNinos: false, radio: 10 };
+let currentOngId = null; // Guardaremos el ID de la ONG aprobada
 const user = getUsuario();
 
 // Validación simple
@@ -20,6 +21,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+document.addEventListener('click', (e) => {
+    if(!e.target.closest('#search-user')) {
+        document.getElementById('search-results').classList.add('hidden');
+    }
+});
+
 async function verificarAccesoOng() {
     try {
         const res = await fetch(`${API_URL}/Organizaciones/mis-ongs/${user.id}`);
@@ -29,18 +36,33 @@ async function verificarAccesoOng() {
         const aprobada = ongs.find(o => o.estadoVerificacion === 'Aprobado');
         
         if (!aprobada) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Acceso Restringido',
-                text: 'Necesitas pertenecer a una Organización Aprobada para ver este panel.',
-                confirmButtonText: 'Volver'
-            }).then(() => window.location.href = 'perfil.html');
+            bloquearAcceso();
         } else {
+            // NUEVO: Verificar que sea ADMIN
+            if (aprobada.rol !== 'Admin' && aprobada.rol !== 'Creador') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Acceso Restringido',
+                    text: 'Solo los administradores pueden gestionar el panel. Tu rol es: ' + aprobada.rol,
+                    confirmButtonText: 'Entendido'
+                }).then(() => window.location.href = 'index.html'); // Volver al inicio
+                return;
+            }
+
+            currentOngId = aprobada.id;
             document.getElementById('ong-nombre-header').innerText = aprobada.nombre;
+            cargarMiembros();
         }
-    } catch (e) {
-        console.error(e);
-    }
+    } catch (e) { console.error(e); }
+}
+
+function bloquearAcceso() {
+    Swal.fire({
+        icon: 'error',
+        title: 'Acceso Denegado',
+        text: 'No tienes permisos para ver este panel.',
+        confirmButtonText: 'Volver'
+    }).then(() => window.location.href = 'perfil.html');
 }
 
 function initMap(loc) {
@@ -110,6 +132,159 @@ async function aplicarFiltros() {
     } finally {
         btn.innerHTML = 'Buscar Hogares';
     }
+}
+
+// --- PESTAÑAS ---
+// 2. UX: Ocultar Filtros en Pestaña Equipo
+function cambiarTab(tab) {
+    const sidebar = document.getElementById('sidebar-filtros');
+    const viewMapa = document.getElementById('view-mapa');
+    const viewEquipo = document.getElementById('view-equipo');
+    const tabMapa = document.getElementById('tab-mapa');
+    const tabEquipo = document.getElementById('tab-equipo');
+
+    if(tab === 'mapa') {
+        sidebar.classList.remove('hidden'); // Mostrar filtros
+        viewMapa.classList.remove('hidden');
+        viewEquipo.classList.add('hidden');
+        
+        tabMapa.className = "flex-1 py-1 px-2 bg-white/20 rounded font-bold text-xs transition";
+        tabEquipo.className = "flex-1 py-1 px-2 bg-transparent rounded font-bold text-xs hover:bg-white/10 transition";
+    } else {
+        sidebar.classList.add('hidden'); // Ocultar filtros
+        viewMapa.classList.add('hidden');
+        viewEquipo.classList.remove('hidden');
+        
+        tabEquipo.className = "flex-1 py-1 px-2 bg-white/20 rounded font-bold text-xs transition";
+        tabMapa.className = "flex-1 py-1 px-2 bg-transparent rounded font-bold text-xs hover:bg-white/10 transition";
+    }
+}
+
+// --- GESTIÓN DE MIEMBROS ---
+
+async function cargarMiembros() {
+    if(!currentOngId) return;
+    const tbody = document.getElementById('lista-miembros');
+    
+    try {
+        const res = await fetch(`${API_URL}/Organizaciones/${currentOngId}/miembros`);
+        const miembros = await res.json();
+        
+        document.getElementById('count-miembros').innerText = miembros.length;
+        tbody.innerHTML = '';
+
+        miembros.forEach(m => {
+            const esCreador = m.rolEnOrganizacion === 'Creador';
+            // Badge visual del rol
+            let badgeColor = m.rolEnOrganizacion === 'Admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700';
+            if(esCreador) badgeColor = 'bg-yellow-100 text-yellow-700';
+
+            tbody.innerHTML += `
+                <tr class="hover:bg-gray-50">
+                    <td class="p-4 font-medium text-gray-800">${m.nombreUsuario}</td>
+                    <td class="p-4">
+                        <span class="${badgeColor} text-xs font-bold px-2 py-1 rounded uppercase">${m.rolEnOrganizacion}</span>
+                    </td>
+                    <td class="p-4 text-right">
+                        ${!esCreador ? `
+                        <button onclick="eliminarMiembro(${m.id})" class="text-gray-400 hover:text-red-500 transition" title="Eliminar">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>` : ''}
+                    </td>
+                </tr>
+            `;
+        });
+    } catch(e) { console.error(e); }
+}
+
+// Búsqueda de usuarios en tiempo real
+let debounceTimer;
+function buscarUsuarios(query) {
+    const resultsDiv = document.getElementById('search-results');
+    clearTimeout(debounceTimer);
+    
+    if(query.length < 3) {
+        resultsDiv.classList.add('hidden');
+        return;
+    }
+
+    debounceTimer = setTimeout(async () => {
+        try {
+            const res = await fetch(`${API_URL}/Organizaciones/buscar-usuarios?query=${query}`);
+            if(res.ok) {
+                const usuarios = await res.json();
+                renderResultadosBusqueda(usuarios);
+            }
+        } catch(e) { console.error(e); }
+    }, 300);
+}
+
+function renderResultadosBusqueda(usuarios) {
+    const div = document.getElementById('search-results');
+    div.innerHTML = '';
+    div.classList.remove('hidden');
+
+    if(usuarios.length === 0) {
+        div.innerHTML = '<div class="p-3 text-sm text-gray-500 text-center">No se encontraron usuarios.</div>';
+        return;
+    }
+
+    usuarios.forEach(u => {
+        const item = document.createElement('div');
+        item.className = "p-3 hover:bg-purple-50 cursor-pointer border-b border-gray-100 flex justify-between items-center group";
+        item.innerHTML = `
+            <span class="font-bold text-gray-700 text-sm">${u.nombreUsuario}</span>
+            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+                <button onclick="agregarMiembro(${u.id}, 'Voluntario')" class="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded hover:bg-blue-200 font-bold">
+                    + Voluntario
+                </button>
+                <button onclick="agregarMiembro(${u.id}, 'Admin')" class="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded hover:bg-purple-200 font-bold">
+                    + Admin
+                </button>
+            </div>
+        `;
+        div.appendChild(item);
+    });
+}
+
+async function agregarMiembro(usuarioId, rol) {
+    const dto = {
+        ongId: currentOngId,
+        usuarioId: usuarioId,
+        rol: rol
+    };
+
+    try {
+        const res = await fetch(`${API_URL}/Organizaciones/agregar-miembro`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(dto)
+        });
+
+        if(res.ok) {
+            const Toast = Swal.mixin({
+                toast: true, position: 'top-end', showConfirmButton: false, timer: 3000
+            });
+            Toast.fire({ icon: 'success', title: 'Miembro agregado' });
+            
+            document.getElementById('search-user').value = '';
+            document.getElementById('search-results').classList.add('hidden');
+            cargarMiembros(); // Recargar tabla
+        } else {
+            Swal.fire('Error', await res.text(), 'error');
+        }
+    } catch(e) { console.error(e); }
+}
+
+async function eliminarMiembro(id) {
+    if(!confirm("¿Estás seguro de eliminar a este miembro?")) return;
+    
+    try {
+        const res = await fetch(`${API_URL}/Organizaciones/eliminar-miembro/${id}`, { method: 'DELETE' });
+        if(res.ok) {
+            cargarMiembros();
+        }
+    } catch(e) { console.error(e); }
 }
 
 function renderizarResultados(lista) {
