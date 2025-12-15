@@ -28,6 +28,9 @@ namespace AnimalConnect.Backend.Controllers
             var query = _context.Animales
                                 .Include(a => a.Especie)
                                 .Include(a => a.Estado)
+                                .Include(a => a.Usuario)
+                                    .ThenInclude(u => u.Organizaciones)
+                                    .ThenInclude(mo => mo.Organizacion)
                                 .Where(a => a.FechaUltimaRenovacion >= fechaLimite && 
                                             (a.IdEstado == 1 || a.IdEstado == 2 || a.IdEstado == 3));
 

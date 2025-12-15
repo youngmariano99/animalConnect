@@ -85,5 +85,89 @@ namespace AnimalConnect.Backend.Controllers
                                      .ToListAsync();
             return Ok(ongs);
         }
+
+        // --- GESTIÓN DE MIEMBROS ---
+
+        // 1. BUSCAR USUARIOS (Para invitar)
+        // GET: api/Organizaciones/buscar-usuarios?query=juan
+        [HttpGet("buscar-usuarios")]
+        public async Task<ActionResult> BuscarUsuarios([FromQuery] string query)
+        {
+            if (string.IsNullOrWhiteSpace(query) || query.Length < 3)
+                return BadRequest("Escribe al menos 3 letras.");
+
+            var usuarios = await _context.Usuarios
+                .Where(u => u.NombreUsuario.ToLower().Contains(query.ToLower()))
+                .Select(u => new { u.Id, u.NombreUsuario, u.Rol }) // Solo info pública
+                .Take(5)
+                .ToListAsync();
+
+            return Ok(usuarios);
+        }
+
+        // 2. LISTAR MIEMBROS DE UNA ONG
+        [HttpGet("{ongId}/miembros")]
+        public async Task<ActionResult> GetMiembros(int ongId)
+        {
+            var miembros = await _context.MiembrosOrganizaciones
+                .Include(m => m.Usuario)
+                .Where(m => m.PerfilOrganizacionId == ongId)
+                .Select(m => new {
+                    m.Id, // Id de la membresía (para borrar)
+                    m.UsuarioId,
+                    NombreUsuario = m.Usuario.NombreUsuario,
+                    m.RolEnOrganizacion // "Creador", "Admin", "Voluntario"
+                })
+                .ToListAsync();
+
+            return Ok(miembros);
+        }
+
+        // 3. AGREGAR MIEMBRO
+        public class AgregarMiembroDto
+        {
+            public int OngId { get; set; }
+            public int UsuarioId { get; set; }
+            public string Rol { get; set; } = "Voluntario"; // Admin o Voluntario
+        }
+
+        [HttpPost("agregar-miembro")]
+        public async Task<IActionResult> AgregarMiembro([FromBody] AgregarMiembroDto dto)
+        {
+            // Validar que no exista ya
+            var existe = await _context.MiembrosOrganizaciones
+                .AnyAsync(m => m.PerfilOrganizacionId == dto.OngId && m.UsuarioId == dto.UsuarioId);
+            
+            if (existe) return BadRequest("El usuario ya es miembro de la organización.");
+
+            var miembro = new MiembroOrganizacion
+            {
+                PerfilOrganizacionId = dto.OngId,
+                UsuarioId = dto.UsuarioId,
+                RolEnOrganizacion = dto.Rol
+            };
+
+            _context.MiembrosOrganizaciones.Add(miembro);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Miembro agregado correctamente." });
+        }
+
+        // 4. ELIMINAR MIEMBRO
+        [HttpDelete("eliminar-miembro/{id}")]
+        public async Task<IActionResult> EliminarMiembro(int id)
+        {
+            var miembro = await _context.MiembrosOrganizaciones.FindAsync(id);
+            if (miembro == null) return NotFound();
+
+            // Evitar que se borre al Creador (opcional, regla de negocio)
+            if (miembro.RolEnOrganizacion == "Creador") 
+                return BadRequest("No se puede eliminar al creador.");
+
+            _context.MiembrosOrganizaciones.Remove(miembro);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Miembro eliminado." });
+        }
     }
 }

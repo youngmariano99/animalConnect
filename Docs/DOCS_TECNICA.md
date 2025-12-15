@@ -326,3 +326,19 @@ Se implementó un filtrado en servidor (`IQueryable`) para optimizar la respuest
 Para evitar la frustración de contactar hogares inactivos:
 * **Caducidad Automática:** La API filtra por defecto cualquier hogar cuya `UltimaActualizacion` sea mayor a 30 días.
 * **Renovación:** El usuario dispone de un botón "Reconfirmar Disponibilidad" en su perfil que ejecuta un `PUT` ligero para actualizar el *timestamp*, volviendo a hacer visible el hogar en el mapa operativo.
+
+### 15.1 Ciclo de Vida y Gestión de Hogares Transitorios
+Para mantener la calidad de los datos en el mapa de tránsitos, se implementó un sistema de caducidad y renovación manual:
+
+1.  **Estados Calculados (Frontend):**
+    * El estado no se guarda como string en BD, sino que se calcula dinámicamente comparando `DateTime.Now` con `UltimaActualizacion`.
+    * **Activo:** Menos de 25 días desde la última actualización.
+    * **Preventivo:** Entre 25 y 30 días. Se alerta al usuario para que confirme que sigue disponible.
+    * **Inactivo (Soft):** Más de 30 días. El backend filtra estos registros en las búsquedas (`GET /buscar`), por lo que desaparecen del mapa de las ONGs, pero no se borran de la base de datos.
+
+2.  **Mecanismo de Renovación:**
+    * El usuario dispone de una acción de "Reactivar" que impacta en el endpoint `PUT /renovar`. Esto actualiza el timestamp a la fecha actual, volviendo a incluir el hogar en los resultados de búsqueda geoespacial inmediatamente.
+
+3.  **Edición y Baja:**
+    * **Edición:** Se reutiliza el formulario "Wizard" inyectando los datos previos. Al guardar, el sistema actualiza tanto la información como la fecha de `UltimaActualizacion`.
+    * **Baja (Delete):** Eliminación física del registro a petición del usuario.

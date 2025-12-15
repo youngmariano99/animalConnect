@@ -18,6 +18,7 @@ namespace AnimalConnect.Backend.Controllers
         }
 
         // 1. GET: Obtener Muro (Con Filtro Geoespacial)
+        // 1. GET: Obtener Muro
         [HttpGet]
         public async Task<ActionResult> GetPosts(
             [FromQuery] int pagina = 1, 
@@ -25,51 +26,41 @@ namespace AnimalConnect.Backend.Controllers
             [FromQuery] string? categoria = null,
             [FromQuery] double? lat = null, 
             [FromQuery] double? lng = null, 
-            [FromQuery] double radio = 50) // 50km por defecto para comunidad
+            [FromQuery] double radio = 50)
         {
-            // A. Consulta Base (Incluyendo relaciones)
             var query = _context.Posts
                 .Include(p => p.Usuario).ThenInclude(u => u.PerfilVeterinario)
                 .Include(p => p.Usuario).ThenInclude(u => u.PerfilCiudadano)
+                // 👇👇👇 AGREGAR ESTO PARA QUE NO DE ERROR EL BADGE 👇👇👇
+                .Include(p => p.Usuario).ThenInclude(u => u.Organizaciones).ThenInclude(mo => mo.Organizacion)
+                
                 .Include(p => p.Comentarios).ThenInclude(c => c.Usuario).ThenInclude(u => u.PerfilVeterinario)
                 .Include(p => p.Comentarios).ThenInclude(c => c.Usuario).ThenInclude(u => u.PerfilCiudadano)
+                // 👇👇👇 TAMBIÉN PARA LOS COMENTARIOS 👇👇👇
+                .Include(p => p.Comentarios).ThenInclude(c => c.Usuario).ThenInclude(u => u.Organizaciones).ThenInclude(mo => mo.Organizacion)
+                
                 .AsQueryable();
 
-            // B. Filtro Categoría
             if (!string.IsNullOrEmpty(categoria) && categoria != "Todas")
             {
                 query = query.Where(p => p.Categoria == categoria);
             }
 
-            // Ordenar por fecha (más nuevo arriba)
             query = query.OrderByDescending(p => p.FechaPublicacion);
 
-            // C. Ejecución y Filtrado
-            var todosLosPosts = await query.ToListAsync(); // Traemos a memoria
+            var todosLosPosts = await query.ToListAsync();
             var postsFiltrados = todosLosPosts;
 
-            // SI hay ubicación, filtramos por distancia
             if (lat.HasValue && lng.HasValue)
             {
                 postsFiltrados = todosLosPosts.Where(p => 
                 {
-                    // Prioridad 1: Ubicación del Post
                     if (p.Latitud.HasValue && p.Longitud.HasValue)
                         return GeoService.CalcularDistanciaKm(lat.Value, lng.Value, p.Latitud.Value, p.Longitud.Value) <= radio;
-                    
-                    // Prioridad 2: Fallback a ubicación del Usuario (si el post no tiene geo, usamos la casa del autor)
-                    // (Esto requiere que hayas agregado LatitudHome a PerfilCiudadano, si no, omite esta línea)
-                    /* var perfil = p.Usuario.PerfilCiudadano;
-                    if (perfil != null) 
-                         return GeoService.CalcularDistanciaKm(lat.Value, lng.Value, perfil.LatitudHome, perfil.LongitudHome) <= radio;
-                    */
-
-                    // Si no tiene ubicación ni el post ni el autor, lo mostramos por defecto (o lo ocultamos, decisión tuya)
                     return true; 
                 }).ToList();
             }
 
-            // D. Paginación en Memoria (Manual)
             var totalRegistros = postsFiltrados.Count;
             var postsPaginados = postsFiltrados
                 .Skip((pagina - 1) * cantidad)
@@ -81,26 +72,39 @@ namespace AnimalConnect.Backend.Controllers
                     p.Categoria,
                     p.ImagenUrl,
                     p.FechaPublicacion,
-                    p.Latitud, // Devolvemos la data para depurar si quieres
+                    p.Latitud,
                     
                     Autor = p.Usuario.Rol == "Veterinario" 
-                    ? p.Usuario.NombreUsuario // <--- CAMBIO: Usamos el nombre de usuario directo
-                    : (p.Usuario.PerfilCiudadano != null && !string.IsNullOrEmpty(p.Usuario.PerfilCiudadano.NombreCompleto) ? p.Usuario.PerfilCiudadano.NombreCompleto : p.Usuario.NombreUsuario),
+                        ? p.Usuario.NombreUsuario 
+                        : (p.Usuario.PerfilCiudadano != null ? p.Usuario.PerfilCiudadano.NombreCompleto : p.Usuario.NombreUsuario),
                     
                     EsVeterinario = p.Usuario.Rol == "Veterinario",
-                    AutorId = p.UsuarioId,
-                    AutorPuntos = p.Usuario.Rol == "Ciudadano" && p.Usuario.PerfilCiudadano != null ? p.Usuario.PerfilCiudadano.Puntos : 0,
                     
-                    TotalComentarios = p.Comentarios.Count(),
-                    Comentarios = p.Comentarios.OrderByDescending(c => c.Fecha).Take(3).Select(c => new {
+                    // Ahora esto funcionará porque incluimos la relación arriba
+                    NombreOng = p.Usuario.Organizaciones != null 
+                        ? p.Usuario.Organizaciones
+                            .Where(m => m.Organizacion != null && m.Organizacion.EstadoVerificacion == "Aprobado")
+                            .Select(m => m.Organizacion!.Nombre)
+                            .FirstOrDefault()
+                        : null,
+
+                    AutorId = p.UsuarioId,
+                    TotalComentarios = p.Comentarios != null ? p.Comentarios.Count : 0,
+                    
+                    Comentarios = p.Comentarios != null ? p.Comentarios.OrderByDescending(c => c.Fecha).Take(3).Select(c => new {
                         c.Id,
                         c.Contenido,
                         c.Fecha,
-                         Autor = p.Usuario.Rol == "Veterinario" 
-                        ? p.Usuario.NombreUsuario // <--- CAMBIO: Usamos el nombre de usuario directo
-                        : (p.Usuario.PerfilCiudadano != null && !string.IsNullOrEmpty(p.Usuario.PerfilCiudadano.NombreCompleto) ? p.Usuario.PerfilCiudadano.NombreCompleto : p.Usuario.NombreUsuario),
-                        EsVeterinario = c.Usuario.Rol == "Veterinario"
-                    }).OrderBy(c => c.Fecha).ToList()
+                        Autor = c.Usuario.Rol == "Veterinario" ? c.Usuario.NombreUsuario : (c.Usuario.PerfilCiudadano != null ? c.Usuario.PerfilCiudadano.NombreCompleto : c.Usuario.NombreUsuario),
+                        EsVeterinario = c.Usuario.Rol == "Veterinario",
+                        
+                        NombreOng = c.Usuario.Organizaciones != null
+                            ? c.Usuario.Organizaciones
+                                .Where(m => m.Organizacion != null && m.Organizacion.EstadoVerificacion == "Aprobado")
+                                .Select(m => m.Organizacion!.Nombre)
+                                .FirstOrDefault()
+                            : null
+                    }).OrderBy(c => c.Fecha).ToList() : new()
                 })
                 .ToList();
 
@@ -143,17 +147,31 @@ namespace AnimalConnect.Backend.Controllers
                 .Where(c => c.PostId == id)
                 .Include(c => c.Usuario).ThenInclude(u => u.PerfilVeterinario)
                 .Include(c => c.Usuario).ThenInclude(u => u.PerfilCiudadano)
+                // 👇👇👇 AGREGAR ESTO 👇👇👇
+                .Include(c => c.Usuario).ThenInclude(u => u.Organizaciones).ThenInclude(mo => mo.Organizacion)
+                
                 .OrderBy(c => c.Fecha)
                 .Skip((pagina - 1) * cantidad)
                 .Take(cantidad)
-                .Select(c => new {
+                .ToListAsync(); // Traemos a memoria primero para proyectar tranquilos
+
+            var resultado = comentarios.Select(c => new {
                     c.Id, c.Contenido, c.Fecha,
                     Autor = c.Usuario.Rol == "Veterinario" 
-                    ? c.Usuario.NombreUsuario // <--- CAMBIO
-                    : (c.Usuario.PerfilCiudadano != null && !string.IsNullOrEmpty(c.Usuario.PerfilCiudadano.NombreCompleto) ? c.Usuario.PerfilCiudadano.NombreCompleto : c.Usuario.NombreUsuario),
-                    EsVeterinario = c.Usuario.Rol == "Veterinario"
-                }).ToListAsync();
-            return Ok(comentarios);
+                        ? c.Usuario.NombreUsuario 
+                        : (c.Usuario.PerfilCiudadano != null ? c.Usuario.PerfilCiudadano.NombreCompleto : c.Usuario.NombreUsuario),
+                    EsVeterinario = c.Usuario.Rol == "Veterinario",
+                    
+                    // Lógica segura de badge
+                    NombreOng = c.Usuario.Organizaciones != null
+                            ? c.Usuario.Organizaciones
+                                .Where(m => m.Organizacion != null && m.Organizacion.EstadoVerificacion == "Aprobado")
+                                .Select(m => m.Organizacion!.Nombre)
+                                .FirstOrDefault()
+                            : null
+                });
+
+            return Ok(resultado);
         }
 
         [HttpPost("{id}/comentar")]

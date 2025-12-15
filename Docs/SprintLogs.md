@@ -212,3 +212,13 @@ Se reestructuró el Frontend para diferenciar claramente los casos de uso.
 * [x] **UX/UI y Estados:**
     * Lógica reactiva en `perfil.html` para mostrar estados (Pendiente/Aprobado/Vencido).
     * Corrección de estilos en filtros y tarjetas interactivas.
+* [x] **Gestión Avanzada de Hogares (CRUD Completo):**
+    * Implementación de endpoints `PUT /api/Hogares/{id}` (Edición) y `DELETE /api/Hogares/{id}` (Baja).
+    * Adaptación del Frontend (`hogar-wizard.js`) para detectar modo "Edición", precargar datos existentes y actualizar en lugar de crear.
+    * Botones de acción rápida en el perfil (Editar/Eliminar).
+* [x] **Ciclo de Vida y Reactivación de Publicaciones:**
+    * Implementación de lógica de "Semáforo" en el perfil según antigüedad de la actualización:
+        * **Activo (Verde):** 0 a 24 días.
+        * **Por Vencer (Amarillo):** 25 a 30 días (Habilita botón "Renovar").
+        * **Pausado/Vencido (Rojo):** >30 días (Habilita botón "Reactivar" y oculta del mapa público).
+    * Endpoint `PUT /api/Hogares/renovar/{id}` para resetear el contador de días sin perder la información del hogar.
