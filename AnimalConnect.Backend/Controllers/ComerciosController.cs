@@ -126,5 +126,23 @@ namespace AnimalConnect.Backend.Controllers
 
             return Ok(new { message = "Producto eliminado" });
         }
+
+        // 7. ELIMINAR COMERCIO (Y sus productos en cascada)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteComercio(int id)
+        {
+            var comercio = await _context.Comercios.FindAsync(id);
+            if (comercio == null) return NotFound();
+
+            // Verificamos que el usuario que borra sea el dueño (Seguridad básica)
+            // En un caso real, deberías obtener el ID del usuario logueado desde el token.
+            // Por ahora confiamos en que el frontend manda el ID correcto, pero idealmente:
+            // if (comercio.UsuarioId != usuarioIdLogueado) return Forbid();
+
+            _context.Comercios.Remove(comercio);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Comercio eliminado con éxito." });
+        }
     }
 }

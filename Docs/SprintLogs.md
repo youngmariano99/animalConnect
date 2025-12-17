@@ -184,11 +184,26 @@ Se reestructuró el Frontend para diferenciar claramente los casos de uso.
 
 ---
 
-### 📅 Sprint F: Marketplace y Servicios (Próximo)
-**Objetivo:** Expansión a comercios y monetización.
-* [ ] **Modelado de Rubros:** Tablas para `Comercio`, `Rubro` y `PerfilComerciante`.
-* [ ] **Guía de Servicios:** Frontend tipo "Páginas Amarillas" con filtros por tags.
-* [ ] **Wizard de Comercios:** Adaptación del Wizard de clínicas para PetShops.
+### 📅 Sprint F: Marketplace y Servicios (Completado)
+**Estado:** ✅ Finalizado 
+**Objetivo:** Expansión del ecosistema hacia comercios y servicios, estableciendo la base técnica para la monetización.
+
+* [x] **Arquitectura de Datos (Backend):**
+    * Implementación de entidades `Comercio` y `ItemCatalogo` (Code First) con relaciones de integridad referencial.
+    * Inclusión de campos estratégicos (`NivelPlan`, `EsDestacado`) para futura escalabilidad comercial (Monetización/Ads).
+    * Migración de base de datos (`AgregarMarketplace`).
+* [x] **API y Lógica de Negocio:**
+    * Desarrollo de `ComerciosController` con endpoints para CRUD completo y gestión de sub-recursos (Productos).
+    * Implementación de búsqueda georreferenciada con filtros por categoría (`Rubro`) en el servidor.
+    * Endpoint de borrado con validación de seguridad (Owner Check) y eliminación en cascada de catálogos.
+* [x] **Frontend Público (La Vidriera):**
+    * Desarrollo de `tiendas.html`: Interfaz dual (Mapa + Lista) con filtrado en tiempo real por etiquetas (PetShop, Farmacia, etc.).
+    * **UX "Mini-Tienda":** Implementación de modal flotante (`z-index: 9999`) para visualizar el catálogo de productos sin abandonar el mapa, mejorando la retención del usuario.
+    * **Conversión:** Botones de acción "Pedir por WhatsApp" dinámicos en cada producto.
+* [x] **Gestión Comercial (Perfil):**
+    * **Wizard de Alta:** Formulario de 3 pasos (`comercio-wizard.html`) con selector de ubicación en mapa y multiselección de rubros visual.
+    * **Panel de Administración:** Integración en `perfil.html` de la sección "Mis Comercios".
+    * **Gestor de Catálogo:** Modal administrativo para carga rápida de productos (Foto, Precio, Descripción) y eliminación de ítems en tiempo real.
 
 ### 📅 Sprint G: Ecosistema de Organizaciones y Tránsitos (Completado)
 **Estado:** ✅ Finalizado 

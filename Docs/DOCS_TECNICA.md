@@ -342,3 +342,40 @@ Para mantener la calidad de los datos en el mapa de tránsitos, se implementó u
 3.  **Edición y Baja:**
     * **Edición:** Se reutiliza el formulario "Wizard" inyectando los datos previos. Al guardar, el sistema actualiza tanto la información como la fecha de `UltimaActualizacion`.
     * **Baja (Delete):** Eliminación física del registro a petición del usuario.
+
+## 16. Arquitectura del Marketplace de Servicios (Sprint F)
+
+Este módulo introduce la faceta comercial de la plataforma, permitiendo a Pet Shops, Veterinarias y Prestadores de Servicios ofrecer sus productos en un entorno geolocalizado.
+
+### Modelo de Datos (Scalability Ready)
+Se diseñó una estructura preparada para futura monetización (SaaS), evitando deuda técnica temprana.
+* **Entidad `Comercio`:**
+    * Datos de negocio + Coordenadas Geo (`Latitud`, `Longitud`).
+    * **Campos de Monetización:** Se incluyeron propiedades como `NivelPlan` (int) y `EsDestacado` (bool) para soportar lógica de posicionamiento pago (Ads) sin modificar el esquema de base de datos en el futuro.
+    * **Etiquetado:** Uso de un campo string `Etiquetas` (CSV) para un filtrado flexible (ej: "Alimento,Juguetes").
+* **Entidad `ItemCatalogo`:** Relación 1 a N con Comercio. Almacena productos individuales con precio y foto.
+
+### Motor de Búsqueda y Filtrado
+El `ComerciosController` implementa una estrategia de búsqueda híbrida:
+1.  **Geolocalización:** Reutiliza `GeoService` para devolver solo comercios dentro de un radio configurable (default 15km).
+2.  **Filtrado por Tags:** Permite filtrar en el servidor mediante el parámetro `?rubro=Peluquería`, optimizando la carga de datos al traer solo lo relevante.
+
+### Estrategia de Frontend (UX/UI)
+Se implementaron interfaces diferenciadas para el consumidor y el comerciante:
+
+1.  **Exploración Pública (`tiendas.html`):**
+    * **Diseño Híbrido:** Mapa interactivo (Leaflet) + Lista lateral sincronizada.
+    * **Popups Modernos:** Los marcadores del mapa despliegan tarjetas estilizadas con logo y resumen.
+    * **Modal "Mini-Tienda":** Para evitar que el usuario pierda el contexto geográfico al navegar, el catálogo de productos se abre en una ventana modal sobre el mapa (z-index alto), permitiendo una exploración rápida y cierre fluido.
+    * **Conversión Directa:** Integración de botones "Pedir por WhatsApp" en cada producto, generando enlaces pre-llenados (`wa.me`) con el nombre del ítem para facilitar la venta.
+
+2.  **Gestión Centralizada (`perfil.html`):**
+    * Se integró la administración de múltiples comercios en el panel del usuario.
+    * **CRUD Modal:** La gestión de productos (Alta/Baja) se realiza en una ventana emergente sin recargar la página, mejorando la velocidad de administración.
+    * **Borrado en Cascada:** La eliminación de un comercio dispara el borrado físico de todos sus productos asociados en la base de datos (Integridad Referencial).
+
+### Flujo de Alta (Wizard)
+Se adaptó el patrón de "Pasos" utilizado en Clínicas para el `comercio-wizard.html`:
+* **Paso 1:** Datos Comerciales.
+* **Paso 2:** Selector de Mapa (Ubicación exacta del local).
+* **Paso 3:** Selección visual de Rubros (Iconos interactivos que construyen el string de etiquetas).

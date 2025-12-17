@@ -163,6 +163,8 @@
 
             // 2. Cargar datos básicos
             cargarMisPublicaciones();
+
+            cargarMisComercios();
             
             if (usuario.rol === 'Veterinario') {
                 document.getElementById('sec-veterinario').classList.remove('hidden');
@@ -269,7 +271,7 @@
                 <a href="hogar-wizard.html?editar=true" class="bg-white text-gray-600 border border-gray-300 px-3 py-2 rounded-lg hover:bg-gray-50 hover:text-blue-600 transition shadow-sm" title="Editar datos">
                     <i class="fa-solid fa-pen"></i>
                 </a>
-                <button onclick="darBajaHogar(${id})" class="bg-white text-gray-600 border border-gray-300 px-3 py-2 rounded-lg hover:bg-red-50 hover:text-red-600 transition shadow-sm" title="Eliminar Hogar">
+                <button onclick="darBajaHogar(${id})" class="..." title="Eliminar Hogar">
                     <i class="fa-solid fa-trash"></i>
                 </button>
             </div>
@@ -300,28 +302,55 @@
         }
     }
 
-    async function darBajaHogar(id) {
-        const result = await Swal.fire({
-            title: '¿Eliminar Hogar?',
-            text: "Dejarás de aparecer en las búsquedas. Tendrás que registrarte de nuevo si quieres volver.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#9ca3af',
-            confirmButtonText: 'Sí, eliminar',
-            cancelButtonText: 'Cancelar'
-        });
+    // --- ESTA ES PARA ELIMINAR COMERCIOS ---
+        async function eliminarComercio(id) {
+            const result = await Swal.fire({
+                title: '¿Eliminar Comercio?',
+                text: "Se borrará la tienda y todos sus productos. No se puede deshacer.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
 
-        if (result.isConfirmed) {
-            try {
-                const res = await fetch(`${API_URL}/Hogares/${id}`, { method: 'DELETE' });
-                if (res.ok) {
-                    Swal.fire('Eliminado', 'Tu hogar ha sido dado de baja.', 'success')
-                        .then(() => location.reload());
-                }
-            } catch(e) { console.error(e); }
+            if (result.isConfirmed) {
+                try {
+                    const res = await fetch(`${API_URL}/Comercios/${id}`, { method: 'DELETE' });
+                    if (res.ok) {
+                        Swal.fire('Eliminado', 'El comercio ha sido borrado.', 'success');
+                        cargarMisComercios(); // Recargamos la lista correcta
+                    } else {
+                        Swal.fire('Error', 'No se pudo eliminar.', 'error');
+                    }
+                } catch (e) { console.error(e); }
+            }
         }
-    }
+
+        // --- ESTA ES PARA ELIMINAR HOGARES (RESTAURADA) ---
+        async function darBajaHogar(id) {
+            const result = await Swal.fire({
+                title: '¿Eliminar Hogar?',
+                text: "Dejarás de aparecer en las búsquedas.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#9ca3af',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const res = await fetch(`${API_URL}/Hogares/${id}`, { method: 'DELETE' });
+                    if (res.ok) {
+                        Swal.fire('Eliminado', 'Tu hogar ha sido dado de baja.', 'success')
+                            .then(() => location.reload());
+                    }
+                } catch(e) { console.error(e); }
+            }
+        }
 
         function logout() {
             localStorage.removeItem('zoonosis_user');
@@ -717,7 +746,7 @@ async function cargarMisComercios() {
                                 <button onclick="abrirModalCatalogo(${c.id})" class="flex-1 bg-slate-800 text-white text-sm font-bold py-2 rounded-lg hover:bg-slate-700 transition shadow-sm">
                                     <i class="fa-solid fa-list-check mr-2"></i> Catálogo
                                 </button>
-                                <button class="w-10 flex items-center justify-center border border-gray-200 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition">
+                                <button onclick="eliminarComercio(${c.id})" class="w-10 flex items-center justify-center border border-gray-200 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </div>
