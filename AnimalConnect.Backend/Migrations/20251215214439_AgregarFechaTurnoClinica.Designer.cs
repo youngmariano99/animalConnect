@@ -3,6 +3,7 @@ using System;
 using AnimalConnect.Backend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AnimalConnect.Backend.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251215214439_AgregarFechaTurnoClinica")]
+    partial class AgregarFechaTurnoClinica
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -246,66 +249,6 @@ namespace AnimalConnect.Backend.Migrations
                     b.ToTable("Comentarios");
                 });
 
-            modelBuilder.Entity("AnimalConnect.Backend.Models.Comercio", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Descripcion")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Direccion")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<bool>("EsDestacado")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("Etiquetas")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<DateTime>("FechaRegistro")
-                        .HasColumnType("timestamp without time zone");
-
-                    b.Property<double>("Latitud")
-                        .HasColumnType("double precision");
-
-                    b.Property<string>("LogoUrl")
-                        .HasColumnType("text");
-
-                    b.Property<double>("Longitud")
-                        .HasColumnType("double precision");
-
-                    b.Property<int>("NivelPlan")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Telefono")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("UsuarioId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Whatsapp")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UsuarioId");
-
-                    b.ToTable("Comercios");
-                });
-
             modelBuilder.Entity("AnimalConnect.Backend.Models.Especie", b =>
                 {
                     b.Property<int>("Id")
@@ -433,38 +376,6 @@ namespace AnimalConnect.Backend.Migrations
                     b.HasIndex("ClinicaId");
 
                     b.ToTable("HorariosClinicas");
-                });
-
-            modelBuilder.Entity("AnimalConnect.Backend.Models.ItemCatalogo", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ComercioId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Descripcion")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("ImagenUrl")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("Precio")
-                        .HasColumnType("numeric");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ComercioId");
-
-                    b.ToTable("ItemsCatalogo");
                 });
 
             modelBuilder.Entity("AnimalConnect.Backend.Models.MiembroOrganizacion", b =>
@@ -861,17 +772,6 @@ namespace AnimalConnect.Backend.Migrations
                     b.Navigation("Usuario");
                 });
 
-            modelBuilder.Entity("AnimalConnect.Backend.Models.Comercio", b =>
-                {
-                    b.HasOne("AnimalConnect.Backend.Models.Usuario", "Dueño")
-                        .WithMany()
-                        .HasForeignKey("UsuarioId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Dueño");
-                });
-
             modelBuilder.Entity("AnimalConnect.Backend.Models.HogarTransitorio", b =>
                 {
                     b.HasOne("AnimalConnect.Backend.Models.Usuario", "Usuario")
@@ -892,17 +792,6 @@ namespace AnimalConnect.Backend.Migrations
                         .IsRequired();
 
                     b.Navigation("Clinica");
-                });
-
-            modelBuilder.Entity("AnimalConnect.Backend.Models.ItemCatalogo", b =>
-                {
-                    b.HasOne("AnimalConnect.Backend.Models.Comercio", "Comercio")
-                        .WithMany("Catalogo")
-                        .HasForeignKey("ComercioId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Comercio");
                 });
 
             modelBuilder.Entity("AnimalConnect.Backend.Models.MiembroOrganizacion", b =>
@@ -1006,11 +895,6 @@ namespace AnimalConnect.Backend.Migrations
             modelBuilder.Entity("AnimalConnect.Backend.Models.Clinica", b =>
                 {
                     b.Navigation("Horarios");
-                });
-
-            modelBuilder.Entity("AnimalConnect.Backend.Models.Comercio", b =>
-                {
-                    b.Navigation("Catalogo");
                 });
 
             modelBuilder.Entity("AnimalConnect.Backend.Models.PerfilAdoptante", b =>

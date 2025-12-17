@@ -222,3 +222,13 @@ Se reestructuró el Frontend para diferenciar claramente los casos de uso.
         * **Por Vencer (Amarillo):** 25 a 30 días (Habilita botón "Renovar").
         * **Pausado/Vencido (Rojo):** >30 días (Habilita botón "Reactivar" y oculta del mapa público).
     * Endpoint `PUT /api/Hogares/renovar/{id}` para resetear el contador de días sin perder la información del hogar.
+
+* [x] **Refactorización del Módulo de Salud (Veterinarias):**
+    * **Segregación de Interfaces (Frontend):** * Creación de `veterinarias.html` para desacoplar la búsqueda de profesionales del mapa de "Perdidos y Encontrados".
+        * Implementación de un **Widget de Urgencia** dedicado y listado ordenado por geolocalización (distancia).
+    * **Lógica de Negocio de Turnos (Backend):**
+        * Modificación del modelo `Clinica` (Code First) agregando `FechaInicioTurno` para control temporal.
+        * Implementación de patrón **Lazy Cleanup**: El endpoint `GET /api/Veterinarias` ahora audita automáticamente la antigüedad del turno. Si excede las 24hs, se desactiva y se persiste el cambio, garantizando higiene de datos sin necesidad de tareas programadas (Cron jobs).
+    * **Mejoras en UX para Profesionales:**
+        * Actualización de `perfil.html`: Visualización del estado del turno con **feedback de tiempo restante** (Cálculo de horas hasta vencimiento).
+        * Inclusión de alertas educativas (SweetAlert2) sobre la regla de caducidad de 24hs al activar la guardia.

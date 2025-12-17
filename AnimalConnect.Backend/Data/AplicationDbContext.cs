@@ -26,6 +26,8 @@ namespace AnimalConnect.Backend.Data
         public DbSet<PerfilOrganizacion> PerfilesOrganizaciones { get; set; }
         public DbSet<MiembroOrganizacion> MiembrosOrganizaciones { get; set; }
         public DbSet<HogarTransitorio> HogaresTransitorios { get; set; }
+        public DbSet<Comercio> Comercios { get; set; }
+        public DbSet<ItemCatalogo> ItemsCatalogo { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

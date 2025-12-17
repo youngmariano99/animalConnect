@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketplace - Animal Connect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="css/styles.css">
+
+    <style>
+                /* Estilo para los popups del mapa */
+        .leaflet-popup-content-wrapper {
+            border-radius: 16px;       /* Bordes más redondeados */
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            padding: 0;                /* Quitamos padding default */
+            overflow: hidden;
+        }
+
+        .leaflet-popup-content {
+            margin: 12px 14px;         /* Margen interno controlado */
+            line-height: 1.4;
+        }
+
+        .leaflet-popup-tip {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-gray-800 pb-20">
+
+    <header id="app-navbar" class="sticky top-0 z-50"></header>
+
+    <main class="container mx-auto px-4 mt-6 max-w-7xl">
+        
+        <div class="mb-6 flex flex-col md:flex-row justify-between items-end gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-slate-800 flex items-center">
+                    <i class="fa-solid fa-shop text-orange-600 mr-3"></i> Servicios y Tiendas
+                </h1>
+                <p class="text-slate-500 text-sm mt-1">Encuentra pet shops, peluquerías y cuidadores cerca de ti.</p>
+            </div>
+            
+            <a href="comercio-wizard.html" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-slate-700 transition shadow-md flex items-center">
+                <i class="fa-solid fa-plus-circle mr-2"></i> Publicar mi Negocio
+            </a>
+        </div>
+
+        <div class="mb-6 overflow-x-auto pb-2 scrollbar-hide">
+            <div class="flex gap-3 min-w-max" id="filtros-container">
+                <button onclick="filtrar(null)" class="filter-btn active bg-orange-600 text-white px-5 py-2 rounded-full font-bold text-sm shadow-md transition-all border border-orange-600">
+                    Todos
+                </button>
+                <button onclick="filtrar('Alimento')" class="filter-btn bg-white text-gray-600 hover:text-orange-600 px-5 py-2 rounded-full font-bold text-sm shadow-sm border border-gray-200 hover:border-orange-300 transition-all">
+                    <i class="fa-solid fa-bone mr-1"></i> Alimento
+                </button>
+                <button onclick="filtrar('Farmacia')" class="filter-btn bg-white text-gray-600 hover:text-orange-600 px-5 py-2 rounded-full font-bold text-sm shadow-sm border border-gray-200 hover:border-orange-300 transition-all">
+                    <i class="fa-solid fa-prescription-bottle-medical mr-1"></i> Farmacia
+                </button>
+                <button onclick="filtrar('Peluquería')" class="filter-btn bg-white text-gray-600 hover:text-orange-600 px-5 py-2 rounded-full font-bold text-sm shadow-sm border border-gray-200 hover:border-orange-300 transition-all">
+                    <i class="fa-solid fa-scissors mr-1"></i> Peluquería
+                </button>
+                <button onclick="filtrar('Guardería')" class="filter-btn bg-white text-gray-600 hover:text-orange-600 px-5 py-2 rounded-full font-bold text-sm shadow-sm border border-gray-200 hover:border-orange-300 transition-all">
+                    <i class="fa-solid fa-hotel mr-1"></i> Guardería
+                </button>
+                <button onclick="filtrar('Paseador')" class="filter-btn bg-white text-gray-600 hover:text-orange-600 px-5 py-2 rounded-full font-bold text-sm shadow-sm border border-gray-200 hover:border-orange-300 transition-all">
+                    <i class="fa-solid fa-person-walking-dog mr-1"></i> Paseadores
+                </button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
+            
+            <div class="order-2 lg:order-1 flex flex-col h-full bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+                <div class="p-3 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                    <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Resultados Cercanos</span>
+                    <span id="contador-tiendas" class="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-1 rounded-full">0</span>
+                </div>
+                <div id="lista-tiendas" class="flex-1 overflow-y-auto p-4 space-y-4">
+                    <div class="text-center py-10 text-gray-400">
+                        <i class="fa-solid fa-circle-notch fa-spin"></i> Cargando tiendas...
+                    </div>
+                </div>
+            </div>
+
+            <div class="order-1 lg:order-2 lg:col-span-2 bg-white p-1 rounded-2xl shadow-lg border border-gray-200">
+                <div id="map-tiendas" class="w-full h-full rounded-xl z-0"></div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/layout.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/tiendas.js"></script>
+
+    <div id="modal-comercio" class="fixed inset-0 z-[9999] hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    
+        <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-sm transition-opacity" onclick="cerrarModal()"></div>
+
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                
+                <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border border-gray-200">
+                    
+                    <div class="bg-gradient-to-r from-orange-500 to-amber-500 h-32 relative">
+                        <button onclick="cerrarModal()" class="absolute top-4 right-4 bg-black/20 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-black/40 transition">
+                            <i class="fa-solid fa-times"></i>
+                        </button>
+                        <div class="absolute -bottom-10 left-8">
+                            <div class="w-24 h-24 rounded-2xl border-4 border-white bg-white shadow-md overflow-hidden flex items-center justify-center">
+                                <img id="m-logo" src="" class="w-full h-full object-cover hidden">
+                                <i id="m-logo-icon" class="fa-solid fa-store text-4xl text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pt-12 px-8 pb-6">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="text-2xl font-bold text-gray-900" id="m-nombre">Nombre Comercio</h3>
+                                <div class="flex flex-wrap gap-2 mt-2" id="m-tags">
+                                    </div>
+                            </div>
+                            <div class="text-right hidden sm:block">
+                                <div class="text-sm text-green-600 font-bold bg-green-50 px-3 py-1 rounded-lg border border-green-100">
+                                    <i class="fa-solid fa-clock mr-1"></i> Abierto hoy
+                                </div>
+                            </div>
+                        </div>
+
+                        <p class="mt-4 text-gray-600 text-sm leading-relaxed" id="m-desc">Descripción...</p>
+
+                        <div class="grid grid-cols-2 gap-4 mt-6">
+                            <a id="btn-wsp" href="#" target="_blank" class="flex items-center justify-center bg-green-500 text-white px-4 py-2.5 rounded-xl font-bold hover:bg-green-600 transition shadow-sm">
+                                <i class="fa-brands fa-whatsapp text-xl mr-2"></i> WhatsApp
+                            </a>
+                            <a id="btn-tel" href="#" class="flex items-center justify-center bg-gray-100 text-gray-700 px-4 py-2.5 rounded-xl font-bold hover:bg-gray-200 transition">
+                                <i class="fa-solid fa-phone mr-2"></i> Llamar
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-gray-100"></div>
+
+                    <div class="bg-gray-50 px-8 py-6">
+                        <h4 class="font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fa-solid fa-tags text-orange-500 mr-2"></i> Catálogo Destacado
+                        </h4>
+                        
+                        <div id="m-catalogo" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

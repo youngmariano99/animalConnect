@@ -9,7 +9,7 @@ namespace AnimalConnect.Backend.Models
 
         [Required]
         [MaxLength(100)]
-        public string Nombre { get; set; } = string.Empty; // Ej: "Veterinaria San Roque"
+        public string Nombre { get; set; } = string.Empty;
 
         public string Direccion { get; set; } = string.Empty;
         public string Telefono { get; set; } = string.Empty;
@@ -21,15 +21,16 @@ namespace AnimalConnect.Backend.Models
 
         // --- LÓGICA DE NEGOCIO ---
         public bool EsDeTurno { get; set; } = false;
+        
+        // [NUEVO] Para controlar la expiración de 24hs
+        public DateTime? FechaInicioTurno { get; set; } 
 
         public string HorariosEstructurados { get; set; } = string.Empty;
 
-        // Relación: ¿Quién es el dueño/administrador?
         public int PerfilVeterinarioId { get; set; }
         [ForeignKey("PerfilVeterinarioId")]
         public virtual PerfilVeterinario? Dueño { get; set; }
 
-        // Relación con Horarios
         public virtual ICollection<HorarioClinica>? Horarios { get; set; }
     }
 }

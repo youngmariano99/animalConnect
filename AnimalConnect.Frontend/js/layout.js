@@ -21,21 +21,21 @@ function cargarNavbar() {
                 <a href="adopcion.html" class="text-gray-600 hover:text-orange-500 font-medium transition ${isActive('adopcion.html')}">
                     <i class="fa-solid fa-heart mr-1"></i> Adopción
                 </a>
+                <a href="veterinarias.html" class="text-gray-600 hover:text-orange-500 font-medium transition ${isActive('veterinarias.html')}">
+                    <i class="fa-solid fa-user-doctor mr-1"></i> Profesionales
+                </a>
+                <a href="tiendas.html" class="text-gray-600 hover:text-orange-500 font-medium transition ${isActive('tiendas.html')}">
+                    <i class="fa-solid fa-shop mr-1"></i> Marketplace
+                </a>
                 <a href="comunidad.html" class="text-gray-600 hover:text-orange-500 font-medium transition ${isActive('comunidad.html')}">
                     <i class="fa-solid fa-users mr-1"></i> Comunidad
                 </a>
                 <a href="salud.html" class="text-gray-600 hover:text-orange-500 font-medium transition ${isActive('salud.html')}">
-                    <i class="fa-solid fa-truck-medical mr-1"></i> Salud
+                    <i class="fa-solid fa-truck-medical mr-1"></i> Operativos
                 </a>
             </div>
 
-            <div class="flex items-center space-x-4">
-                <div id="widget-turno" class="hidden flex items-center bg-green-50 px-3 py-1 rounded-full border border-green-200 animate-pulse">
-                    <span class="text-xs font-bold text-green-700 mr-2">GUARDIA</span>
-                    <a id="turno-btn" href="#" target="_blank" class="bg-green-500 text-white w-6 h-6 rounded-full flex items-center justify-center hover:bg-green-600">
-                        <i class="fa-brands fa-whatsapp text-xs"></i>
-                    </a>
-                </div>
+            
 
                 <div id="auth-buttons">
                     <a href="login.html" class="text-gray-500 hover:text-orange-500 font-bold text-sm">
@@ -50,6 +50,9 @@ function cargarNavbar() {
              <a href="index.html" class="text-2xl ${isActive('index.html', true)}"><i class="fa-solid fa-map-location-dot"></i></a>
              <a href="adopcion.html" class="text-2xl ${isActive('adopcion.html', true)}"><i class="fa-solid fa-heart"></i></a>
              <a href="comunidad.html" class="text-2xl ${isActive('comunidad.html', true)}"><i class="fa-solid fa-users"></i></a>
+             <div class="md:hidden border-t ...">
+                <a href="veterinarias.html" class="text-2xl ${isActive('veterinarias.html', true)}"><i class="fa-solid fa-user-doctor"></i></a>
+            </div>
              <a href="salud.html" class="text-2xl ${isActive('salud.html', true)}"><i class="fa-solid fa-truck-medical"></i></a>
         </div>
     </nav>

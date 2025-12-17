@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alta de Comercio - Animal Connect</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body class="bg-slate-50 text-gray-800 pb-20">
+
+    <nav class="bg-white shadow-sm mb-8">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center text-orange-600 font-bold text-xl">
+                <i class="fa-solid fa-store mr-2"></i> AnimalMarket <span class="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded ml-2">BETA</span>
+            </div>
+            <a href="perfil.html" class="text-gray-500 hover:text-orange-600 font-medium text-sm">
+                <i class="fa-solid fa-times mr-1"></i> Cancelar
+            </a>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 max-w-3xl">
+        
+        <div class="mb-8">
+            <div class="flex justify-between mb-2 px-2">
+                <span class="text-xs font-bold text-orange-600">PASO 1: DATOS</span>
+                <span class="text-xs font-bold text-gray-400">PASO 2: UBICACIÓN</span>
+                <span class="text-xs font-bold text-gray-400">PASO 3: RUBROS</span>
+            </div>
+            <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                <div id="progress-bar" class="h-full bg-orange-500 w-1/3 transition-all duration-500"></div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+            
+            <form id="wizard-form">
+
+                <div id="step-1" class="animate-fade-in">
+                    <h2 class="text-2xl font-bold mb-1">Sobre tu Negocio</h2>
+                    <p class="text-gray-500 mb-6 text-sm">Cuéntanos lo básico para que los clientes te encuentren.</p>
+
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Nombre del Comercio</label>
+                            <input type="text" id="com-nombre" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-orange-200 focus:border-orange-500 outline-none transition" placeholder="Ej: PetShop Patitas">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Descripción Breve</label>
+                            <textarea id="com-desc" rows="2" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-orange-200 outline-none" placeholder="Vendemos alimento balanceado y accesorios..."></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Teléfono / WhatsApp</label>
+                                <input type="tel" id="com-tel" class="w-full border border-gray-300 rounded-lg p-3 outline-none" placeholder="Ej: 11 1234 5678">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-700 mb-1">Dirección (Texto)</label>
+                                <input type="text" id="com-dir" class="w-full border border-gray-300 rounded-lg p-3 outline-none" placeholder="Av. Siempre Viva 123">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Logo (URL)</label>
+                            <input type="url" id="com-logo" class="w-full border border-gray-300 rounded-lg p-3 text-sm text-gray-500" placeholder="https://...">
+                            <p class="text-xs text-gray-400 mt-1">Por ahora pega un link de imagen. Próximamente subida de archivos.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="step-2" class="hidden animate-fade-in">
+                    <h2 class="text-2xl font-bold mb-1">Ubicación Exacta</h2>
+                    <p class="text-gray-500 mb-6 text-sm">Marca en el mapa dónde está la entrada de tu local.</p>
+
+                    <div id="map-wizard" class="w-full h-80 rounded-xl border-2 border-orange-100 z-0 mb-4"></div>
+                    
+                    <p id="coords-msg" class="text-center text-sm font-bold text-orange-600 bg-orange-50 py-2 rounded-lg border border-orange-100">
+                        <i class="fa-solid fa-location-crosshairs mr-1"></i> Toca el mapa para marcar
+                    </p>
+                </div>
+
+                <div id="step-3" class="hidden animate-fade-in">
+                    <h2 class="text-2xl font-bold mb-1">¿Qué ofreces?</h2>
+                    <p class="text-gray-500 mb-6 text-sm">Selecciona todas las categorías que apliquen.</p>
+
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6" id="rubros-container">
+                        <div onclick="toggleRubro(this)" data-val="Alimento" class="rubro-item cursor-pointer border rounded-xl p-4 text-center hover:bg-orange-50 hover:border-orange-300 transition group">
+                            <i class="fa-solid fa-bone text-2xl text-gray-400 group-hover:text-orange-500 mb-2"></i>
+                            <p class="text-sm font-bold text-gray-600">Alimento</p>
+                        </div>
+                        <div onclick="toggleRubro(this)" data-val="Farmacia" class="rubro-item cursor-pointer border rounded-xl p-4 text-center hover:bg-orange-50 hover:border-orange-300 transition group">
+                            <i class="fa-solid fa-prescription-bottle-medical text-2xl text-gray-400 group-hover:text-orange-500 mb-2"></i>
+                            <p class="text-sm font-bold text-gray-600">Farmacia</p>
+                        </div>
+                        <div onclick="toggleRubro(this)" data-val="Peluquería" class="rubro-item cursor-pointer border rounded-xl p-4 text-center hover:bg-orange-50 hover:border-orange-300 transition group">
+                            <i class="fa-solid fa-scissors text-2xl text-gray-400 group-hover:text-orange-500 mb-2"></i>
+                            <p class="text-sm font-bold text-gray-600">Peluquería</p>
+                        </div>
+                         <div onclick="toggleRubro(this)" data-val="Accesorios" class="rubro-item cursor-pointer border rounded-xl p-4 text-center hover:bg-orange-50 hover:border-orange-300 transition group">
+                            <i class="fa-solid fa-baseball text-2xl text-gray-400 group-hover:text-orange-500 mb-2"></i>
+                            <p class="text-sm font-bold text-gray-600">Accesorios</p>
+                        </div>
+                         <div onclick="toggleRubro(this)" data-val="Guardería" class="rubro-item cursor-pointer border rounded-xl p-4 text-center hover:bg-orange-50 hover:border-orange-300 transition group">
+                            <i class="fa-solid fa-hotel text-2xl text-gray-400 group-hover:text-orange-500 mb-2"></i>
+                            <p class="text-sm font-bold text-gray-600">Guardería</p>
+                        </div>
+                         <div onclick="toggleRubro(this)" data-val="Adiestramiento" class="rubro-item cursor-pointer border rounded-xl p-4 text-center hover:bg-orange-50 hover:border-orange-300 transition group">
+                            <i class="fa-solid fa-graduation-cap text-2xl text-gray-400 group-hover:text-orange-500 mb-2"></i>
+                            <p class="text-sm font-bold text-gray-600">Adiestramiento</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 p-4 rounded-xl text-sm text-blue-800 flex items-start">
+                        <i class="fa-solid fa-info-circle mt-1 mr-3 text-lg"></i>
+                        <div>
+                            <strong>Plan Gratuito:</strong> Por ahora tu comercio aparecerá en el mapa básico. Próximamente podrás destacar productos en el catálogo.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-between border-t border-gray-100 pt-6">
+                    <button type="button" id="btn-prev" onclick="cambiarPaso(-1)" class="hidden text-gray-500 font-bold px-6 py-2 hover:bg-gray-100 rounded-lg transition">
+                        Atrás
+                    </button>
+                    
+                    <button type="button" id="btn-next" onclick="cambiarPaso(1)" class="ml-auto bg-orange-600 text-white font-bold px-8 py-3 rounded-xl hover:bg-orange-700 shadow-lg hover:shadow-orange-200 transition flex items-center">
+                        Siguiente <i class="fa-solid fa-arrow-right ml-2"></i>
+                    </button>
+
+                    <button type="button" id="btn-submit" onclick="finalizarWizard()" class="hidden ml-auto bg-green-600 text-white font-bold px-8 py-3 rounded-xl hover:bg-green-700 shadow-lg hover:shadow-green-200 transition flex items-center">
+                        <i class="fa-solid fa-check-circle mr-2"></i> Crear Comercio
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/comercio-wizard.js"></script>
+</body>
+</html>
