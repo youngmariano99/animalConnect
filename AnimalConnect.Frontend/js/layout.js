@@ -29,7 +29,7 @@ function cargarNavbar() {
                     
                     <a href="index.html" class="text-sm font-medium transition ${isActive('index.html')}">Inicio</a>
                     
-                    <a href="adopcion.html" class="text-sm font-medium transition ${isActive('adopcion.html')}">Mascotas</a>
+                    <a href="adopcion.html" class="text-sm font-medium transition ${isActive('adopcion.html')}">Adopción</a>
 
                     <div class="relative group h-16 flex items-center">
                         <button class="flex items-center space-x-1 text-sm font-medium transition outline-none ${isServiceActive()}">
@@ -96,7 +96,7 @@ function cargarNavbar() {
         <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100 absolute w-full left-0 shadow-lg">
             <div class="p-4 space-y-2">
                 <a href="index.html" class="block px-4 py-2 rounded-lg hover:bg-gray-50 font-bold text-gray-700">Inicio</a>
-                <a href="adopcion.html" class="block px-4 py-2 rounded-lg hover:bg-gray-50 font-bold text-gray-700">Mascotas</a>
+                <a href="adopcion.html" class="block px-4 py-2 rounded-lg hover:bg-gray-50 font-bold text-gray-700">Adopción</a>
                 
                 <div class="bg-gray-50 rounded-xl p-3 mt-2">
                     <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-2">Servicios</p>

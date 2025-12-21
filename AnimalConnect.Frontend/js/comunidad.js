@@ -37,20 +37,34 @@ const currentUser = JSON.parse(localStorage.getItem('zoonosis_user'));
 document.addEventListener('DOMContentLoaded', () => {
     inicializarInterfaz();
     
-    // Si viene redirigido desde una Historia de Éxito
+    // Si viene redirigido desde el Perfil (Finalizar Caso)
     const params = new URLSearchParams(window.location.search);
+    
     if (params.get('modo') === 'historia') {
-        categoriaActual = 'Historia'; // Forzamos filtro Historia
+        categoriaActual = 'Historia'; // Filtramos para ver historias
         actualizarEstilosFiltros();
         
         if (currentUser) {
+            // Esperamos un poco a que el DOM termine de renderizar si es necesario
             setTimeout(() => {
-                const cat = document.getElementById('post-categoria');
-                const tit = document.getElementById('post-titulo');
-                const cont = document.getElementById('post-contenido');
-                if(cat) cat.value = 'Historia';
-                if(tit) tit.value = "¡Final Feliz! Encontré a mi mascota 🎉";
-                if(cont) cont.focus();
+                const catInput = document.getElementById('post-categoria');
+                const titInput = document.getElementById('post-titulo');
+                const contInput = document.getElementById('post-contenido');
+                const boxPublicar = document.getElementById('box-publicar');
+
+                // 1. Recuperar los textos que enviamos desde perfil.html
+                const tituloUrl = params.get('titulo');
+                const textoUrl = params.get('texto');
+
+                // 2. Llenar el formulario
+                if (catInput) catInput.value = 'Historia';
+                if (titInput && tituloUrl) titInput.value = tituloUrl;
+                if (contInput && textoUrl) contInput.value = textoUrl;
+
+                // 3. Enfocar y scrollear hacia el formulario
+                if (contInput) contInput.focus();
+                if (boxPublicar) boxPublicar.scrollIntoView({ behavior: 'smooth' });
+
             }, 500);
         }
     }

@@ -463,37 +463,40 @@
 
         // ... (Aquí van tus funciones finalizar, renovar y borrar que ya tenías) ...
         async function finalizar(id, estadoOrigen) {
-            const nuevoEstado = 4;
+            const nuevoEstado = 4; // Finalizado
             
             let tituloConfirm = "¿Caso Resuelto?";
             let textoConfirm = "";
-            let textoHistoria = "";
+            
+            // Variables para pre-llenar el post en comunidad
             let tituloHistoria = "";
+            let textoHistoria = "";
 
-            if (estadoOrigen === 2) {
-                textoConfirm = "¡Qué alegría! Se marcará como encontrado y desaparecerá del mapa público.";
-                tituloHistoria = "🎉 ¡Final Feliz!";
-                textoHistoria = "¿Te gustaría contar cómo fue el reencuentro en la Comunidad para sumar puntos?";
+            if (estadoOrigen === 2) { 
+                // PERDIDO -> ENCONTRADO
+                textoConfirm = "¡Qué alegría! Se marcará como encontrado.";
+                tituloHistoria = "🎉 ¡Final Feliz! Encontré a mi mascota";
+                textoHistoria = "Gracias a todos los que compartieron, hoy tuvimos un reencuentro...";
             } else if (estadoOrigen === 3) {
-                textoConfirm = "El aviso dejará de ser visible en el mapa.";
-                tituloHistoria = "👏 ¡Gran trabajo!";
-                textoHistoria = "¿Quieres compartir esta buena acción en el muro?";
+                // ENCONTRADO -> DEVUELTO
+                textoConfirm = "El aviso dejará de ser visible.";
+                tituloHistoria = "👏 Misión Cumplida";
+                textoHistoria = "Hoy esta mascota volvió con su familia...";
             } else {
+                // ADOPCIÓN -> ADOPTADO
                 textoConfirm = "¿Se concretó la adopción?";
-                tituloHistoria = "🏡 ¡Nueva Vida!";
-                textoHistoria = "¿Quieres compartir la adopción en la comunidad?";
+                tituloHistoria = "🏡 ¡Final Feliz! Se adoptó una mascota 🎉"; // <--- EL TITULO QUE QUERÍAS
+                textoHistoria = "Hoy celebramos que una nueva vida comienza...";
             }
 
-            // 1. PRIMERA CONFIRMACIÓN (Cambiar Estado)
+            // 1. Confirmar Acción en Base de Datos
             const result = await Swal.fire({
                 title: tituloConfirm,
                 text: textoConfirm,
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: '#22c55e', // Green
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Sí, confirmar',
-                cancelButtonText: 'Cancelar'
+                confirmButtonColor: '#22c55e',
+                confirmButtonText: 'Sí, confirmar'
             });
 
             if(!result.isConfirmed) return;
@@ -506,22 +509,23 @@
                 });
                 
                 if(res.ok) {
-                    // 2. SEGUNDA CONFIRMACIÓN (Compartir Historia)
+                    // 2. Preguntar si quiere compartir la historia
                     const shareResult = await Swal.fire({
-                        title: tituloHistoria,
-                        text: textoHistoria,
+                        title: '¡Genial!',
+                        text: '¿Te gustaría contar la historia en la Comunidad para sumar puntos?',
                         icon: 'success',
                         showCancelButton: true,
-                        confirmButtonColor: '#f97316',
-                        cancelButtonColor: '#6b7280',
                         confirmButtonText: 'Sí, compartir',
                         cancelButtonText: 'No, gracias'
                     });
 
                     if (shareResult.isConfirmed) {
-                        window.location.href = 'comunidad.html?modo=historia';
+                        // AQUÍ ESTÁ LA SOLUCIÓN: Pasamos los datos en la URL
+                        // encodeURIComponent asegura que los emojis y espacios pasen bien
+                        const url = `comunidad.html?modo=historia&titulo=${encodeURIComponent(tituloHistoria)}&texto=${encodeURIComponent(textoHistoria)}`;
+                        window.location.href = url;
                     } else {
-                        cargarMisPublicaciones();
+                        cargarMisPublicaciones(); // Solo recargar si no comparte
                     }
                 }
             } catch(e) { console.error(e); }
