@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Image as ImageIcon, X, Upload } from 'lucide-react';
+import { X, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ImageUploadProps {

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -80,16 +80,7 @@ const Dashboard = () => {
         ],
     };
 
-    const dataIntake = {
-        labels: ['Perdidos', 'Encontrados', 'Abandono'],
-        datasets: [
-            {
-                label: 'Ingresos',
-                data: [65, 40, 10], // Still mocked as Backend didn't provide this yet
-                backgroundColor: ['#ef4444', '#3b82f6', '#eab308'],
-            },
-        ],
-    };
+
 
     return (
         <div className="space-y-6">

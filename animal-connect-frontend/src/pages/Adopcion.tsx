@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Filter, AlertCircle, CheckCircle2, Percent, Ban, ArrowRight, Heart, X, Wand2 } from 'lucide-react';
+import { Filter, AlertCircle, CheckCircle2, Percent, ArrowRight, Heart, X, Wand2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import PetCard from '../components/PetCard';
 
@@ -99,8 +99,8 @@ const Adopcion = () => {
                         key={btn.id}
                         onClick={() => setFilter(btn.id as any)}
                         className={`px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-colors ${filter === btn.id
-                                ? 'bg-gray-800 text-white shadow-lg'
-                                : 'bg-white text-gray-600 border border-gray-200'
+                            ? 'bg-gray-800 text-white shadow-lg'
+                            : 'bg-white text-gray-600 border border-gray-200'
                             }`}
                     >
                         {React.createElement(btn.icon, { className: "w-4 h-4" })}

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
-import { Calendar, MapPin, Phone, Info, Syringe, HeartHandshake, User } from 'lucide-react';
+import { Calendar, MapPin, Phone, Syringe, HeartHandshake, User } from 'lucide-react';
 import { divIcon } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
@@ -21,7 +21,7 @@ interface Campana {
 const customIcon = (type: string) => divIcon({
     className: '',
     html: `<div class="w-8 h-8 rounded-full border-2 border-white shadow-lg flex items-center justify-center text-white ${type === 'Vacunacion' ? 'bg-blue-500' :
-            type === 'Castracion' ? 'bg-purple-500' : 'bg-green-500'
+        type === 'Castracion' ? 'bg-purple-500' : 'bg-green-500'
         }">
     <i class="fas fa-${type === 'Vacunacion' ? 'syringe' : type === 'Castracion' ? 'notes-medical' : 'paw'}"></i>
   </div>`
@@ -94,7 +94,7 @@ const Campaigns = () => {
                                     <div className="min-w-[200px]">
                                         <h3 className="font-bold text-gray-800 mb-1">{c.titulo}</h3>
                                         <span className={`text-xs px-2 py-0.5 rounded-full font-bold uppercase ${c.tipo === 'Vacunacion' ? 'bg-blue-100 text-blue-600' :
-                                                c.tipo === 'Castracion' ? 'bg-purple-100 text-purple-600' : 'bg-green-100 text-green-600'
+                                            c.tipo === 'Castracion' ? 'bg-purple-100 text-purple-600' : 'bg-green-100 text-green-600'
                                             }`}>
                                             {c.tipo}
                                         </span>
@@ -118,7 +118,7 @@ const Campaigns = () => {
                         {campanas.map(c => (
                             <div key={c.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex gap-4">
                                 <div className={`w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center ${c.tipo === 'Vacunacion' ? 'bg-blue-100 text-blue-500' :
-                                        c.tipo === 'Castracion' ? 'bg-purple-100 text-purple-500' : 'bg-green-100 text-green-500'
+                                    c.tipo === 'Castracion' ? 'bg-purple-100 text-purple-500' : 'bg-green-100 text-green-500'
                                     }`}>
                                     {c.tipo === 'Vacunacion' ? <Syringe /> : <User />}
                                 </div>

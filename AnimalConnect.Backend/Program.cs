@@ -4,6 +4,7 @@ using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
 using DotNetEnv; // <--- 1. Importar librería
 using System.Globalization; // <--- AGREGAR ESTO ARRIBA
+using CloudinaryDotNet;
 
 // 2. Cargar el archivo .env ANTES de crear el builder
 Env.Load();
@@ -37,7 +38,21 @@ var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
+    options.UseNpgsql(connectionString, o => o.UseNetTopologySuite()));
+
+// 4. Configurar Cloudinary (Gestión de Imágenes)
+// builder.Services.AddScoped<IPhotoService, PhotoService>(); // <-- Próximamente
+
+var cloudName = Environment.GetEnvironmentVariable("CLOUDINARY_CLOUD_NAME");
+var apiKey = Environment.GetEnvironmentVariable("CLOUDINARY_API_KEY");
+var apiSecret = Environment.GetEnvironmentVariable("CLOUDINARY_API_SECRET");
+
+if (!string.IsNullOrEmpty(cloudName))
+{
+    var account = new Account(cloudName, apiKey, apiSecret);
+    var cloudinary = new Cloudinary(account);
+    builder.Services.AddSingleton(cloudinary);
+}
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

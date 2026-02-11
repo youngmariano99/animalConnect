@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, Circle } from 'react-leaflet';
-import { Building, MapPin, Save, ShieldCheck } from 'lucide-react';
+import { Building, MapPin, Save } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 

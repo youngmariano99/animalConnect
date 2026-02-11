@@ -2,8 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     MessageCircle, Heart, Share2, Send,
-    MapPin, User, Star, Award, ShieldCheck,
-    Filter, Plus, Search, Megaphone, HelpCircle
+    Shield, Filter, Plus, Megaphone, CircleHelp
 } from 'lucide-react';
 
 interface Post {
@@ -112,7 +111,7 @@ const Community = () => {
 
     const categories = [
         { id: 'Todas', label: 'Todo', icon: Filter, color: 'bg-gray-800' },
-        { id: 'Duda', label: 'Consultas', icon: HelpCircle, color: 'bg-blue-500' },
+        { id: 'Duda', label: 'Consultas', icon: CircleHelp, color: 'bg-blue-500' },
         { id: 'Historia', label: 'Historias', icon: Heart, color: 'bg-red-500' },
         { id: 'Aviso', label: 'Avisos', icon: Megaphone, color: 'bg-yellow-500' },
     ];
@@ -140,8 +139,8 @@ const Community = () => {
                         key={cat.id}
                         onClick={() => setFilter(cat.id as any)}
                         className={`px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 whitespace-nowrap transition-all ${filter === cat.id
-                                ? `${cat.color} text-white shadow-md`
-                                : 'bg-white text-gray-600 border border-gray-200'
+                            ? `${cat.color} text-white shadow-md`
+                            : 'bg-white text-gray-600 border border-gray-200'
                             }`}
                     >
                         {React.createElement(cat.icon, { className: "w-3 h-3" })}
@@ -178,15 +177,15 @@ const Community = () => {
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <span className="font-bold text-sm text-gray-800">{post.autor}</span>
-                                            {post.esVeterinario && <ShieldCheck className="w-4 h-4 text-blue-500" />}
+                                            {post.esVeterinario && <Shield className="w-4 h-4 text-blue-500" />}
                                             {post.nombreOng && <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full font-bold">{post.nombreOng}</span>}
                                         </div>
                                         <p className="text-xs text-gray-400">{new Date(post.fechaPublicacion).toLocaleDateString()}</p>
                                     </div>
                                 </div>
                                 <span className={`text-[10px] px-2 py-1 rounded-full font-bold uppercase ${post.categoria === 'Historia' ? 'bg-red-50 text-red-500' :
-                                        post.categoria === 'Aviso' ? 'bg-yellow-50 text-yellow-600' :
-                                            'bg-blue-50 text-blue-500'
+                                    post.categoria === 'Aviso' ? 'bg-yellow-50 text-yellow-600' :
+                                        'bg-blue-50 text-blue-500'
                                     }`}>
                                     {post.categoria}
                                 </span>
