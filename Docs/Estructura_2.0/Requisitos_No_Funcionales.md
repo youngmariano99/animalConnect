@@ -1,4 +1,4 @@
-RNF 1: Usabilidad y Experiencia (Mobile First)
+# RNF 1: Usabilidad y Experiencia (Mobile First)
 
 RNF-1.1 (PWA): Aplicación Web Progresiva instalable en Android/iOS con icono y pantalla completa.
 
@@ -6,13 +6,29 @@ RNF-1.2 (Ergonomía): Diseño táctil con botones grandes (>48px) y flujos simpl
 
 RNF-1.3 (Modo Offline): Capacidad de consultar datos cacheados (como la Libreta Sanitaria) sin conexión a internet.
 
-RNF 4: Escalabilidad
+# RNF 2: Rendimiento y Eficiencia
+
+RNF-2.1 (Velocidad Geoespacial): Uso de PostGIS e índices espaciales para que las consultas de cercanía respondan en <300ms.
+
+RNF-2.2 (Caché): Implementación de Redis para datos frecuentes (Farmacias, Eventos).
+
+RNF-2.3 (Optimización Multimedia): Las imágenes se procesan en la nube (Cloudinary) para reducir tamaño y formato automáticamente antes de llegar al celular.
+
+# RNF 3: Seguridad y Privacidad (Crítico)
+
+RNF-3.1 (Geo-Fuzzing / Ofuscación): Para Hogares de Tránsito, el backend guarda la coordenada exacta pero devuelve al frontend una ubicación desplazada aleatoriamente (Algoritmo Donut 200m) para proteger la privacidad.
+
+RNF-3.2 (Seguridad de API): Rate Limiting para evitar spam y fuerza bruta.
+
+RNF-3.3 (Protección de Datos): Encriptación HTTPS y hasheo de contraseñas (BCrypt).
+
+# RNF 4: Escalabilidad
 
 RNF-4.1 (Arquitectura Stateless): Backend desacoplado que permite crecimiento horizontal.
 
 RNF-4.2 (Preparación Híbrida): El código Frontend (React) debe mantenerse limpio para poder empaquetarse con Capacitor y subirse a tiendas (Play Store/App Store) en el futuro sin reescribir la lógica.
 
-RNF 5: Mantenimiento y Evolución
+# RNF 5: Mantenimiento y Evolución
 
 RNF-5.1 (Código Limpio): Uso de patrones de diseño (Repository, DTOs) y principios SOLID para facilitar actualizaciones.
 
@@ -22,7 +38,7 @@ RNF-5.3 (Documentación): Actualización constante de DOCS_TECNICA.md y SprintLo
 
 RNF-5.4 Uso de vocabulario ideal para entener el código por personas que estan aprendiendo a programar y en cuanto al diseño usar un lenguaje claro y sencillo en el idioma español latinoamericano con excepción de los términos técnicos que se usan en inglés en el mundo de la programación.
 
-RNF 6: Rendimiento y Optimización
+# RNF 6: Rendimiento y Optimización
 
 RNF-6.1 (Carga Inicial): El Frontend debe cargar en menos de 2 segundos en conexiones 4G.
 
@@ -30,7 +46,7 @@ RNF-6.2 (Mapas): Uso de Leaflet con clustering de marcadores para manejar miles 
 
 RNF-6.3 (Backend): Implementación de paginación y filtros por defecto para evitar consultas masivas a la base de datos.
 
-RNF 7: Seguridad
+# RNF 7: Seguridad
 
 RNF-7.1 (Autenticación): Implementación de JWT con expiración y refresh tokens.
 
@@ -38,7 +54,7 @@ RNF-7.2 (Protección de Rutas): Uso de middleware para restringir acceso a rutas
 
 RNF-7.3 (Validación de Datos): Validación estricta de datos de entrada para prevenir inyección SQL y XSS.
 
-RNF 8: Identidad Visual y Sistema de Diseño (Bio-Tech Humanista)
+# RNF 8: Identidad Visual y Sistema de Diseño (Bio-Tech Humanista)
 Este sistema busca equilibrar la calidez del mundo animal con la precisión tecnológica, bajo el concepto de un "ecosistema vivo".
 
 RNF-8.1 (Paleta de Colores "Vital-Ecosystem"):
@@ -105,7 +121,7 @@ ONG/Rescatista: Layout enfocado en tarjetas grandes de acción con bordes de col
 Ciudadano: Estética "Soft" con bordes muy redondeados (1rem o rounded-2xl) y un Floating Action Button (FAB) de pánico siempre visible en Sunrise Gold.
 
 
-RNF 9: Accesibilidad e Inclusión (A11y)
+# RNF 9: Accesibilidad e Inclusión (A11y)
 Garantizar que la plataforma sea utilizable por todos, incluyendo adultos mayores y personas con discapacidades visuales.
 
 
@@ -149,7 +165,7 @@ Para que la IA configure el proyecto correctamente, incluye este bloque de códi
   }
 }
 
-RNF 10: Coherencia y Sistema de Componentes (Design System)
+# RNF 10: Coherencia y Sistema de Componentes (Design System)
 Para evitar que la IA genere estilos inconsistentes entre el panel del veterinario y el del ciudadano, se debe trabajar bajo un esquema de componentes compartidos.
 +1
 
@@ -161,7 +177,7 @@ RNF-10.1 (Arquitectura de Componentes): El Frontend debe construirse utilizando 
 RNF-10.2 (Visualización de Datos Humanista): En los paneles de gestión (especialmente Veterinarios y ONGs), el uso de gráficos (Recharts) debe seguir la psicología del color: Bio-Teal para métricas positivas/estables y Living Coral para métricas que requieren atención emocional. Los datos densos deben presentarse con la fuente Inter para maximizar la eficiencia técnica sin perder la estética general.
 +3
 
-RNF 11: Feedback Empático y Gestión de Estados
+# RNF 11: Feedback Empático y Gestión de Estados
 La "confianza empática" mencionada en el informe debe reflejarse en cómo la aplicación responde a las acciones del usuario.
 
 
@@ -172,7 +188,7 @@ RNF-11.1 (Micro-copy y Lenguaje): Los mensajes de error o confirmación deben us
 RNF-11.2 (Estados de Carga y Transiciones): No se permiten cambios bruscos de pantalla. Se deben usar Skeleton Screens que sigan la estructura de las "Tarjetas de Mascota" para reducir la percepción de espera. Las transiciones entre rutas deben ser suaves (fundidos de 300ms) usando Framer Motion para evocar calma y control.
 
 
-RNF 12: Adaptabilidad y Modos de Visualización
+# RNF 12: Adaptabilidad y Modos de Visualización
 Dado que el proyecto es "Mobile First" pero será usado por profesionales en clínicas (Desktop), la adaptabilidad es clave.
 
 
