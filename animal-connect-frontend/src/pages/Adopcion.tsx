@@ -1,195 +1,208 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom'; // Importamos Link para el botón de login
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Filter, AlertCircle, CheckCircle2, Percent, Ban, ArrowRight, Heart, X, Wand2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import PetCard from '../components/PetCard';
 
-interface Animal {
-    id: number;
-    nombre: string;
-    descripcion: string;
-    imagenUrl: string;
-    edad: string;
-    ubicacion: string;
-    esPerro: boolean;
-    sexo: 'Macho' | 'Hembra';
-    matchPorcentaje?: number;
+// Dummy interfaces pending full Types
+interface MatchResult {
+    animal: any;
+    porcentajeMatch: number;
+    razonesMatch: string[];
 }
 
 const Adopcion = () => {
-    const [animales, setAnimales] = useState<Animal[]>([]);
-    const [cargando, setCargando] = useState(true);
-    
-    // --- NUEVO: Estado para el Modal y el Usuario ---
-    // Si es null, el modal está cerrado. Si tiene un animal, el modal se abre con sus datos.
-    const [matchSeleccionado, setMatchSeleccionado] = useState<Animal | null>(null);
-    
-    // Leemos el usuario igual que en el Navbar (esto lo mejoraremos luego con Context)
-    const usuario = JSON.parse(localStorage.getItem('usuario') || 'null');
+    const navigate = useNavigate();
+    const [loading, setLoading] = useState(true);
+    const [matches, setMatches] = useState<MatchResult[]>([]);
+    const [filter, setFilter] = useState<'estricto' | 'flexible' | 'todos'>('estricto');
+    const [selectedMatch, setSelectedMatch] = useState<MatchResult | null>(null);
 
-    
+    const user = JSON.parse(localStorage.getItem('zoonosis_user') || '{}');
 
     useEffect(() => {
-        const cargarDatos = () => {
-            // Simulamos datos del backend
-            const datosFalsos: Animal[] = [
-                {
-                    id: 1,
-                    nombre: "Coco",
-                    descripcion: "Un compañero fiel para salir a correr.",
-                    imagenUrl: "https://images.unsplash.com/photo-1543466835-00a7907e9de1",
-                    edad: "2 años",
-                    ubicacion: "Av. Principal 123",
-                    esPerro: true,
-                    sexo: "Macho",
-                    matchPorcentaje: 95
-                },
-                {
-                    id: 2,
-                    nombre: "Luna",
-                    descripcion: "Tranquila y cariñosa, ideal para departamento.",
-                    imagenUrl: "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba",
-                    edad: "5 meses",
-                    ubicacion: "Barrio Norte",
-                    esPerro: false,
-                    sexo: "Hembra",
-                    matchPorcentaje: 80
-                }
-            ];
-            
-            setTimeout(() => {
-                setAnimales(datosFalsos);
-                setCargando(false);
-            }, 1000);
-        };
-        cargarDatos();
+        // Simulate API fetch delay
+        fetchMatches();
     }, []);
 
-    return (
-        <div className="container mx-auto px-4 mt-8 pb-20 relative">
-            
-            <div className="flex justify-between items-end mb-6">
-                <div>
-                    <h1 className="text-2xl font-bold text-gray-800">Adopción Responsable</h1>
-                    <p className="text-gray-500 text-sm">Estos animales buscan un hogar que se adapte a ellos.</p>
+    const fetchMatches = async () => {
+        try {
+            if (!user.id || !user.tienePerfilMatch) {
+                setLoading(false);
+                return;
+            }
+
+            // Mock coordinates for now
+            const lat = -38.0;
+            const lng = -61.0;
+
+            const res = await fetch(`http://localhost:5269/api/Match/${user.id}?lat=${lat}&lng=${lng}&radio=100`);
+            if (res.ok) {
+                const data = await res.json();
+                setMatches(data);
+            }
+        } catch (error) {
+            console.error("Error fetching matches:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const filteredMatches = matches.filter(m => {
+        if (filter === 'estricto') return m.porcentajeMatch >= 80;
+        if (filter === 'flexible') return m.porcentajeMatch >= 50;
+        return true;
+    });
+
+    const getBadges = (score: number) => {
+        if (score >= 80) return { bg: 'bg-green-100', text: 'text-green-700', label: 'Excelente Match' };
+        if (score >= 50) return { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Bueno' };
+        return { bg: 'bg-red-50', text: 'text-red-500', label: 'Bajo' };
+    };
+
+    if (!user.id || !user.tienePerfilMatch) {
+        return (
+            <div className="min-h-screen bg-white flex flex-col items-center justify-center p-8 text-center">
+                <div className="w-24 h-24 bg-orange-100 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                    <Heart className="w-12 h-12 text-orange-500" />
                 </div>
+                <h1 className="text-2xl font-bold text-gray-800 mb-2">Encuentra tu compañero ideal</h1>
+                <p className="text-gray-500 mb-8 max-w-xs mx-auto">Nuestro algoritmo analiza tu estilo de vida para sugerirte mascotas compatibles.</p>
+                <button
+                    onClick={() => navigate(user.id ? '/quiz' : '/login')}
+                    className="bg-gray-900 text-white px-8 py-3 rounded-full font-bold shadow-xl hover:scale-105 transition-transform flex items-center gap-2"
+                >
+                    {user.id ? 'Comenzar Test' : 'Iniciar Sesión'} <ArrowRight className="w-4 h-4" />
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen bg-gray-50 pb-20">
+            {/* Header */}
+            <div className="bg-white p-4 sticky top-0 z-40 border-b border-gray-100 flex items-center justify-between">
+                <h1 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                    <span className="bg-orange-100 p-1.5 rounded-lg text-orange-600"><Percent className="w-5 h-5" /></span>
+                    Compatibilidad
+                </h1>
             </div>
 
-            {/* --- NUEVO: Banner de Login (Renderizado Condicional) --- */}
-            {/* Si NO hay usuario (!usuario) Y (&&) mostramos el div */}
-            {!usuario && (
-                <div className="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg mb-8 shadow-sm">
-                    <h2 className="text-xl font-bold text-blue-800">
-                        <i className="fa-solid fa-circle-info mr-2"></i>
-                        ¿Buscas a tu compañero ideal?
-                    </h2>
-                    <p className="text-blue-700 mt-2">
-                        Inicia sesión para ver el <strong>% de compatibilidad real</strong> basado en tu estilo de vida.
-                    </p>
-                    <div className="mt-4">
-                        <Link to="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-blue-700 transition">
-                            Iniciar Sesión
-                        </Link>
+            {/* Filters */}
+            <div className="p-4 flex gap-2 overflow-x-auto">
+                {[
+                    { id: 'estricto', label: 'Compatibles (+80%)', icon: CheckCircle2 },
+                    { id: 'flexible', label: 'Flexibles (+50%)', icon: Filter },
+                    { id: 'todos', label: 'Ver Todos', icon: Heart },
+                ].map(btn => (
+                    <button
+                        key={btn.id}
+                        onClick={() => setFilter(btn.id as any)}
+                        className={`px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 whitespace-nowrap transition-colors ${filter === btn.id
+                                ? 'bg-gray-800 text-white shadow-lg'
+                                : 'bg-white text-gray-600 border border-gray-200'
+                            }`}
+                    >
+                        {React.createElement(btn.icon, { className: "w-4 h-4" })}
+                        {btn.label}
+                    </button>
+                ))}
+            </div>
+
+            {/* List */}
+            <div className="px-4 pb-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {loading ? (
+                    <div className="col-span-full py-20 text-center text-gray-400">
+                        <Heart className="w-12 h-12 mx-auto animate-bounce mb-4 text-gray-300" />
+                        <p>Buscando matches perfectos...</p>
                     </div>
-                </div>
-            )}
-
-            {cargando ? (
-                <div className="text-center py-20">
-                    <i className="fa-solid fa-spinner fa-spin text-3xl text-orange-600"></i>
-                    <p className="mt-2 text-gray-500">Buscando amigos peludos...</p>
-                </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {animales.map((animal) => (
-                        <div key={animal.id} className="bg-white rounded-2xl shadow-sm hover:shadow-md transition overflow-hidden border border-gray-100 group">
-                            <div className="h-48 overflow-hidden relative">
-                                <img src={animal.imagenUrl} alt={animal.nombre} className="w-full h-full object-cover group-hover:scale-105 transition duration-500" />
-                                {/* Solo mostramos el badge si hay usuario logueado */}
-                                {usuario && (
-                                    <span className="absolute top-3 right-3 bg-white/90 px-2 py-1 rounded-lg text-xs font-bold text-green-700 shadow-sm">
-                                        {animal.matchPorcentaje}% Match
-                                    </span>
-                                )}
-                            </div>
-
-                            <div className="p-4">
-                                <div className="flex justify-between items-start">
-                                    <h3 className="font-bold text-lg text-gray-800">{animal.nombre}</h3>
-                                    {animal.esPerro ? 
-                                        <i className="fa-solid fa-dog text-blue-500 bg-blue-50 p-2 rounded-full"></i> : 
-                                        <i className="fa-solid fa-cat text-purple-500 bg-purple-50 p-2 rounded-full"></i>
-                                    }
-                                </div>
-                                <p className="text-gray-500 text-sm mt-1 line-clamp-2">{animal.descripcion}</p>
-                                
-                                <div className="mt-4 flex items-center text-xs text-gray-400 space-x-4">
-                                    <span><i className="fa-solid fa-venus-mars mr-1"></i> {animal.sexo}</span>
-                                    <span><i className="fa-solid fa-cake-candles mr-1"></i> {animal.edad}</span>
-                                </div>
-
-                                {/* --- NUEVO: Botón activa el estado del Modal --- */}
-                                <button 
-                                    onClick={() => setMatchSeleccionado(animal)}
-                                    className="w-full mt-4 bg-orange-600 text-white py-2 rounded-xl font-bold hover:bg-orange-700 transition"
-                                >
-                                    Ver Detalles / Match
-                                </button>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-
-            {/* --- NUEVO: EL MODAL (Renderizado Condicional) --- */}
-            {/* Solo se dibuja si matchSeleccionado NO es null */}
-            {matchSeleccionado && (
-                <div className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
-                    {/* Contenido del Modal */}
-                    <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-[fadeIn_0.3s_ease-out]">
-                        
-                        {/* Header con Imagen */}
-                        <div className="h-40 bg-gray-200 relative">
-                            <img src={matchSeleccionado.imagenUrl} className="w-full h-full object-cover" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
-                                <h2 className="text-white text-2xl font-bold">{matchSeleccionado.nombre}</h2>
-                            </div>
-                            {/* Botón de cerrar: Pone el estado en null */}
-                            <button 
-                                onClick={() => setMatchSeleccionado(null)}
-                                className="absolute top-2 right-2 bg-black/50 text-white w-8 h-8 rounded-full hover:bg-black/80 flex items-center justify-center"
-                            >
-                                &times;
-                            </button>
-                        </div>
-
-                        <div className="p-6">
-                            <div className="flex items-center justify-between mb-6">
-                                <div>
-                                    <p className="text-sm text-gray-500 font-bold uppercase">Compatibilidad</p>
-                                    <p className="text-xs text-gray-400">Basado en tu perfil</p>
-                                </div>
-                                <div className="text-2xl font-bold text-green-600 bg-green-50 px-4 py-2 rounded-lg">
-                                    {matchSeleccionado.matchPorcentaje || '?'}%
-                                </div>
-                            </div>
-
-                            <p className="text-gray-600 mb-6 text-sm">
-                                {matchSeleccionado.descripcion}
-                            </p>
-
-                            <div className="space-y-3">
-                                <button className="w-full bg-green-500 text-white py-3 rounded-xl font-bold hover:bg-green-600 transition shadow-md flex items-center justify-center">
-                                    <i className="fa-brands fa-whatsapp text-xl mr-2"></i> Contactar ahora
-                                </button>
-                                <button 
-                                    onClick={() => setMatchSeleccionado(null)}
-                                    className="w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200"
-                                >
-                                    Cerrar
-                                </button>
-                            </div>
-                        </div>
+                ) : filteredMatches.length === 0 ? (
+                    <div className="col-span-full py-10 text-center bg-white rounded-2xl border border-dashed border-gray-300">
+                        <Filter className="w-10 h-10 mx-auto text-gray-300 mb-2" />
+                        <p className="text-gray-500">No hay mascotas con este nivel de compatibilidad.</p>
+                        <button onClick={() => setFilter('todos')} className="text-blue-500 font-bold mt-2 hover:underline">Ver todas las mascotas</button>
                     </div>
-                </div>
-            )}
+                ) : (
+                    filteredMatches.map((match, idx) => (
+                        <div key={idx} className="relative group">
+                            <PetCard
+                                animal={match.animal}
+                                onClick={() => setSelectedMatch(match)}
+                            />
+                            {/* Overlay Badge */}
+                            <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold shadow-md z-10 flex items-center gap-1 ${getBadges(match.porcentajeMatch).bg} ${getBadges(match.porcentajeMatch).text}`}>
+                                <Percent className="w-3 h-3" />
+                                {match.porcentajeMatch}% Match
+                            </div>
+                        </div>
+                    ))
+                )}
+            </div>
+
+            {/* Match Details Modal */}
+            <AnimatePresence>
+                {selectedMatch && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4"
+                        onClick={() => setSelectedMatch(null)}
+                    >
+                        <motion.div
+                            initial={{ y: '100%' }}
+                            animate={{ y: 0 }}
+                            exit={{ y: '100%' }}
+                            className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="relative h-60">
+                                <img src={selectedMatch.animal.imagenUrl || 'https://via.placeholder.com/400'} className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-6">
+                                    <div>
+                                        <div className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold mb-2 ${getBadges(selectedMatch.porcentajeMatch).bg} ${getBadges(selectedMatch.porcentajeMatch).text}`}>
+                                            <Percent className="w-3 h-3" /> {selectedMatch.porcentajeMatch}% Compatible
+                                        </div>
+                                        <h2 className="text-3xl font-extrabold text-white">{selectedMatch.animal.nombre}</h2>
+                                    </div>
+                                </div>
+                                <button onClick={() => setSelectedMatch(null)} className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 p-2 rounded-full text-white backdrop-blur-md transition">
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+
+                            <div className="p-6">
+                                <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                                    <Wand2 className="w-5 h-5 text-purple-500" />
+                                    Análisis del Algoritmo
+                                </h3>
+
+                                <div className="space-y-3 mb-6 max-h-60 overflow-y-auto">
+                                    {selectedMatch.razonesMatch?.map((razon, i) => {
+                                        const isNegative = razon.includes('❌') || razon.includes('⚠️');
+                                        return (
+                                            <div key={i} className={`p-3 rounded-xl border flex gap-3 items-start ${isNegative ? 'bg-orange-50 border-orange-100' : 'bg-green-50 border-green-100'}`}>
+                                                <div className={`mt-0.5 ${isNegative ? 'text-orange-500' : 'text-green-500'}`}>
+                                                    {isNegative ? <AlertCircle className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
+                                                </div>
+                                                <p className="text-sm text-gray-700 leading-snug">{razon.replace(/✅|❌|⚠️/g, '')}</p>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+
+                                <a
+                                    href={`https://wa.me/549${selectedMatch.animal.telefonoContacto || ''}`}
+                                    target="_blank"
+                                    className="block w-full bg-green-500 text-white text-center py-4 rounded-xl font-bold hover:bg-green-600 transition shadow-lg shadow-green-500/20"
+                                >
+                                    ¡Quiero Adoptarlo!
+                                </a>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

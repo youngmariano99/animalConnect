@@ -3,13 +3,16 @@ using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
 using DotNetEnv; // <--- 1. Importar librería
+using System.Globalization; // <--- AGREGAR ESTO ARRIBA
 
 // 2. Cargar el archivo .env ANTES de crear el builder
 Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
-
+var cultureInfo = new CultureInfo("en-US");
+CultureInfo.DefaultThreadCurrentCulture = cultureInfo;
+CultureInfo.DefaultThreadCurrentUICulture = cultureInfo;
 // --- 1. CONFIGURACIÓN DE SERVICIOS ---
 
 builder.Services.AddOpenApi();

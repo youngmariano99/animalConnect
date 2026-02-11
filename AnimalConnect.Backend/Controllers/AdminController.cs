@@ -36,12 +36,32 @@ namespace AnimalConnect.Backend.Controllers
             ).ToList();
 
             // 4. Calcular Métricas
+            var fechaInicioMes = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+            
+            // Adopciones del mes (Usamos FechaUltimaRenovacion como proxy de fecha de cierre por ahora)
+            var adopcionesMes = animalesEnZona.Count(a => a.IdEstado == 3 && a.FechaUltimaRenovacion >= fechaInicioMes);
+
+            // Distribución de Especies (Dinámico)
+            var especiesStats = animalesEnZona
+                .GroupBy(a => a.IdEspecie)
+                .Select(g => new { 
+                    Especie = g.Key == 1 ? "Perros" : g.Key == 2 ? "Gatos" : "Otros", 
+                    Cantidad = g.Count() 
+                })
+                .ToList();
+
             var stats = new {
                 TotalReportes = animalesEnZona.Count,
-                Perros = animalesEnZona.Count(a => a.IdEspecie == 1),
-                Gatos = animalesEnZona.Count(a => a.IdEspecie == 2),
-                PerdidosActivos = animalesEnZona.Count(a => a.IdEstado == 2),
-                // Datos para el mapa de calor (solo lat/lon)
+                AdopcionesMes = adopcionesMes,
+                CasosAbiertos = animalesEnZona.Count(a => a.IdEstado != 3),
+                UsuariosNuevos = 12, // Mock por ahora (requeriría query compleja de usuarios x zona)
+                
+                // Nuevos campos para gráficos
+                SpeciesLabels = especiesStats.Select(e => e.Especie).ToArray(),
+                SpeciesData = especiesStats.Select(e => e.Cantidad).ToArray(),
+                
+                // Trend Mock (Simulado para que el gráfico no esté vacío)
+                AdoptionTrend = new [] { 5, 8, 12, 10, 15, adopcionesMes > 0 ? adopcionesMes : 20 },
                 PuntosCalor = animalesEnZona.Select(a => new { lat = a.UbicacionLat, lng = a.UbicacionLon })
             };
 

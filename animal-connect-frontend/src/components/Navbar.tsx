@@ -1,18 +1,16 @@
 // src/components/Navbar.tsx
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { PawPrint, Menu, X, ChevronDown, Stethoscope, Store, HeartPulse, UserCircle, LogOut, User } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-// Simulamos la autenticación por ahora (luego conectaremos esto con Auth real)
+// Simulamos la autenticación por ahora
 const checkUser = () => {
     const usuarioGuardado = localStorage.getItem('usuario');
-    
-    // Si no hay nada, o es la palabra "undefined" (basura), retornamos null
     if (!usuarioGuardado || usuarioGuardado === "undefined") return null;
-
     try {
         return JSON.parse(usuarioGuardado);
     } catch (error) {
-        // Si falla el parseo, limpiamos la basura para que no moleste más
         console.error("Error leyendo usuario:", error);
         localStorage.removeItem('usuario');
         return null;
@@ -20,22 +18,20 @@ const checkUser = () => {
 };
 
 const Navbar = () => {
-    const [isOpen, setIsOpen] = useState(false); // Estado para menú móvil
-    const [user, setUser] = useState(checkUser()); // Estado del usuario
-    const location = useLocation(); // Hook para saber en qué URL estamos
+    const [isOpen, setIsOpen] = useState(false);
+    const [user, setUser] = useState(checkUser());
+    const location = useLocation();
 
-    // Función auxiliar para saber si un link está activo (Reemplaza a tu isActive antiguo)
     const isActive = (path: string) => {
-        return location.pathname === path 
-            ? 'text-orange-600 font-bold' 
-            : 'text-gray-600 hover:text-orange-500 font-medium';
+        return location.pathname === path
+            ? 'text-health font-bold bg-health/10 rounded-xl'
+            : 'text-tech hover:text-health font-medium hover:bg-health/5 rounded-xl';
     };
 
-    // Función para el dropdown de Servicios (lógica migrada de tu layout.js)
     const isServiceActive = () => {
-        const servicesPaths = ['/veterinarias', '/tiendas', '/salud'];
+        const servicesPaths = ['/marketplace', '/campanias'];
         const isMatch = servicesPaths.some(p => location.pathname.includes(p));
-        return isMatch ? 'text-orange-600 font-bold' : 'text-gray-600 hover:text-orange-500 font-medium';
+        return isMatch ? 'text-health font-bold bg-health/10 rounded-xl' : 'text-tech hover:text-health font-medium hover:bg-health/5 rounded-xl';
     };
 
     const handleLogout = () => {
@@ -46,102 +42,130 @@ const Navbar = () => {
     };
 
     return (
-        <nav id="app-navbar" className="bg-white shadow-md sticky top-0 z-[1000]">
+        <nav className="bg-white/90 backdrop-blur-md sticky top-0 z-[1000] border-b border-gray-100 shadow-sm">
             <div className="container mx-auto px-4">
-                <div className="flex justify-between items-center h-16">
+                <div className="flex justify-between items-center h-20">
                     {/* LOGO */}
                     <Link to="/" className="flex items-center space-x-2 group">
-                        <div className="bg-orange-100 p-2 rounded-lg group-hover:bg-orange-200 transition">
-                            <i className="fa-solid fa-paw text-2xl text-orange-600"></i>
+                        <div className="bg-health p-2.5 rounded-2xl group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-health/20">
+                            <PawPrint className="text-white w-6 h-6" strokeWidth={2.5} />
                         </div>
-                        <span className="font-bold text-xl text-gray-800 tracking-tight">
-                            Animal<span className="text-orange-600">Connect</span>
+                        <span className="font-heading font-extrabold text-2xl text-tech tracking-tight">
+                            Animal<span className="text-health">Connect</span>
                         </span>
                     </Link>
 
                     {/* MENÚ DE ESCRITORIO */}
-                    <div className="hidden md:flex space-x-8 items-center">
-                        <Link to="/" className={`transition ${isActive('/')}`}>Inicio</Link>
-                        
+                    <div className="hidden md:flex space-x-2 items-center">
+                        <Link to="/" className={`px-4 py-2 transition-all duration-300 ${isActive('/')}`}>Inicio</Link>
+
                         {/* Dropdown Servicios */}
                         <div className="relative group">
-                            <button className={`flex items-center space-x-1 transition ${isServiceActive()}`}>
+                            <button className={`flex items-center gap-1 px-4 py-2 transition-all duration-300 ${isServiceActive()}`}>
                                 <span>Servicios</span>
-                                <i className="fa-solid fa-chevron-down text-xs"></i>
+                                <ChevronDown className="w-4 h-4" />
                             </button>
-                            {/* Menú desplegable */}
-                            <div className="absolute top-full left-0 w-48 bg-white shadow-lg rounded-xl py-2 hidden group-hover:block border border-gray-100 mt-2">
-                                <Link to="/veterinarias" className="block px-4 py-2 text-gray-600 hover:bg-orange-50 hover:text-orange-600">
-                                    <i className="fa-solid fa-user-doctor mr-2"></i> Veterinarias
+                            <div className="absolute top-full left-0 w-56 bg-white shadow-xl rounded-2xl py-2 hidden group-hover:block border border-gray-100 mt-2 animate-in fade-in slide-in-from-top-2">
+                                <Link to="/marketplace" className="flex items-center px-4 py-3 text-tech hover:bg-health/5 hover:text-health transition-colors">
+                                    <Stethoscope className="w-5 h-5 mr-3 text-health" /> Veterinarias
                                 </Link>
-                                <Link to="/tiendas" className="block px-4 py-2 text-gray-600 hover:bg-orange-50 hover:text-orange-600">
-                                    <i className="fa-solid fa-store mr-2"></i> Pet Shops
+                                <Link to="/marketplace" className="flex items-center px-4 py-3 text-tech hover:bg-health/5 hover:text-health transition-colors">
+                                    <Store className="w-5 h-5 mr-3 text-hope" /> Pet Shops
                                 </Link>
-                                <Link to="/salud" className="block px-4 py-2 text-gray-600 hover:bg-orange-50 hover:text-orange-600">
-                                    <i className="fa-solid fa-heart-pulse mr-2"></i> Salud
+                                <Link to="/campanias" className="flex items-center px-4 py-3 text-tech hover:bg-health/5 hover:text-health transition-colors">
+                                    <HeartPulse className="w-5 h-5 mr-3 text-love" /> Campañas Salud
                                 </Link>
                             </div>
                         </div>
 
-                        <Link to="/adopcion" className={`transition ${isActive('/adopcion')}`}>Adopción</Link>
-                        <Link to="/comunidad" className={`transition ${isActive('/comunidad')}`}>Comunidad</Link>
+                        <Link to="/adopcion" className={`px-4 py-2 transition-all duration-300 ${isActive('/adopcion')}`}>Adopción</Link>
+                        <Link to="/comunidad" className={`px-4 py-2 transition-all duration-300 ${isActive('/comunidad')}`}>Comunidad</Link>
 
-                        {/* ÁREA DE USUARIO (Dinámica) */}
-                        {user ? (
-                            <div className="flex items-center space-x-4 ml-4 pl-4 border-l border-gray-200">
-                                <div className="text-right hidden lg:block">
-                                    <div className="text-sm font-bold text-gray-800">{user.nombre || 'Usuario'}</div>
-                                    <div className="text-xs text-gray-500 capitalize">{user.rol || 'Ciudadano'}</div>
+                        {/* ÁREA DE USUARIO */}
+                        <div className="pl-4 ml-2 flex items-center gap-3">
+                            {user ? (
+                                <div className="flex items-center gap-3 pl-4 border-l border-gray-200">
+                                    <div className="text-right hidden lg:block">
+                                        <div className="text-sm font-bold text-tech">{user.nombre}</div>
+                                        <div className="text-xs text-health font-semibold capitalize">{user.rol}</div>
+                                    </div>
+                                    <Link to="/perfil" className="bg-gray-100 p-2.5 rounded-full hover:bg-health/10 text-tech hover:text-health transition-all duration-300 ring-2 ring-transparent hover:ring-health/20" title="Mi Perfil">
+                                        <User className="w-5 h-5" />
+                                    </Link>
+                                    <button onClick={handleLogout} className="text-gray-400 hover:text-love transition-colors p-2" title="Cerrar Sesión">
+                                        <LogOut className="w-5 h-5" />
+                                    </button>
                                 </div>
-                                <Link to="/perfil" className="bg-gray-100 p-2 rounded-full hover:bg-orange-100 text-gray-600 hover:text-orange-600 transition" title="Mi Perfil">
-                                    <i className="fa-solid fa-user-gear text-sm"></i>
+                            ) : (
+                                <Link to="/login" className="bg-health text-white px-6 py-2.5 rounded-full font-bold hover:bg-health/90 transition-all shadow-lg shadow-health/30 hover:shadow-health/40 transform hover:-translate-y-0.5 flex items-center gap-2">
+                                    <UserCircle className="w-5 h-5" />
+                                    Ingresar
                                 </Link>
-                                <button onClick={handleLogout} className="text-gray-400 hover:text-red-500 transition" title="Cerrar Sesión">
-                                    <i className="fa-solid fa-right-from-bracket"></i>
-                                </button>
-                            </div>
-                        ) : (
-                            <Link to="/login" className="bg-orange-600 text-white px-6 py-2 rounded-full font-bold hover:bg-orange-700 transition shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                                Ingresar
-                            </Link>
-                        )}
+                            )}
+                        </div>
                     </div>
 
                     {/* BOTÓN HAMBURGUESA (MÓVIL) */}
-                    <button 
-                        className="md:hidden text-gray-600 focus:outline-none"
+                    <button
+                        className="md:hidden p-2 text-tech hover:bg-gray-100 rounded-xl transition-colors"
                         onClick={() => setIsOpen(!isOpen)}
                     >
-                        <i className={`fa-solid ${isOpen ? 'fa-times' : 'fa-bars'} text-2xl`}></i>
+                        {isOpen ? <X className="w-7 h-7" /> : <Menu className="w-7 h-7" />}
                     </button>
                 </div>
             </div>
 
-            {/* MENÚ MÓVIL (Desplegable) */}
-            {isOpen && (
-                <div className="md:hidden bg-white border-t border-gray-100 absolute w-full shadow-lg">
-                    <div className="px-4 py-3 space-y-3">
-                        <Link to="/" className="block text-gray-600 font-medium" onClick={() => setIsOpen(false)}>Inicio</Link>
-                        <div className="pl-4 border-l-2 border-orange-100 space-y-2">
-                            <p className="text-xs font-bold text-orange-400 uppercase tracking-wider">Servicios</p>
-                            <Link to="/veterinarias" className="block text-gray-600" onClick={() => setIsOpen(false)}>Veterinarias</Link>
-                            <Link to="/tiendas" className="block text-gray-600" onClick={() => setIsOpen(false)}>Pet Shops</Link>
-                        </div>
-                        <Link to="/adopcion" className="block text-gray-600 font-medium" onClick={() => setIsOpen(false)}>Adopción</Link>
-                        
-                        {user ? (
-                            <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
-                                <span className="font-bold text-gray-800">Hola, {user.nombre}</span>
-                                <button onClick={handleLogout} className="text-red-500 text-sm font-bold">Salir</button>
+            {/* MENÚ MÓVIL */}
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="md:hidden bg-white border-t border-gray-100 overflow-hidden"
+                    >
+                        <div className="p-4 space-y-2">
+                            <Link to="/" className="block px-4 py-3 rounded-xl text-tech font-bold hover:bg-gray-50" onClick={() => setIsOpen(false)}>Inicio</Link>
+
+                            <div className="bg-gray-50 rounded-2xl p-4 space-y-1">
+                                <p className="text-xs font-bold text-health uppercase tracking-wider mb-2 px-2">Servicios</p>
+                                <Link to="/marketplace" className="flex items-center px-4 py-3 rounded-xl text-tech hover:bg-white" onClick={() => setIsOpen(false)}>
+                                    <Stethoscope className="w-5 h-5 mr-3 text-health" /> Veterinarias
+                                </Link>
+                                <Link to="/marketplace" className="flex items-center px-4 py-3 rounded-xl text-tech hover:bg-white" onClick={() => setIsOpen(false)}>
+                                    <Store className="w-5 h-5 mr-3 text-hope" /> Pet Shops
+                                </Link>
                             </div>
-                        ) : (
-                            <Link to="/login" className="block w-full text-center bg-orange-600 text-white py-3 rounded-xl font-bold shadow-md" onClick={() => setIsOpen(false)}>
-                                <i className="fa-solid fa-user-circle text-xl mr-2"></i> Ingresar
-                            </Link>
-                        )}
-                    </div>
-                </div>
-            )}
+
+                            <Link to="/adopcion" className="block px-4 py-3 rounded-xl text-tech font-bold hover:bg-gray-50" onClick={() => setIsOpen(false)}>Adopción</Link>
+
+                            {user ? (
+                                <div className="mt-4 pt-4 border-t border-gray-100">
+                                    <div className="flex items-center justify-between px-2 mb-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="bg-health/10 p-2 rounded-full">
+                                                <User className="w-5 h-5 text-health" />
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-tech">{user.nombre}</div>
+                                                <div className="text-xs text-gray-500">{user.rol}</div>
+                                            </div>
+                                        </div>
+                                        <button onClick={handleLogout} className="text-love font-medium text-sm bg-love/10 px-3 py-1.5 rounded-lg">Salir</button>
+                                    </div>
+                                    <Link to="/perfil" className="block w-full text-center bg-gray-100 text-tech py-3 rounded-xl font-bold" onClick={() => setIsOpen(false)}>
+                                        Ir a mi Perfil
+                                    </Link>
+                                </div>
+                            ) : (
+                                <Link to="/login" className="block w-full text-center bg-health text-white py-3.5 rounded-xl font-bold shadow-lg shadow-health/20 mt-4" onClick={() => setIsOpen(false)}>
+                                    Ingresar
+                                </Link>
+                            )}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </nav>
     );
 };

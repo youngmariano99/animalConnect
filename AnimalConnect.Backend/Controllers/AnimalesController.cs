@@ -3,6 +3,9 @@ using Microsoft.EntityFrameworkCore;
 using AnimalConnect.Backend.Data;
 using AnimalConnect.Backend.Models;
 using AnimalConnect.Backend.Services;
+using Microsoft.AspNetCore.Hosting; // <---  (Para IWebHostEnvironment)
+using System.IO;                    // <---  (Para Path y FileStream)
+using System;                       // <--- Para Guid y DateTime
 
 namespace AnimalConnect.Backend.Controllers
 {
@@ -11,12 +14,13 @@ namespace AnimalConnect.Backend.Controllers
     public class AnimalesController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _env;
 
-        public AnimalesController(ApplicationDbContext context)
+        public AnimalesController(ApplicationDbContext context, IWebHostEnvironment env) // <--- ¡AQUÍ FALTABA "env"!
         {
             _context = context;
+            _env = env; // Ahora sí funcionará porque "env" viene de arriba 👆
         }
-
         // --- 1. OBTENER PÚBLICOS (Solo activos y recientes) ---
         // GET: api/Animales?lat=-37.99&lng=-61.35&radio=50
         [HttpGet]
@@ -94,16 +98,54 @@ namespace AnimalConnect.Backend.Controllers
         }
 
         // --- CREAR (Actualizado con UsuarioId) ---
-        [HttpPost]
-        public async Task<ActionResult<Animal>> PostAnimal(Animal animal)
+       [HttpPost]
+        public async Task<ActionResult<Animal>> PostAnimal([FromForm] Animal animal)
         {
-            animal.FechaPublicacion = DateTime.Now;
-            animal.FechaUltimaRenovacion = DateTime.Now;
-            
-            _context.Animales.Add(animal);
-            await _context.SaveChangesAsync();
+            try 
+            {
+                // A. LÓGICA DE GUARDADO DE IMAGEN
+                // Verificamos si llegó una foto válida
+                if (animal.Foto != null && animal.Foto.Length > 0)
+                {
+                    // 1. Ruta: wwwroot/uploads
+                    // Usamos _env.WebRootPath para ir a la carpeta correcta en el servidor
+                    string uploadsFolder = Path.Combine(_env.WebRootPath, "uploads");
 
-            return Ok(animal);
+                    // Crear carpeta si no existe
+                    if (!Directory.Exists(uploadsFolder))
+                        Directory.CreateDirectory(uploadsFolder);
+
+                    // 2. Nombre único para la imagen
+                    string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(animal.Foto.FileName);
+                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                    // 3. Guardar el archivo en disco
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await animal.Foto.CopyToAsync(stream);
+                    }
+
+                    // 4. Crear URL pública para guardarla en la BD
+                    // Ejemplo: http://localhost:5269/uploads/foto-abc.jpg
+                    string baseUrl = $"{Request.Scheme}://{Request.Host}";
+                    animal.ImagenUrl = $"{baseUrl}/uploads/{uniqueFileName}";
+                }
+
+                // B. COMPLETAR DATOS FALTANTES
+                animal.FechaPublicacion = DateTime.Now;
+                animal.FechaUltimaRenovacion = DateTime.Now;
+
+                // C. GUARDAR EN BASE DE DATOS
+                _context.Animales.Add(animal);
+                await _context.SaveChangesAsync();
+
+                return Ok(animal);
+            }
+            catch (Exception ex)
+            {
+                // Si algo falla, devolvemos error 500 con el mensaje para que sepas qué pasó
+                return StatusCode(500, $"Error interno: {ex.Message}");
+            }
         }
 
         // ... (Mantener Delete y Get por ID igual que antes) ...

@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { PawPrint, Loader2, AlertCircle, User, Lock } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-// 1. INTERFAZ: Lo que espera tu Backend C# (LoginRequest)
 interface LoginRequest {
     Usuario: string;
     Password: string;
 }
 
-// 2. INTERFAZ CORREGIDA: Según tu AuthController.cs actual
-// Tu backend devuelve los datos "planos", no dentro de un objeto "usuario".
 interface UserResponse {
     id: number;
     nombre: string;
@@ -21,7 +20,7 @@ interface UserResponse {
 
 const Login = () => {
     const navigate = useNavigate();
-    
+
     const [formData, setFormData] = useState<LoginRequest>({ Usuario: '', Password: '' });
     const [error, setError] = useState<string | null>(null);
     const [cargando, setCargando] = useState(false);
@@ -39,7 +38,6 @@ const Login = () => {
         setCargando(true);
 
         try {
-            // Asegúrate que este puerto (7133) sea el correcto donde corre tu API
             const response = await fetch('http://localhost:5269/api/Auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -47,31 +45,21 @@ const Login = () => {
             });
 
             if (!response.ok) {
-                // Intentamos leer el mensaje de error del backend si existe
-                const errorData = await response.text(); 
+                const errorData = await response.text();
                 throw new Error(errorData || 'Usuario o contraseña incorrectos');
             }
 
-            // CORRECCIÓN AQUÍ:
-            const data: UserResponse = await response.json(); 
+            const data: UserResponse = await response.json();
+            localStorage.setItem('usuario', JSON.stringify(data));
 
-            // Como tu backend NO devuelve un token por ahora (según el archivo que pasaste),
-            // solo guardamos los datos del usuario.
-            
-            // Guardamos todo el objeto 'data' como el usuario actual
-            localStorage.setItem('usuario', JSON.stringify(data)); 
-
-            // REDIRECCIÓN (Usando data.rol directamente)
             if (data.rol === 'Administrador') {
                 navigate('/superadmin');
             } else if (data.rol === 'Municipio') {
                 navigate('/admin');
             } else {
-                navigate('/'); // Usuario normal va al Home
+                navigate('/');
             }
 
-            // Forzamos una recarga rápida para que la Navbar se entere que cambiamos de usuario
-            // (Una solución temporal simple, luego usaremos Context para hacerlo elegante)
             window.location.reload();
 
         } catch (err) {
@@ -83,67 +71,79 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-900 bg-[url('https://images.unsplash.com/photo-1548199973-03cce0bbc87b')] bg-cover bg-center bg-blend-overlay">
-            <div className="bg-white/95 backdrop-blur-sm p-8 rounded-2xl shadow-2xl w-full max-w-md">
-                
+        <div className="min-h-screen flex items-center justify-center bg-canvas px-4">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white p-8 rounded-pet shadow-2xl w-full max-w-md border border-gray-100"
+            >
+
                 <div className="text-center mb-8">
-                    <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <i className="fa-solid fa-paw text-3xl text-orange-600"></i>
-                    </div>
-                    <h2 className="text-3xl font-bold text-gray-800">Bienvenido</h2>
-                    <p className="text-gray-500 mt-2">Ingresa a AnimalConnect</p>
+                    <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="bg-health w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-health/30"
+                    >
+                        <PawPrint className="text-white w-10 h-10" />
+                    </motion.div>
+                    <h2 className="text-3xl font-heading font-extrabold text-tech">Bienvenido</h2>
+                    <p className="text-gray-500 mt-2 font-body">Ingresa a AnimalConnect</p>
                 </div>
 
                 {error && (
-                    <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-4 text-sm flex items-center">
-                        <i className="fa-solid fa-circle-exclamation mr-2"></i>
+                    <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="bg-red-50 text-red-600 p-4 rounded-xl mb-6 text-sm flex items-center shadow-sm"
+                    >
+                        <AlertCircle className="w-5 h-5 mr-3 flex-shrink-0" />
                         {error}
-                    </div>
+                    </motion.div>
                 )}
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2">Usuario</label>
-                        <input 
-                            type="text" 
+                    <div className="relative group">
+                        <User className="absolute left-4 top-3.5 text-gray-400 w-5 h-5 group-focus-within:text-health transition-colors" />
+                        <input
+                            type="text"
                             name="Usuario"
                             value={formData.Usuario}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition"
+                            className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-200 focus:border-health focus:ring-4 focus:ring-health/10 outline-none transition-all bg-gray-50 focus:bg-white font-medium text-tech"
                             placeholder="Tu nombre de usuario"
                             required
                         />
                     </div>
 
-                    <div>
-                        <label className="block text-gray-700 text-sm font-bold mb-2">Contraseña</label>
-                        <input 
-                            type="password" 
+                    <div className="relative group">
+                        <Lock className="absolute left-4 top-3.5 text-gray-400 w-5 h-5 group-focus-within:text-health transition-colors" />
+                        <input
+                            type="password"
                             name="Password"
                             value={formData.Password}
                             onChange={handleChange}
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:border-orange-500 focus:ring-2 focus:ring-orange-200 outline-none transition"
+                            className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-200 focus:border-health focus:ring-4 focus:ring-health/10 outline-none transition-all bg-gray-50 focus:bg-white font-medium text-tech"
                             placeholder="••••••••"
                             required
                         />
                     </div>
 
-                    <button 
-                        type="submit" 
+                    <button
+                        type="submit"
                         disabled={cargando}
-                        className="w-full bg-orange-600 text-white py-3 rounded-xl font-bold hover:bg-orange-700 transition shadow-lg disabled:opacity-50 flex justify-center items-center"
+                        className="w-full bg-health text-white py-4 rounded-pet font-bold hover:bg-health/90 transition-all shadow-lg shadow-health/30 hover:shadow-health/40 transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center gap-2"
                     >
-                        {cargando ? <i className="fa-solid fa-spinner fa-spin"></i> : 'Ingresar'}
+                        {cargando ? <Loader2 className="w-6 h-6 animate-spin" /> : 'Ingresar'}
                     </button>
                 </form>
 
-                <div className="mt-6 text-center text-sm text-gray-500">
+                <div className="mt-8 text-center text-sm text-gray-500 font-medium">
                     ¿No tienes cuenta?{' '}
-                    <Link to="/register" className="text-orange-600 font-bold hover:underline">
+                    <Link to="/register" className="text-health font-bold hover:text-tech transition-colors hover:underline">
                         Regístrate aquí
                     </Link>
                 </div>
-            </div>
+            </motion.div>
         </div>
     );
 };

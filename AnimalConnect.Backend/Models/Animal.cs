@@ -18,6 +18,8 @@ namespace AnimalConnect.Backend.Models
         public string EdadAproximada { get; set; } = string.Empty;
 
         public string? ImagenUrl { get; set; } // Puede ser nulo si no tiene foto aún
+        [NotMapped] 
+        public IFormFile? Foto { get; set; }
 
         // Geolocalización (usamos double para lat/lon)
         public double? UbicacionLat { get; set; }
