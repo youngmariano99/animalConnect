@@ -3,9 +3,11 @@ using Microsoft.EntityFrameworkCore;
 using AnimalConnect.Backend.Data;
 using AnimalConnect.Backend.Models;
 using AnimalConnect.Backend.Services;
-using Microsoft.AspNetCore.Hosting; // <---  (Para IWebHostEnvironment)
-using System.IO;                    // <---  (Para Path y FileStream)
-using System;                       // <--- Para Guid y DateTime
+using Microsoft.AspNetCore.Hosting; 
+using System.IO;                    
+using System;
+using NetTopologySuite.Geometries; // Geo
+using NetTopologySuite; // For NtsGeometryServices
 
 namespace AnimalConnect.Backend.Controllers
 {
@@ -15,12 +17,61 @@ namespace AnimalConnect.Backend.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly IWebHostEnvironment _env;
+        private readonly IPdfService _pdfService;
+        private readonly IQrService _qrService;
 
-        public AnimalesController(ApplicationDbContext context, IWebHostEnvironment env) // <--- ¡AQUÍ FALTABA "env"!
+        public AnimalesController(ApplicationDbContext context, IWebHostEnvironment env, IPdfService pdfService, IQrService qrService) 
         {
             _context = context;
-            _env = env; // Ahora sí funcionará porque "env" viene de arriba 👆
+            _env = env;
+            _pdfService = pdfService;
+            _qrService = qrService;
         }
+
+        // --- 5. CARTEL SE BUSCA (PDF) ---
+        [HttpGet("{id}/cartel")]
+        public async Task<IActionResult> GetCartel(int id)
+        {
+            var animal = await _context.Animales.Include(a => a.Especie).FirstOrDefaultAsync(a => a.Id == id);
+            if (animal == null) return NotFound();
+
+            // 1. Generar URL pública para el QR
+            // Apunta al frontend: http://localhost:5173/alerta/{id}
+            // TODO: Usar variable de entorno para el Host del Frontend
+            string publicUrl = $"http://localhost:5173/alerta/{id}";
+
+            // 2. Generar QR
+            var qrBytes = _qrService.GenerateQrCode(publicUrl);
+
+            // 3. Generar PDF
+            var pdfBytes = await _pdfService.GeneratePoster(animal, qrBytes);
+
+            return File(pdfBytes, "application/pdf", $"Cartel_{animal.Nombre}.pdf");
+        }
+
+        // --- 6. QR IMAGEN (PNG) ---
+        [HttpGet("{id}/qr")]
+        public IActionResult GetQr(int id)
+        {
+            string publicUrl = $"http://localhost:5173/alerta/{id}";
+            var qrBytes = _qrService.GenerateQrCode(publicUrl);
+            return File(qrBytes, "image/png");
+        }
+
+        // --- 7. OBTENER POR ID (Para Alerta Pública y Detalle) ---
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Animal>> GetAnimal(int id)
+        {
+            var animal = await _context.Animales
+                                       .Include(a => a.Especie)
+                                       .Include(a => a.Estado)
+                                       .Include(a => a.Vacunas) // Incluir vacunas
+                                       .FirstOrDefaultAsync(a => a.Id == id);
+                                       
+            if (animal == null) return NotFound();
+            return Ok(animal);
+        }
+
         // --- 1. OBTENER PÚBLICOS (Solo activos y recientes) ---
         // GET: api/Animales?lat=-37.99&lng=-61.35&radio=50
         [HttpGet]
@@ -63,6 +114,7 @@ namespace AnimalConnect.Backend.Controllers
             var misAnimales = await _context.Animales
                                             .Include(a => a.Especie)
                                             .Include(a => a.Estado)
+                                            .Include(a => a.Vacunas) // Ver mis libretas sanitarias
                                             .Where(a => a.UsuarioId == usuarioId)
                                             .OrderByDescending(a => a.FechaUltimaRenovacion)
                                             .ToListAsync();
@@ -97,12 +149,33 @@ namespace AnimalConnect.Backend.Controllers
             return Ok(new { message = "Estado actualizado correctamente." });
         }
 
+        // --- 8. AGREGAR VACUNA (Libreta Sanitaria) ---
+        [HttpPost("{id}/vacunas")]
+        public async Task<ActionResult<Vacuna>> AddVacuna(int id, [FromBody] Vacuna vacuna)
+        {
+            var animal = await _context.Animales.FindAsync(id);
+            if (animal == null) return NotFound("Animal no encontrado");
+
+            vacuna.AnimalId = id; // Asegurar FK
+            _context.Vacunas.Add(vacuna);
+            await _context.SaveChangesAsync();
+
+            return Ok(vacuna);
+        }
+
         // --- CREAR (Actualizado con UsuarioId) ---
        [HttpPost]
         public async Task<ActionResult<Animal>> PostAnimal([FromForm] Animal animal)
         {
             try 
             {
+                // GEO: Crear Point si vienen coordenadas
+                if (animal.UbicacionLat.HasValue && animal.UbicacionLon.HasValue)
+                {
+                     var geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
+                     animal.Ubicacion = geometryFactory.CreatePoint(new Coordinate(animal.UbicacionLon.Value, animal.UbicacionLat.Value));
+                }
+
                 // A. LÓGICA DE GUARDADO DE IMAGEN
                 // Verificamos si llegó una foto válida
                 if (animal.Foto != null && animal.Foto.Length > 0)

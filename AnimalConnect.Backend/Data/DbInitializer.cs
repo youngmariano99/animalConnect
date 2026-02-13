@@ -207,17 +207,38 @@ namespace AnimalConnect.Backend.Data
                     IdEstado = estadoId,
                     UbicacionLat = GetLat(),
                     UbicacionLon = GetLng(),
-                    ImagenUrl = img
+                    ImagenUrl = img,
+
+                    // BIO-TECH FIELDS (Sprint 4)
+                    NivelEnergia = rnd.Next(1, 11), // 1-10
+                    NivelInstintoPresa = rnd.Next(1, 11),
+                    NivelSociabilidadNinos = rnd.Next(1, 11),
+                    NivelSociabilidadPerros = rnd.Next(1, 11),
+                    NivelSociabilidadGatos = rnd.Next(1, 11),
+                    ToleranciaSoledad = rnd.Next(1, 11),
+                    NivelMantenimiento = rnd.Next(1, 6), // 1-5
+                    PesoActual = rnd.Next(5, 40) // kg
                 };
+
+                // Add Vaccines (Libreta Sanitaria)
+                if (estadoId == 1 || estadoId == 3) // Adoptables o Encontrados
+                {
+                    animal.Vacunas = new List<Vacuna>
+                    {
+                        new Vacuna { Nombre = "Antirrábica", FechaAplicacion = DateTime.Now.AddMonths(-rnd.Next(1, 12)), Veterinario = "Dr. Seed" },
+                        new Vacuna { Nombre = "Quíntuple", FechaAplicacion = DateTime.Now.AddMonths(-rnd.Next(1, 6)), Veterinario = "Dr. Seed" }
+                    };
+                }
+
                 context.Animales.Add(animal);
                 context.SaveChanges();
 
-                // Atributos aleatorios para el match
-                if(estadoId == 1) { // Solo si está en adopción
-                    context.AnimalAtributos.Add(new AnimalAtributo { AnimalId = animal.Id, AtributoId = atrEnergia.Id, Valor = rnd.Next(1, 6) });
-                    context.AnimalAtributos.Add(new AnimalAtributo { AnimalId = animal.Id, AtributoId = atrPatio.Id, Valor = rnd.Next(0, 2) }); // 0 o 1
-                    context.AnimalAtributos.Add(new AnimalAtributo { AnimalId = animal.Id, AtributoId = atrNinos.Id, Valor = rnd.Next(0, 2) });
-                    context.AnimalAtributos.Add(new AnimalAtributo { AnimalId = animal.Id, AtributoId = atrMascotas.Id, Valor = rnd.Next(0, 2) });
+                // Atributos legacy (mantener por compatibilidad si se usa en filtros viejos)
+                if(estadoId == 1) { 
+                    context.AnimalAtributos.Add(new AnimalAtributo { AnimalId = animal.Id, AtributoId = atrEnergia.Id, Valor = animal.NivelEnergia }); // Sync
+                    context.AnimalAtributos.Add(new AnimalAtributo { AnimalId = animal.Id, AtributoId = atrPatio.Id, Valor = rnd.Next(0, 2) });
+                    context.AnimalAtributos.Add(new AnimalAtributo { AnimalId = animal.Id, AtributoId = atrNinos.Id, Valor = animal.NivelSociabilidadNinos > 5 ? 1 : 0 });
+                    context.AnimalAtributos.Add(new AnimalAtributo { AnimalId = animal.Id, AtributoId = atrMascotas.Id, Valor = animal.NivelSociabilidadPerros > 5 ? 1 : 0 });
                     context.AnimalAtributos.Add(new AnimalAtributo { AnimalId = animal.Id, AtributoId = atrTamano.Id, Valor = rnd.Next(1, 4) });
                 }
             }

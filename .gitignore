@@ -27,3 +27,5 @@ Thumbs.db
 
 ## Ignorar carpetas de Test Results (si agregamos tests luego)
 TestResults/
+# Backend Test Logs
+Tests/AnimalConnect.Backend.Tests

@@ -9,7 +9,12 @@ import ClinicaWizard from './pages/ClinicaWizard';
 import Quiz from './pages/Quiz';
 import Community from './pages/Community';
 import Campaigns from './pages/Campaigns';
-
+import PublicAlert from './pages/PublicAlert';
+import { QuizWizard } from './pages/QuizWizard';
+// import ReportWizard from './pages/ReportWizard';
+import MyPetsDashboard from './pages/MyPetsDashboard';
+import AddPet from './pages/AddPet';
+import PetHealthBook from './pages/PetHealthBook';
 import MedicalRecords from './pages/MedicalRecords';
 import ONGWizard from './pages/ONGWizard';
 import TransitWizard from './pages/TransitWizard';
@@ -44,6 +49,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
           <Route path="/adopcion" element={<Adopcion />} />
+          <Route path="/match" element={<QuizWizard />} />
+          {/* <Route path="/reportar" element={<ReportWizard />} /> Requires props, it's a modal */}
           <Route path="/quiz" element={<Quiz />} />
           <Route path="/comunidad" element={<Community />} />
           <Route path="/campanias" element={<Campaigns />} />
@@ -63,7 +70,15 @@ function App() {
           <Route path="/comercio-register" element={<ComercioWizard />} />
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/comercio/:id" element={<CommerceDetail />} />
+          <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/comercio/:id" element={<CommerceDetail />} />
+          <Route path="/mis-mascotas" element={<MyPetsDashboard />} />
+          <Route path="/add-pet" element={<AddPet />} />
+          <Route path="/pet/:id" element={<PetHealthBook />} />
         </Route>
+
+        {/* Standalone Route for QR Scans */}
+        <Route path="/alerta/:id" element={<PublicAlert />} />
 
         {/* Admin Routes (No Standard Navbar) */}
         <Route path="/admin" element={<AdminLayout />}>

@@ -28,6 +28,7 @@ namespace AnimalConnect.Backend.Data
         public DbSet<HogarTransitorio> HogaresTransitorios { get; set; }
         public DbSet<Comercio> Comercios { get; set; }
         public DbSet<ItemCatalogo> ItemsCatalogo { get; set; }
+        public DbSet<Vacuna> Vacunas { get; set; } // Nueva tabla para Libreta Sanitaria V1
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

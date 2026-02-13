@@ -15,32 +15,54 @@
 - [x] **Historia 1.3 (Backend):** Instalación de paquetes NuGet críticos: `NetTopologySuite` (PostGIS) y `CloudinaryDotNet`.
 - [x] **Historia 1.4 (Infra):** Configuración de PostgreSQL en desarrollo con la extensión PostGIS activada.
 
-### SPRINT 2: El Motor Geoespacial (Semanas 3-4)
+### SPRINT 2: El Motor Geoespacial (Semanas 3-4) ✅ Completado (2026-02-12)
 *Migrar de cálculos manuales a potencia de base de datos real.*
 
-- [ ] **Historia 2.1 (Backend):** Refactorizar entidad `Mascota`, `Comercio` y `Veterinaria` para usar tipos `Point` (geometría) en lugar de `double Lat/Lon`.
-- [ ] **Historia 2.2 (Backend):** Reescribir `GeoService` para ejecutar consultas espaciales en BD (`ST_DWithin`) optimizando el filtro por radio.
-- [ ] **Historia 2.3 (Backend):** Implementar "Farmacias de Turno" con lógica de expiración automática (Lazy Cleanup).
-- [ ] **Historia 2.4 (Frontend):** Integrar mapa Leaflet con los nuevos endpoints geoespaciales y marcadores personalizados (Iconos SVG).
+- [x] **Historia 2.1 (Backend):** Refactorizar entidad `Mascota`, `Comercio` y `Veterinaria` para usar tipos `Point` (geometría) en lugar de `double Lat/Lon`.
+- [x] **Historia 2.2 (Backend):** Reescribir `GeoService` para ejecutar consultas espaciales en BD (`ST_DWithin`) optimizando el filtro por radio.
+- [x] **Historia 2.3 (Backend):** Implementar "Farmacias de Turno" con lógica de expiración automática (Lazy Cleanup).
+- [x] **Historia 2.4 (Frontend):** Integrar mapa Leaflet con los nuevos endpoints geoespaciales y marcadores personalizados (Iconos SVG).
 
-### SPRINT 3: El Gancho Viral (Perdidos y Encontrados) (Semanas 5-6)
+### SPRINT 3: El Gancho Viral (Perdidos y Encontrados) (Semanas 5-6) ✅ Completado (2026-02-12)
 *La característica que atrae usuarios masivamente.*
 
-- [ ] **Historia 3.1 (Backend):** Integrar **QuestPDF** para generar el PDF A4 del cartel de búsqueda dinámicamente.
-- [ ] **Historia 3.2 (Backend):** Endpoint para generar código CodeQR único que enlace al perfil público de la mascota.
-- [ ] **Historia 3.3 (Frontend):** Flujo de "Reportar Perdido": Formulario simple + Subida de fotos a Cloudinary + Botón "Descargar Cartel".
-- [ ] **Historia 3.4 (Frontend):** Vista pública de "Alerta" (Landing page al escanear QR) optimizada para móviles (carga rápida).
+- [x] **Historia 3.1 (Backend):** Integrar **QuestPDF** para generar el PDF A4 del cartel de búsqueda dinámicamente.
+- [x] **Historia 3.2 (Backend):** Endpoint para generar código CodeQR único que enlace al perfil público de la mascota.
+- [x] **Historia 3.3 (Frontend):** Flujo de "Reportar Perdido": Formulario simple + Subida de fotos a Cloudinary + Botón "Descargar Cartel".
+- [x] **Historia 3.4 (Frontend):** Vista pública de "Alerta" (Landing page al escanear QR) optimizada para móviles (carga rápida).
 
-### SPRINT 4: Adopción y Conexión Emocional (Semanas 7-8)
+### SPRINT 4: Adopción y Conexión Emocional (Semanas 7-8) ✅ Completado (2026-02-12)
 *Cerrar el ciclo de valor con adopciones.*
 
-- [ ] **Historia 4.1 (Backend):** Implementar lógica de bloqueo (Hard Filters) en `MatchController` (ej: Niños vs Perro no sociable).
-- [ ] **Historia 4.2 (Frontend):** UI de "Quiz de Compatibilidad" animada (Framer Motion) conectada al backend.
-- [ ] **Historia 4.3 (Frontend):** Visualización del resultado del Match con "Semáforo de Compatibilidad" (Verde/Amarillo/Rojo) y explicaciones claras.
-- [ ] **Historia 4.4 (Backend):** CRUD básico de "Mis Mascotas" (Libreta Sanitaria **Manual** V1) para fomentar el registro proactivo.
+- [x] **Historia 4.1 (Backend):** Implementar lógica de bloqueo (Hard Filters) en `MatchController` (ej: Niños vs Perro no sociable).
+- [x] **Historia 4.2 (Frontend):** UI de "Quiz de Compatibilidad" animada (Framer Motion) conectada al backend.
+- [x] **Historia 4.3 (Frontend):** Visualización del resultado del Match con "Semáforo de Compatibilidad" (Verde/Amarillo/Rojo) y explicaciones claras.
+- [x] **Historia 4.4 (Backend):** CRUD básico de "Mis Mascotas" (Libreta Sanitaria **Manual** V1) para fomentar el registro proactivo.
 
 ### 🏁 Hito 1: Lanzamiento Beta (MVP)
 *Funcionalidades: Mapa de Servicios, Reporte de Perdidos con Cartel QR, Adopción con Match, Perfil Básico.*
+
+#### 🏆 Resumen de Logros: Hito 1 (Sprints 1-4)
+Hemos completado con éxito la fase fundacional del **Ecosistema AnimalConnect**, estableciendo una base técnica robusta y una propuesta de valor centrada en la confianza y la utilidad.
+
+1.  **Identidad & Infraestructura (Bio-Tech)**:
+    *   Arquitectura "Clean" con .NET 8 y React + Vite.
+    *   Base de datos **PostgreSQL + PostGIS** configurada para alta precisión geoespacial.
+    *   Diseño UI **"Bio-Tech Humanista"** (TailwindCSS) que combina modernidad con calidez (colores Bio-Teal/Living Coral, bordes suaves).
+
+2.  **Motor Geoespacial (El Corazón)**:
+    *   Implementación de **NetTopologySuite** para cálculos de proximidad reales (nada de fórmulas Haversine manuales).
+    *   Mapa interactivo (**Leaflet**) con capacidad de Clustering y filtrado por radio dinámico.
+    *   Lógica de "Farmacias de Turno" con expiración automática.
+
+3.  **Viralidad & Comunidad (El Gancho)**:
+    *   **Generador de Carteles PDF (QuestPDF)**: Creación automática de assets físicos profesionales para pegar en la calle.
+    *   **Códigos QR Dinámicos**: Enlace directo entre el mundo físico (cartel) y digital (perfil de mascota).
+    *   **Alerta Pública**: Landing page optimizada para móviles para quien escanea el QR.
+
+4.  **Inteligencia & Conexión (El Vínculo)**:
+    *   **Algoritmo de Match (FEV)**: Sistema de compatibilidad basado en etología (Energía, Soledad, Espacio) y filtros duros (Niños/Otros animales).
+    *   **Libreta Sanitaria Digital V1**: Gestión de "Mis Mascotas" con registro de vacunación, paso clave para la retención de usuarios post-hallazgo.
 
 ---
 

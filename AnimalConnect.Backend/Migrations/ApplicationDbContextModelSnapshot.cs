@@ -4,6 +4,7 @@ using AnimalConnect.Backend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using NetTopologySuite.Geometries;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
@@ -20,6 +21,7 @@ namespace AnimalConnect.Backend.Migrations
                 .HasAnnotation("ProductVersion", "9.0.1")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "postgis");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("AnimalConnect.Backend.Models.Animal", b =>
@@ -55,20 +57,41 @@ namespace AnimalConnect.Backend.Migrations
                     b.Property<string>("ImagenUrl")
                         .HasColumnType("text");
 
+                    b.Property<int>("NivelEnergia")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("NivelInstintoPresa")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("NivelMantenimiento")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("NivelSociabilidadGatos")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("NivelSociabilidadNinos")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("NivelSociabilidadPerros")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<double>("PesoActual")
+                        .HasColumnType("double precision");
+
                     b.Property<string>("TelefonoContacto")
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<double?>("UbicacionLat")
-                        .HasColumnType("double precision");
+                    b.Property<int>("ToleranciaSoledad")
+                        .HasColumnType("integer");
 
-                    b.Property<double?>("UbicacionLon")
-                        .HasColumnType("double precision");
+                    b.Property<Point>("Ubicacion")
+                        .HasColumnType("geometry(Point, 4326)");
 
                     b.Property<int?>("UsuarioId")
                         .HasColumnType("integer");
@@ -187,14 +210,8 @@ namespace AnimalConnect.Backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<double>("Latitud")
-                        .HasColumnType("double precision");
-
                     b.Property<string>("LogoUrl")
                         .HasColumnType("text");
-
-                    b.Property<double>("Longitud")
-                        .HasColumnType("double precision");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
@@ -207,6 +224,10 @@ namespace AnimalConnect.Backend.Migrations
                     b.Property<string>("Telefono")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<Point>("Ubicacion")
+                        .IsRequired()
+                        .HasColumnType("geometry(Point, 4326)");
 
                     b.HasKey("Id");
 
@@ -272,14 +293,8 @@ namespace AnimalConnect.Backend.Migrations
                     b.Property<DateTime>("FechaRegistro")
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<double>("Latitud")
-                        .HasColumnType("double precision");
-
                     b.Property<string>("LogoUrl")
                         .HasColumnType("text");
-
-                    b.Property<double>("Longitud")
-                        .HasColumnType("double precision");
 
                     b.Property<int>("NivelPlan")
                         .HasColumnType("integer");
@@ -291,6 +306,10 @@ namespace AnimalConnect.Backend.Migrations
                     b.Property<string>("Telefono")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<Point>("Ubicacion")
+                        .IsRequired()
+                        .HasColumnType("geometry(Point, 4326)");
 
                     b.Property<int>("UsuarioId")
                         .HasColumnType("integer");
@@ -787,6 +806,48 @@ namespace AnimalConnect.Backend.Migrations
                     b.ToTable("Usuarios");
                 });
 
+            modelBuilder.Entity("AnimalConnect.Backend.Models.Vacuna", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AnimalId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("FechaAplicacion")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("FechaProxima")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Lote")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Marca")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Veterinario")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AnimalId");
+
+                    b.ToTable("Vacunas");
+                });
+
             modelBuilder.Entity("AnimalConnect.Backend.Models.Animal", b =>
                 {
                     b.HasOne("AnimalConnect.Backend.Models.Especie", "Especie")
@@ -998,9 +1059,22 @@ namespace AnimalConnect.Backend.Migrations
                     b.Navigation("PerfilAdoptante");
                 });
 
+            modelBuilder.Entity("AnimalConnect.Backend.Models.Vacuna", b =>
+                {
+                    b.HasOne("AnimalConnect.Backend.Models.Animal", "Animal")
+                        .WithMany("Vacunas")
+                        .HasForeignKey("AnimalId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Animal");
+                });
+
             modelBuilder.Entity("AnimalConnect.Backend.Models.Animal", b =>
                 {
                     b.Navigation("Atributos");
+
+                    b.Navigation("Vacunas");
                 });
 
             modelBuilder.Entity("AnimalConnect.Backend.Models.Clinica", b =>

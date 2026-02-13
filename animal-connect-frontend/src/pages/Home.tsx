@@ -115,7 +115,7 @@ const Home = () => {
         return estadoMatch && especieMatch;
     });
 
-    const handleWizardSubmit = async (data: any) => {
+    const handleWizardSubmit = async (data: any): Promise<number | null> => {
         try {
             const formData = new FormData();
             formData.append('Nombre', data.nombre);
@@ -133,15 +133,18 @@ const Home = () => {
             const res = await fetch('http://localhost:5269/api/Animales', { method: 'POST', body: formData });
 
             if (res.ok) {
-                alert("¡Reporte publicado con éxito! 🐾");
-                setModalAbierto(false);
+                const responseData = await res.json();
+                // alert("¡Reporte publicado con éxito! 🐾"); // Removed alert to show UI
                 if (ubicacion) cargarAnimales(ubicacion.lat, ubicacion.lng);
+                return responseData.id; // Return ID
             } else {
                 alert("Hubo un error al publicar el reporte.");
+                return null;
             }
         } catch (error) {
             console.error("Error submitting wizard:", error);
             alert("Error de conexión");
+            return null;
         }
     };
 
@@ -167,12 +170,14 @@ const Home = () => {
                         <button
                             onClick={() => setViewMode('list')}
                             className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white shadow text-health' : 'text-gray-400 hover:text-gray-600'}`}
+                            data-testid="btn-view-list"
                         >
                             <List className="w-5 h-5" />
                         </button>
                         <button
                             onClick={() => setViewMode('map')}
                             className={`p-2 rounded-lg transition-all ${viewMode === 'map' ? 'bg-white shadow text-health' : 'text-gray-400 hover:text-gray-600'}`}
+                            data-testid="btn-view-map"
                         >
                             <MapIcon className="w-5 h-5" />
                         </button>
@@ -198,12 +203,14 @@ const Home = () => {
                     <motion.div
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                         className="h-[70vh] rounded-pet overflow-hidden shadow-lg border-2 border-white relative z-10"
+                        data-testid="map-view-container"
                     >
                         <MapContainer
                             key={esUbicacionReal ? "real" : "default"}
                             center={[ubicacion!.lat, ubicacion!.lng]}
                             zoom={14}
                             style={{ height: "100%", width: "100%" }}
+                            data-testid="leaflet-map"
                         >
                             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
@@ -229,7 +236,7 @@ const Home = () => {
                             </MarkerClusterGroup>
                         </MapContainer>
                         {!esUbicacionReal && (
-                            <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur px-4 py-2 rounded-full text-xs font-bold shadow-md text-tech z-[500]">
+                            <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur px-4 py-2 rounded-full text-xs font-bold shadow-md text-tech z-[500]" data-testid="location-status-badge">
                                 📍 Buscando tu ubicación...
                             </div>
                         )}

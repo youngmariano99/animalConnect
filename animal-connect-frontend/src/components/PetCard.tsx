@@ -82,15 +82,15 @@ const PetCard = ({ animal, onClick }: PetCardProps) => {
                             <Phone className="w-4 h-4" /> Whatsapp
                         </a>
                     )}
-                    <button
+                    <a
+                        href={`http://localhost:5269/api/Animales/${animal.id}/cartel`}
+                        target="_blank"
+                        rel="noreferrer"
                         className="flex items-center justify-center gap-2 bg-gray-50 text-gray-600 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-100 transition-colors"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            // Share logic
-                        }}
+                        onClick={(e) => e.stopPropagation()}
                     >
-                        <Share2 className="w-4 h-4" /> Compartir
-                    </button>
+                        <Share2 className="w-4 h-4" /> Cartel
+                    </a>
                 </div>
             </div>
         </motion.div>

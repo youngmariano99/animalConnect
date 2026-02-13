@@ -2,6 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using AnimalConnect.Backend.Data;
 using AnimalConnect.Backend.Models;
+using AnimalConnect.Backend.Services; // ITurnosService
+using NetTopologySuite.Geometries; 
+using NetTopologySuite; 
 
 namespace AnimalConnect.Backend.Controllers
 {
@@ -10,10 +13,33 @@ namespace AnimalConnect.Backend.Controllers
     public class ClinicasController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly ITurnosService _turnosService; // Injected Service
 
-        public ClinicasController(ApplicationDbContext context)
+        public ClinicasController(ApplicationDbContext context, ITurnosService turnosService)
         {
             _context = context;
+            _turnosService = turnosService;
+        }
+
+        // --- 1. FARMACIAS DE TURNO (Lazy Cleanup) ---
+        // GET: api/Clinicas/de-turno?lat=-34.6&lon=-58.4&radio=10
+        [HttpGet("de-turno")]
+        public async Task<ActionResult<IEnumerable<Clinica>>> GetClinicasDeTurno(
+            [FromQuery] double lat, 
+            [FromQuery] double lon, 
+            [FromQuery] double radio = 10)
+        {
+            var clinicas = await _turnosService.ObtenerClinicasDeTurno(lat, lon, radio);
+            return Ok(clinicas);
+        }
+
+        // --- 2. ACTIVAR TURNO (Veterinario) ---
+        [HttpPost("{id}/activar-turno")]
+        public async Task<IActionResult> ActivarTurno(int id)
+        {
+             // TODO: Verificar que el usuario sea dueño de la clínica (Security)
+            await _turnosService.MarcarComoDeTurno(id);
+            return Ok(new { message = "Clínica marcada como de turno por 24hs." });
         }
 
         // GET: api/Clinicas/mis-clinicas/{usuarioId}
@@ -36,14 +62,17 @@ namespace AnimalConnect.Backend.Controllers
             var perfil = await _context.PerfilesVeterinarios.FirstOrDefaultAsync(p => p.UsuarioId == dto.UsuarioId);
             if (perfil == null) return BadRequest("Usuario no es veterinario.");
 
+            // Create Point
+            var geometryFactory = NtsGeometryServices.Instance.CreateGeometryFactory(srid: 4326);
+            var ubicacion = geometryFactory.CreatePoint(new Coordinate(dto.Longitud, dto.Latitud));
+
             var nuevaClinica = new Clinica
             {
                 Nombre = dto.Nombre,
                 Direccion = dto.Direccion,
                 Telefono = dto.Telefono,
-                Latitud = dto.Latitud,
-                Longitud = dto.Longitud,
-                HorariosEstructurados = dto.Horarios, // Texto simple por ahora
+                Ubicacion = ubicacion, 
+                HorariosEstructurados = dto.Horarios, 
                 PerfilVeterinarioId = perfil.Id,
                 EsDeTurno = false
             };

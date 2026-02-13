@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using NetTopologySuite.Geometries;
+using System.Text.Json.Serialization;
 
 namespace AnimalConnect.Backend.Models
 {
@@ -16,9 +18,26 @@ namespace AnimalConnect.Backend.Models
         public string Whatsapp { get; set; } = string.Empty; // Direct link
         public string Direccion { get; set; } = string.Empty;
 
-        // Geo
-        public double Latitud { get; set; }
-        public double Longitud { get; set; }
+        // Geo (Refactor PostGIS)
+        [JsonIgnore]
+        [Column(TypeName = "geometry(Point, 4326)")]
+        public Point Ubicacion { get; set; }
+
+        [NotMapped]
+        public double Latitud
+        {
+            get => Ubicacion?.Y ?? _tempLat;
+            set => _tempLat = value;
+        }
+        private double _tempLat;
+
+        [NotMapped]
+        public double Longitud
+        {
+            get => Ubicacion?.X ?? _tempLon;
+            set => _tempLon = value;
+        }
+        private double _tempLon;
 
         // Tags para filtros (Separados por coma: "Alimento,Juguetes,Baño")
         public string Etiquetas { get; set; } = string.Empty; 

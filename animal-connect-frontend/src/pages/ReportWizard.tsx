@@ -53,7 +53,7 @@ interface ReportWizardProps {
     isOpen: boolean;
     onClose: () => void;
     type: 'perdido' | 'encontrado';
-    onSubmit: (data: any) => Promise<void>;
+    onSubmit: (data: any) => Promise<number | null>; // Return ID
     initialLocation: { lat: number, lng: number };
 }
 
@@ -71,6 +71,8 @@ const ReportWizard = ({ isOpen, onClose, type, onSubmit, initialLocation }: Repo
         telefono: ''
     });
 
+    const [createdId, setCreatedId] = useState<number | null>(null); // Guardar ID para el cartel
+
     const handleNext = () => {
         if (step === 1 && !formData.foto) return alert("Por favor sube una foto");
         if (step === 2 && !formData.nombre) return alert("Por favor ingresa un nombre o raza");
@@ -81,12 +83,22 @@ const ReportWizard = ({ isOpen, onClose, type, onSubmit, initialLocation }: Repo
     };
 
     const handleBack = () => {
-        if (step > 1) setStep(step - 1);
+        if (step > 1 && step <= totalSteps) setStep(step - 1); // No volver desde Success
     };
 
     const handleSubmit = async () => {
-        await onSubmit({ ...formData, type });
-        onClose();
+        try {
+            const newId = await onSubmit({ ...formData, type });
+            if (newId) {
+                setCreatedId(newId);
+                setStep(5); // Ir a Success
+            } else {
+                onClose(); // Fallback si no hay ID
+            }
+        } catch (e) {
+            console.error(e);
+            alert("Error al enviar el reporte");
+        }
     };
 
     // Wizard Content per Step
@@ -186,6 +198,38 @@ const ReportWizard = ({ isOpen, onClose, type, onSubmit, initialLocation }: Repo
                         </div>
                     </motion.div>
                 );
+            case 5: // SUCCESS & POSTER
+                return (
+                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-6">
+                        <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-green-50 shadow-inner">
+                            <Check className="w-10 h-10" />
+                        </div>
+                        <h3 className="text-2xl font-black text-gray-800 mb-2">¡Reporte Enviado!</h3>
+                        <p className="text-gray-500 text-sm max-w-xs mx-auto mb-8">
+                            La comunidad ya ha sido alertada.
+                        </p>
+
+                        {/* CARTEL DE BÚSQUEDA */}
+                        <div className="bg-orange-50 rounded-2xl p-6 border-2 border-orange-100 max-w-sm mx-auto">
+                            <h4 className="font-bold text-orange-800 text-lg mb-2">🖨️ ¡Imprimí tu Cartel!</h4>
+                            <p className="text-orange-700/80 text-xs mb-4 leading-relaxed">
+                                Generamos un cartel PDF con foto y código QR listo para pegar en tu barrio.
+                            </p>
+
+                            <a
+                                href={`http://localhost:5269/api/Animales/${createdId}/cartel`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="w-full bg-orange-600 text-white font-black py-4 rounded-xl shadow-lg shadow-orange-600/30 active:scale-95 transition-transform flex items-center justify-center gap-2"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                </svg>
+                                Descargar Cartel Oficial
+                            </a>
+                        </div>
+                    </motion.div>
+                );
             default: return null;
         }
     };
@@ -197,7 +241,7 @@ const ReportWizard = ({ isOpen, onClose, type, onSubmit, initialLocation }: Repo
                     <motion.div
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-                        onClick={onClose}
+                        onClick={step === 5 ? onClose : undefined} // Click outside closes only strictly if success
                     />
 
                     <motion.div
@@ -207,17 +251,19 @@ const ReportWizard = ({ isOpen, onClose, type, onSubmit, initialLocation }: Repo
                         className="bg-white w-full max-w-md rounded-3xl shadow-2xl relative z-10 overflow-hidden flex flex-col max-h-[90vh]"
                     >
                         {/* Header */}
-                        <div className={`p-6 pb-4 ${type === 'perdido' ? 'bg-love/10' : 'bg-health/10'}`}>
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className={`text-2xl font-heading font-extrabold ${type === 'perdido' ? 'text-love' : 'text-health'}`}>
-                                    {type === 'perdido' ? '💔 Perdí mi Mascota' : '👀 Encontré un Animal'}
-                                </h2>
-                                <button onClick={onClose} className="bg-white/50 p-2 rounded-full hover:bg-white transition-colors">
-                                    <X className="w-5 h-5 text-gray-500" />
-                                </button>
+                        {step !== 5 && (
+                            <div className={`p-6 pb-4 ${type === 'perdido' ? 'bg-love/10' : 'bg-health/10'}`}>
+                                <div className="flex justify-between items-center mb-4">
+                                    <h2 className={`text-2xl font-heading font-extrabold ${type === 'perdido' ? 'text-love' : 'text-health'}`}>
+                                        {type === 'perdido' ? '💔 Perdí mi Mascota' : '👀 Encontré un Animal'}
+                                    </h2>
+                                    <button onClick={onClose} className="bg-white/50 p-2 rounded-full hover:bg-white transition-colors">
+                                        <X className="w-5 h-5 text-gray-500" />
+                                    </button>
+                                </div>
+                                <StepTracker currentStep={step} totalSteps={totalSteps} />
                             </div>
-                            <StepTracker currentStep={step} totalSteps={totalSteps} />
-                        </div>
+                        )}
 
                         {/* Body */}
                         <div className="p-6 flex-grow overflow-y-auto">
@@ -227,23 +273,34 @@ const ReportWizard = ({ isOpen, onClose, type, onSubmit, initialLocation }: Repo
                         </div>
 
                         {/* Footer Controls */}
-                        <div className="p-6 pt-2 border-t border-gray-100 flex gap-3 bg-gray-50/50">
-                            {step > 1 && (
+                        {step !== 5 && (
+                            <div className="p-6 pt-2 border-t border-gray-100 flex gap-3 bg-gray-50/50">
+                                {step > 1 && (
+                                    <button
+                                        onClick={handleBack}
+                                        className="flex-1 py-4 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <ArrowLeft className="w-5 h-5" /> Volver
+                                    </button>
+                                )}
                                 <button
-                                    onClick={handleBack}
-                                    className="flex-1 py-4 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+                                    onClick={handleNext}
+                                    className={`flex-[2] py-4 rounded-xl font-bold text-white shadow-lg shadow-current/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${type === 'perdido' ? 'bg-love shadow-love/30' : 'bg-health shadow-health/30'}`}
                                 >
-                                    <ArrowLeft className="w-5 h-5" /> Volver
+                                    {step === totalSteps ? '📢 PUBLICAR AVISO' : 'Siguiente'}
+                                    {step !== totalSteps && <ArrowRight className="w-5 h-5" />}
                                 </button>
-                            )}
-                            <button
-                                onClick={handleNext}
-                                className={`flex-[2] py-4 rounded-xl font-bold text-white shadow-lg shadow-current/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 ${type === 'perdido' ? 'bg-love shadow-love/30' : 'bg-health shadow-health/30'}`}
-                            >
-                                {step === totalSteps ? '📢 PUBLICAR AVISO' : 'Siguiente'}
-                                {step !== totalSteps && <ArrowRight className="w-5 h-5" />}
-                            </button>
-                        </div>
+                            </div>
+                        )}
+
+                        {/* Final Step Close Button */}
+                        {step === 5 && (
+                            <div className="p-6 pt-0">
+                                <button onClick={onClose} className="w-full py-3 text-gray-400 font-bold hover:bg-gray-50 rounded-xl">
+                                    Cerrar
+                                </button>
+                            </div>
+                        )}
                     </motion.div>
                 </div>
             )}

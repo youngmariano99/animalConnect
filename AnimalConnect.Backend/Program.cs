@@ -2,12 +2,16 @@ using AnimalConnect.Backend.Data;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using System.Text.Json.Serialization;
-using DotNetEnv; // <--- 1. Importar librería
-using System.Globalization; // <--- AGREGAR ESTO ARRIBA
+using DotNetEnv; 
+using System.Globalization; 
 using CloudinaryDotNet;
+using AnimalConnect.Backend.Services; // <--- Import Services explicitly
 
 // 2. Cargar el archivo .env ANTES de crear el builder
 Env.Load();
+
+// 2.1 Configurar Licencia de QuestPDF (Community)
+QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,6 +57,12 @@ if (!string.IsNullOrEmpty(cloudName))
     var cloudinary = new Cloudinary(account);
     builder.Services.AddSingleton(cloudinary);
 }
+
+// Servicios de Lógica de Negocio
+builder.Services.AddScoped<ITurnosService, TurnosService>();
+builder.Services.AddScoped<IQrService, QrService>(); // <--- QR
+builder.Services.AddScoped<IPdfService, PdfService>(); // <--- PDF
+builder.Services.AddHttpClient(); // <--- Para descargar la foto de Cloudinary en PdfService
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -100,3 +110,5 @@ app.UseCors("PermitirTodo"); // <--- NUEVO: ACTIVAR LA POLÍTICA
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }
